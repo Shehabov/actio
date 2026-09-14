@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Node
+node_modules/
+
+# Temp and build artifacts
+*.tmp
+*.log
+.~lock.*#
+build/
+dist/
+
+# Generated raster exports (the vectors are the source of truth)
+brand/logo/**/*.png
+brand/assets/**/*.png
