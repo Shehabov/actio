@@ -19,5 +19,5 @@ build/
 dist/
 
 # Generated raster exports (the vectors are the source of truth)
-brand/logo/**/*.png
-brand/assets/**/*.png
+logo/**/*.png
+
