@@ -11,6 +11,7 @@ Actio routes employee feedback to whoever can actually fix it, and does not let 
 <p>
 <img src="https://img.shields.io/badge/Version-1-017E85?style=for-the-badge&labelColor=0C0C0C" alt="Version 1">
 <img src="https://img.shields.io/badge/Product-coming_soon-0C0C0C?style=for-the-badge&labelColor=0C0C0C" alt="Product coming soon">
+<img src="https://img.shields.io/badge/Team-13_agents-017E85?style=for-the-badge&labelColor=0C0C0C" alt="13 agents">
 <img src="https://img.shields.io/badge/A_Lumofy-product-017E85?style=for-the-badge&labelColor=0C0C0C" alt="A Lumofy product">
 </p>
 
@@ -25,6 +26,101 @@ This is the specification. The product is being built against it and is not here
 Version 1 fixes the decisions that are expensive to change later: what the product does, who it is for, what it measures, and every rule the interface is built to. Nothing in here is provisional, so the first screen can be written against a decision rather than a preference.
 
 **What lands next:** design tokens, the self-hosted type stack, then the component set. Watch or star the repo if you want the first release.
+
+Version 1 also ships the team that builds it. See [the team](#the-team).
+
+---
+
+## The team
+
+Actio is built by a swarm of thirteen autonomous agents under one human Product Lead.
+
+<div align="center">
+<img src="./docs/diagrams/actio-team.svg" alt="The Actio delivery swarm: Shehab Beram as Product Lead above thirteen agents arranged across plan, design, build, review and ship, with gates marked in the accent colour." width="900">
+</div>
+
+**Shehab Beram is the Product Lead.** He sets the brief and he is the only role that can
+change scope, accept a release, or overrule a gate. Agents never assume his approval, and
+an escalation reaches him as a decision with options and a recommendation, never as a bare
+question.
+
+| | Agent | Owns | Gate |
+|---|---|---|---|
+| **L1** | [`orchestrator`](./.claude/agents/orchestrator.md) | The run. Routing, gate enforcement, the utilisation check. | Run closure |
+| **L2** | [`tech-architect`](./.claude/agents/tech-architect.md) | Architecture of record, ADRs, task briefs for FE and BE | Design authority |
+| | [`engineering-lead`](./.claude/agents/engineering-lead.md) | Integration. Does it actually work end to end. | Engineering |
+| | [`qc-lead`](./.claude/agents/qc-lead.md) | Evidence audit, independent final pass, go or no-go | Quality |
+| **L3** | [`ux-designer`](./.claude/agents/ux-designer.md) | Design specs for every surface | — |
+| | [`ux-auditor`](./.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design |
+| | [`ux-writer`](./.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy |
+| | [`frontend-engineer`](./.claude/agents/frontend-engineer.md) | React and Next.js implementation | — |
+| | [`backend-engineer`](./.claude/agents/backend-engineer.md) | Django and DRF implementation | — |
+| | [`peer-reviewer`](./.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review, 1 of 2 |
+| | [`code-analyst`](./.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review, 2 of 2 |
+| | [`qc-engineer`](./.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | — |
+| | [`release-engineer`](./.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release |
+
+### Every agent runs the same loop
+
+```mermaid
+flowchart LR
+  IN(["handoff in"]) --> P
+  P["<b>1 · plan</b><br/>inputs · assumptions<br/>acceptance criteria"]:::step
+  A["<b>2 · audit the plan</b><br/>what is missing<br/>which rule could break<br/>what would downstream reject"]:::audit
+  E["<b>3 · execute</b>"]:::step
+  R["<b>4 · review</b><br/>own criteria<br/>BRAND.md<br/>definition of done"]:::audit
+  H["<b>5 · hand off</b><br/>handoff.json<br/>+ evidence"]:::step
+  P --> A
+  A -- "revise" --> P
+  A -- "sound" --> E
+  E --> R
+  R -- "fix" --> E
+  R -- "cannot fix" --> ESC["escalate, or<br/>reject upstream"]:::esc
+  R -- "clean" --> H
+  H --> OUT(["handoff out"])
+  classDef step fill:#F6F6F4,stroke:#D8D8D4,color:#0C0C0C
+  classDef audit fill:#E6FAFB,stroke:#02646B,stroke-width:2px,color:#0C0C0C
+  classDef esc fill:#00BFC4,stroke:#0C0C0C,color:#0C0C0C
+```
+
+Step 2 is the one that pays for itself. An agent that audits its own plan before executing
+catches the missing state, the unchecked assumption and the brand rule it was about to
+break, at the point where fixing it costs nothing.
+
+### Four roles exist only to disagree
+
+| Checker | Checks | Why it is separate |
+|---|---|---|
+| `ux-auditor` | `ux-designer` | The designer fixes, the auditor finds. A designer grading their own work is blind to exactly the failures an auditor is for. |
+| `peer-reviewer` | The diff, for judgement | Is this the right solution, simply built. No linter answers that. |
+| `code-analyst` | The diff, for facts | Line by line, so a plausible design does not carry a real bug past both reviews. |
+| `qc-lead` | `qc-engineer` | Audits whether the evidence exists and what was **not** tested. Untested surface is the finding this role exists to catch. |
+
+And the orchestrator checks the checkers: after every stage it verifies that each agent
+that should have run did run, and that each agent's output was actually consumed
+downstream. An agent whose work nobody read is a utilisation failure, and it gets
+reported rather than hidden.
+
+### Skills
+
+Each agent is coupled with the skills it needs. Eleven house skills carry Actio's own
+rules, and twenty-two vendored skills carry craft.
+
+| Pack | Source | Used by |
+|---|---|---|
+| **House** (11) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-django`, `actio-code-review`, `actio-code-analysis`, `actio-test-protocol`, `actio-release` | All |
+| **Taste** (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
+| **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
+
+Where a vendored skill and [`BRAND.md`](./BRAND.md) disagree, `BRAND.md` wins and the
+override is recorded. Several taste skills optimise for premium, decorative aesthetics
+that Actio bans outright, so they are used for compositional rigour and never for their
+decorative vocabulary. The per-skill verdicts are in
+[`actio-brand-guard`](./.claude/skills/actio-brand-guard/SKILL.md).
+
+**Full detail:** [`docs/TEAM.md`](./docs/TEAM.md) for the org, the RACI and the escalation
+ladder. [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) for the delivery flow, the nine gates and
+the handoff schema. [`CLAUDE.md`](./CLAUDE.md) is the operating manual the agents load.
 
 ---
 
@@ -79,14 +175,33 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 |---|---|
 | [`BRAND.md`](./BRAND.md) | The machine-readable spec. Tokens, type, contrast, component rules, copy rules. Read this first if you are building anything. |
 | [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning and the measured numbers behind each one. |
+| [`CLAUDE.md`](./CLAUDE.md) | The operating manual every agent loads. What Actio is, the org, the flow, the hard rules. |
+| [`.claude/agents/`](./.claude/agents/) | The thirteen agent definitions |
+| [`.claude/skills/`](./.claude/skills/) | Eleven house skills and twenty-two vendored ones |
+| [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
+| [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run. |
 | [`logo/`](./logo/) | The seal and the lockups, in every colourway. See [`logo/README.md`](./logo/README.md) for which file to use where. |
 
 ```
 actio/
 ├── README.md
+├── CLAUDE.md                              operating manual, loaded every session
 ├── BRAND.md
 ├── Actio-Brand-Guidelines-v1.pdf
 ├── LICENSE
+├── .claude/
+│   ├── settings.json
+│   ├── agents/                            13 agent definitions
+│   └── skills/
+│       ├── actio-*/                       11 house skills
+│       └── <vendored>/                    22 from taste-skill and vercel-labs
+├── .actio/
+│   ├── TEMPLATE/                          plan.md · review.md · handoff.json
+│   └── runs/                              one directory per run
+├── docs/
+│   ├── TEAM.md                            org chart, RACI, escalation
+│   ├── WORKFLOW.md                        delivery flow, gates, handoff schema
+│   └── diagrams/actio-team.svg
 └── logo/
     ├── README.md
     ├── svg/
@@ -108,12 +223,13 @@ Vertical, Arabic, parent and descriptor lockups, the raster and app-icon exports
 | # | Step | State |
 |---|---|---|
 | 1 | Specification: `BRAND.md`, the guidelines, the marks | Done |
-| 2 | Tokens as CSS custom properties, Tailwind config and native resources | Next |
-| 3 | Source Sans 3, IBM Plex Sans, Mono and Sans Arabic self-hosted as WOFF2 | Next |
-| 4 | Contrast check running in continuous integration | Next |
-| 5 | Components: button, input, select, status pill, card, table row, empty state, toast, modal, nav shell | Not started |
-| 6 | Channels: WhatsApp utility templates, employee update, manager assignment email, SMS fallback | Not started |
-| 7 | Dark mode and all four locales verified on a real handset | Not started |
+| 2 | The team: 13 agents, 11 house skills, the run ledger | Done |
+| 3 | Tokens as CSS custom properties, Tailwind config and native resources | Next |
+| 4 | Source Sans 3, IBM Plex Sans, Mono and Sans Arabic self-hosted as WOFF2 | Next |
+| 5 | Contrast check running in continuous integration | Next |
+| 6 | Components: button, input, select, status pill, card, table row, empty state, toast, modal, nav shell | Not started |
+| 7 | Channels: WhatsApp utility templates, employee update, manager assignment email, SMS fallback | Not started |
+| 8 | Dark mode and all four locales verified on a real handset | Not started |
 
 `BRAND.md` and the guidelines PDF are versioned together. A change to one without the other is a defect.
 

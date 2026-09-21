@@ -1,0 +1,38 @@
+{
+  "run": "<yyyy-mm-dd>-<short-slug>",
+  "agent": "<agent-name>",
+  "status": "passed",
+  "started": "<ISO 8601 UTC, from `date -u +%Y-%m-%dT%H:%M:%SZ`>",
+  "finished": "<ISO 8601 UTC>",
+  "consumed": [
+    "<every path you actually read. Listing one you did not read falsifies the record.>"
+  ],
+  "produced": [
+    "<every path you wrote. Each must exist on disk and be non-empty.>"
+  ],
+  "gates": [
+    {
+      "name": "<only a gate you own. Certifying another agent's gate is a defect.>",
+      "result": "pass",
+      "evidence": "<path>"
+    }
+  ],
+  "blockers": [
+    {
+      "what": "<what is wrong or missing>",
+      "why": "<specifically why it blocks you>",
+      "needs": "<agent-name or 'shehab'>"
+    }
+  ],
+  "decisions_for_shehab": [
+    {
+      "question": "<the decision, stated as a choice>",
+      "options": [
+        "<option, and its consequence>",
+        "<option, and its consequence>"
+      ],
+      "recommendation": "<your recommendation, with the reason. Never a bare question.>"
+    }
+  ],
+  "next": "<agent-name, 'shehab', or null at run closure>"
+}
