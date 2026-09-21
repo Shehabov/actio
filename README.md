@@ -50,14 +50,14 @@ question.
 | **L2** | [`tech-architect`](./.claude/agents/tech-architect.md) | Architecture of record, ADRs, task briefs for FE and BE | Design authority |
 | | [`engineering-lead`](./.claude/agents/engineering-lead.md) | Integration. Does it actually work end to end. | Engineering |
 | | [`qc-lead`](./.claude/agents/qc-lead.md) | Evidence audit, independent final pass, go or no-go | Quality |
-| **L3** | [`ux-designer`](./.claude/agents/ux-designer.md) | Design specs for every surface | — |
+| **L3** | [`ux-designer`](./.claude/agents/ux-designer.md) | Design specs for every surface | – |
 | | [`ux-auditor`](./.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design |
 | | [`ux-writer`](./.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy |
-| | [`frontend-engineer`](./.claude/agents/frontend-engineer.md) | React and Next.js implementation | — |
-| | [`backend-engineer`](./.claude/agents/backend-engineer.md) | Django and DRF implementation | — |
+| | [`frontend-engineer`](./.claude/agents/frontend-engineer.md) | React and Next.js implementation | – |
+| | [`backend-engineer`](./.claude/agents/backend-engineer.md) | Django and DRF implementation | – |
 | | [`peer-reviewer`](./.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review, 1 of 2 |
 | | [`code-analyst`](./.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review, 2 of 2 |
-| | [`qc-engineer`](./.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | — |
+| | [`qc-engineer`](./.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – |
 | | [`release-engineer`](./.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release |
 
 ### Every agent runs the same loop
@@ -103,14 +103,27 @@ reported rather than hidden.
 
 ### Skills
 
-Each agent is coupled with the skills it needs. Eleven house skills carry Actio's own
+Each agent is coupled with the skills it needs. Twelve house skills carry Actio's own
 rules, and twenty-two vendored skills carry craft.
 
 | Pack | Source | Used by |
 |---|---|---|
-| **House** (11) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-django`, `actio-code-review`, `actio-code-analysis`, `actio-test-protocol`, `actio-release` | All |
+| **House** (12) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-django`, `actio-code-review`, `actio-code-analysis`, `actio-test-protocol`, `actio-release` | All |
 | **Taste** (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
 | **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
+
+### The platform
+
+[`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md) is built on three
+approved references in [`docs/design-reference/`](./docs/design-reference/): an assistant
+shell, an operations dashboard, and a minimal canvas. The dashboard is the primary one.
+
+**The structure comes from the references. The surface comes from `BRAND.md`.** Anatomy,
+density, hierarchy and interaction are adopted. Colour, gradient, motion and copy style are
+not: the references run on a lime accent with soft gradients, tinted callouts, multi-hue
+chart ramps and Title Case, all of which Actio bans. The skill carries the full adopt,
+adapt and reject table. The rule it adds that matters most is the **inversion rule**: one
+surface per view may go dark, and it carries the one thing the reader came for.
 
 Where a vendored skill and [`BRAND.md`](./BRAND.md) disagree, `BRAND.md` wins and the
 override is recorded. Several taste skills optimise for premium, decorative aesthetics
@@ -177,7 +190,7 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 | [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning and the measured numbers behind each one. |
 | [`CLAUDE.md`](./CLAUDE.md) | The operating manual every agent loads. What Actio is, the org, the flow, the hard rules. |
 | [`.claude/agents/`](./.claude/agents/) | The thirteen agent definitions |
-| [`.claude/skills/`](./.claude/skills/) | Eleven house skills and twenty-two vendored ones |
+| [`.claude/skills/`](./.claude/skills/) | Twelve house skills and twenty-two vendored ones |
 | [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
 | [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run. |
 | [`logo/`](./logo/) | The seal and the lockups, in every colourway. See [`logo/README.md`](./logo/README.md) for which file to use where. |
@@ -193,7 +206,7 @@ actio/
 │   ├── settings.json
 │   ├── agents/                            13 agent definitions
 │   └── skills/
-│       ├── actio-*/                       11 house skills
+│       ├── actio-*/                       12 house skills
 │       └── <vendored>/                    22 from taste-skill and vercel-labs
 ├── .actio/
 │   ├── TEMPLATE/                          plan.md · review.md · handoff.json
@@ -223,7 +236,7 @@ Vertical, Arabic, parent and descriptor lockups, the raster and app-icon exports
 | # | Step | State |
 |---|---|---|
 | 1 | Specification: `BRAND.md`, the guidelines, the marks | Done |
-| 2 | The team: 13 agents, 11 house skills, the run ledger | Done |
+| 2 | The team: 13 agents, 12 house skills, the run ledger | Done |
 | 3 | Tokens as CSS custom properties, Tailwind config and native resources | Next |
 | 4 | Source Sans 3, IBM Plex Sans, Mono and Sans Arabic self-hosted as WOFF2 | Next |
 | 5 | Contrast check running in continuous integration | Next |

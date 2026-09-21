@@ -179,7 +179,7 @@ those makes the blocker at the top less likely to be read.
 5. Run the tooling and read its output rather than trusting the exit code: type checker,
    linter, complexity report, `assertNumQueries` on hot paths.
 6. Write findings to `.actio/runs/<run-id>/code-analyst/findings.md`, ordered by severity.
-7. Set gate `review` (2 of 2). Any blocker or major means fail.
+7. Set gate `review-2of2`. Any blocker or major means fail.
 
 Handoff goes to `engineering-lead` on pass, or back to the author with `status: rejected`
 and the round number on fail.

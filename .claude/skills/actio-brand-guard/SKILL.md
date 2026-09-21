@@ -10,7 +10,8 @@ the operational bridge: what to check before you ship, what goes wrong most ofte
 which of the vendored design skills you are allowed to apply to an Actio surface.
 
 **Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins.** Record the override in
-your `review.md` so the next person knows the departure was deliberate.
+`.actio/runs/<run-id>/<agent>/review.md` so the next person knows the departure was
+deliberate.
 
 ---
 
@@ -23,8 +24,13 @@ Work through this. Every line is a yes or a finding. Do not ship on a maybe.
 - [ ] Every colour traced to a token in `BRAND.md` §1. No new hex anywhere.
 - [ ] Roughly 70% neutral surface, 20% ink text, 10% Vega. If Vega is doing more than
       punctuation, cut it.
-- [ ] **One** accent element per view. It marks the routing lane and the single primary
-      action. Two primaries means neither is.
+- [ ] **One** accent element per view. It marks the single primary action. Two primaries
+      means neither is.
+- [ ] At most one inverted surface per view: Cosmos `#0C0C0C` ground, Halo `#EFEFEF`
+      primary text, Vega 200 `#6FE0E5` for the accent figure. The inverted surface and the
+      primary button are the same accent budget.
+- [ ] Routing lane and status are never merged into one colour. The lane is a 3px left
+      accent rule at radius 0 in the state colour. The status is a pill with a written label.
 - [ ] No white on Vega 400 anywhere. Measured 2.27:1, fails. Cosmos on Vega 400 is the
       approved pairing at 8.62:1.
 - [ ] Vega 400 is never body text. Vega 600 or darker on a light ground.
@@ -60,7 +66,7 @@ Work through this. Every line is a yes or a finding. Do not ship on a maybe.
 - [ ] Sentence case. No emoji. No exclamation marks in system copy.
 - [ ] Every percentage carries its sample size.
 - [ ] Every status carries a written label, not only a colour.
-- [ ] No banned vocabulary. See `BRAND.md` §2.
+- [ ] No banned vocabulary. See `BRAND.md` §5.
 - [ ] The one check: could a competitor publish this sentence unchanged? Then it carries
       no information. Rewrite it.
 
@@ -115,7 +121,7 @@ kept for their craft, not for their aesthetics. Actio's brand overrides all of t
 | `composition-patterns` | React component API design, compound components, avoiding boolean prop sprawl | Nothing. Structural, not visual. |
 | `react-best-practices` | React and Next.js performance, which is a user-safety concern on the target device | Nothing. |
 | `react-view-transitions` | Route and state transitions, within Actio's motion budget | 200ms maximum, one curve, transform and opacity only, reduced motion honoured. |
-| `writing-guidelines` | Prose and docs review | Actio's register is narrower. `BRAND.md` §2 wins on voice. |
+| `writing-guidelines` | Prose and docs review | Actio's register is narrower. `BRAND.md` §5 wins on voice. |
 | `output-skill` | Preventing truncated or placeholder output on long generation tasks | Nothing. |
 | `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Front-end deploy and cost work | Back end is Django and deploys elsewhere. |
 

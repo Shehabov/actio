@@ -49,7 +49,7 @@ Shehab Beram is the Product Lead. He is the only role that can change scope, acc
 release, or overrule a gate. Everything else is an agent in `.claude/agents/`.
 
 ```
-L0  Shehab Beram — Product Lead (human)
+L0  Shehab Beram · Product Lead (human)
 L1  orchestrator
 L2  tech-architect · engineering-lead · qc-lead
 L3  ux-designer · ux-auditor · ux-writer · frontend-engineer · backend-engineer
@@ -63,15 +63,15 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 |---|---|---|
 | `orchestrator` | The run. Routing, gate enforcement, the utilisation check. | Run closure |
 | `tech-architect` | Architecture of record, ADRs, task briefs for FE and BE | Design authority |
-| `ux-designer` | Design specs for every surface | — |
+| `ux-designer` | Design specs for every surface | – |
 | `ux-auditor` | Independent audit of design and shipped UI | Design gate |
 | `ux-writer` | Every string, English and Arabic | Copy gate |
-| `frontend-engineer` | React and Next.js implementation | — |
-| `backend-engineer` | Django and DRF implementation | — |
+| `frontend-engineer` | React and Next.js implementation | – |
+| `backend-engineer` | Django and DRF implementation | – |
 | `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 2) |
 | `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 2) |
 | `engineering-lead` | Integration. Does it actually work end to end. | Engineering gate |
-| `qc-engineer` | Testing APIs, code and product, with evidence | — |
+| `qc-engineer` | Testing APIs, code and product, with evidence | – |
 | `qc-lead` | Evidence audit, independent final pass, go or no-go | Quality gate |
 | `release-engineer` | Deploy, commit, tag, verify, roll back | Release gate |
 
@@ -105,11 +105,11 @@ and the orchestrator is the role that catches it.
 Every agent, every task, no exceptions. Defined in full in
 [`.claude/skills/actio-agent-protocol/SKILL.md`](./.claude/skills/actio-agent-protocol/SKILL.md).
 
-1. **Plan** — inputs, assumptions, acceptance criteria, out of scope, the rules that constrain it.
-2. **Audit the plan** — adversarially, before executing. What is missing, what did I assume without checking, which Actio rule could this break, what would the downstream agent reject. Revise, and record what changed.
-3. **Execute** — against the audited plan.
-4. **Review** — your own output, against your own acceptance criteria, against `BRAND.md`, and against your role's definition of done. Fix it, or state plainly what you could not fix and why.
-5. **Hand off** — write the handoff record so the next agent and the orchestrator can verify you ran and what you produced.
+1. **Plan:** inputs, assumptions, acceptance criteria, out of scope, the rules that constrain it.
+2. **Audit the plan:** adversarially, before executing. What is missing, what did I assume without checking, which Actio rule could this break, what would the downstream agent reject. Revise, and record what changed.
+3. **Execute:** against the audited plan.
+4. **Review:** your own output, against your own acceptance criteria, against `BRAND.md`, and against your role's definition of done. Fix it, or state plainly what you could not fix and why.
+5. **Hand off:** write the handoff record so the next agent and the orchestrator can verify you ran and what you produced.
 
 ---
 
@@ -158,7 +158,7 @@ These apply to every agent and to any session in this repository.
 
 ## Skills
 
-`.claude/skills/` holds eleven house skills prefixed `actio-` and twenty-two vendored
+`.claude/skills/` holds twelve house skills prefixed `actio-` and twenty-two vendored
 skills. Each agent declares the skills it is coupled with in its own file.
 
 | House skill | For |
@@ -166,6 +166,7 @@ skills. Each agent declares the skills it is coupled with in its own file.
 | `actio-agent-protocol` | Every agent. The five-step loop, artefacts, handoff schema. |
 | `actio-orchestration` | Run planning, gate enforcement, the utilisation check |
 | `actio-brand-guard` | Brand pre-flight, and the vendored skill policy |
+| `actio-design-system` | The platform: shell anatomy, the inversion rule, components, density |
 | `actio-ux-audit` | The UX audit rubric |
 | `actio-bilingual-copy` | English and Arabic product copy |
 | `actio-architecture` | Domain model, invariants, ADRs, task briefs |
@@ -181,6 +182,18 @@ Vendored packs, unmodified from source:
 |---|---|---|
 | taste skills (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
 | Vercel agent skills (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
+
+### Design references
+
+Three approved references in [`docs/design-reference/`](./docs/design-reference/) set the
+platform shape: an assistant shell, an operations dashboard, and a minimal canvas. The
+dashboard is the primary one.
+
+**Take the structure, hold the surface to `BRAND.md`.** Anatomy, density, hierarchy and
+interaction come from the references. Colour, gradient, motion and copy style come from the
+spec. The references use a lime accent, soft gradients, tinted callouts, multi-hue chart
+ramps and Title Case, all of which Actio bans. The full adopt, adapt and reject table is in
+[`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md).
 
 **Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins** and the override is
 recorded. Several taste skills optimise for premium, decorative aesthetics that Actio bans

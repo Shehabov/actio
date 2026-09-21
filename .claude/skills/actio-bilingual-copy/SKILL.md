@@ -12,7 +12,7 @@ companion, not a coach, no name it speaks in, no first person.
 The reader deciding whether to answer honestly is assessing risk. Enthusiasm reads as a
 sales pitch. Precision reads as a system that will behave predictably.
 
-Full voice rules are in `BRAND.md` §2. This skill is the working method.
+Full voice rules are in `BRAND.md` §5. This skill is the working method.
 
 ---
 

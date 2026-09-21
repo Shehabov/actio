@@ -42,9 +42,10 @@ transfers ownership of the design back to you.
 
 Done means all of the following are true and recorded:
 
-1. Every screen, state and breakpoint in the handoff has been opened and inspected. Empty,
-   loading, error, offline, partial-permission, zero-results, single-item and long-content
-   states included. A state you could not reach is a finding, not an omission.
+1. Every screen, state and breakpoint in the handoff has been opened and inspected. All eight
+   states named in `actio-design-system` included: empty, loading, partial, error, dense,
+   protected, below threshold and offline. A state you could not reach is a finding, not an
+   omission.
 2. Every colour pair actually used has a **computed** contrast ratio in the evidence directory.
    Estimated, remembered or eyeballed ratios do not count.
 3. Every finding carries: what, where (file and line, or screen and element), which rule or
@@ -62,8 +63,9 @@ evidence behind each pass. Zero findings with thin evidence is a defect in your 
 
 | Skill | When you invoke it |
 |---|---|
-| `actio-agent-protocol` | Step 1, before anything else. Gives you the run directory layout, the handoff schema, the ledger convention and the rejection protocol. Read it first so your artefacts parse. |
+| `actio-agent-protocol` | Step 1, before anything else. Gives you the run directory layout, the handoff schema, what counts as evidence and the rejection protocol. Read it first so your artefacts parse. |
 | `actio-brand-guard` | Step 3, first pass. The mechanical sweep: token values, banned hexes, off-scale spacing, radius, motion curves, type sizes, mono numerals. Run it before you look at anything subjective. |
+| `actio-design-system` | Step 3, inside passes A and B, whenever there is a spec or a built screen to check against the system. Shell anatomy, the inversion rule, metric tiles, card taxonomy, queue rules, chart series, the mobile-first translation table. `actio-brand-guard` tells you whether a surface is on brand; this tells you whether it is the right structure. Its pre-flight list is the same list the designer signed, so a surface that fails there fails here too. |
 | `actio-ux-audit` | Step 3, second pass, and again in step 4. The Actio-specific heuristic and accessibility checklist, the severity ladder and the finding record shape. This is your core instrument, and in step 4 it is the checklist you re-run against your own finding set. |
 | `web-design-guidelines` | Step 3, third pass, when there is implemented markup or CSS to read. Catches focus management, hit areas, form semantics, keyboard traps and layout defects at the code level. |
 | `taste-skill` | Step 3, fourth pass. Use it as a detector for templated, interchangeable interface patterns. Use its judgement, not its aesthetic preferences: `BRAND.md` outranks it wherever they disagree. |
@@ -129,6 +131,24 @@ direction      left/right physical properties where logical are required
 view. Emoji. Exclamation marks. Counting-up or animating numbers. Skeleton shimmer. A percentage
 without its sample size. A status colour without its written label. Any item on the
 `BRAND.md` section 6 prohibited list.
+
+The design system adds the following, and they are audited the same way. Every one of them is a
+structural fact you can read off the markup, the spec or a single screenshot, so none of them is a
+judgement call.
+
+| Failure | Rule it breaks | How you prove it |
+|---|---|---|
+| More than one inverted surface in a view, or an inverted surface with a second accent element beside it | The inversion rule. One surface per view inverts to Cosmos, and the inverted tile and the primary button are the same accent budget | Count the inverted surfaces and the emphatic elements in one frame of the view. Two of either is a finding |
+| A metric tile carrying a border, a card wrapper, a fill or a shadow | Metric tile. These are readings, not objects, and they separate by space alone | Read the markup or the layer list. Any border, background, radius or shadow on the tile is a finding |
+| An alert drawn as a tinted callout box instead of a left accent rule 3px at radius 0 with a hairline and Ink 50 ground | Card taxonomy, and the rejected list. Tinted callouts are off-brand | Read the fill on the alert container. A tint is a finding even when the tint is Vega |
+| Lane and status merged into a single colour signal | The queue. Lane is who owns it, status is where it has reached, and one colour cannot carry both | Compare the two on one row. Sharing a hue is a finding, and so is a pill doing duty as the lane indicator |
+| A card inside a card | Card taxonomy. Group inside a card with a hairline and space | Read the DOM or the layer tree, not the screenshot. Nesting is a finding even when the inner card has no border |
+| A desktop layout that was clearly not derived from the 360px view: a table that only works wide, a column set that survives only as horizontal scroll, a top bar action with nowhere to go in the bottom bar | Mobile first. The 360px view is designed first and desktop inherits from it | Ask for the 360px artefact. If it does not exist, or the desktop view cannot be traced back to it, it is a finding, and you write it in these words: a layout that only works at 1440px on a desk has failed |
+| A chart series beyond Vega 400, Ink 500 and Vega 200, or a sibling hue anywhere in a ramp | Charts. No fourth colour, and the ageing ramp in `ref-02` is exactly what not to do | Count the distinct series colours. Four is a finding. One sibling hue is a finding on its own |
+
+All seven are majors at minimum. The mobile one is a blocker when the 360px view is unusable
+rather than merely cramped, and the inversion one is a blocker when the competing accent is the
+primary action, because then the view has no primary action.
 
 **Pass C, heuristics.** Name the heuristic in the finding. The ten you audit against:
 
@@ -253,7 +273,10 @@ frontline worker on the baseline device.
 covered, 48x48 targets throughout, focus visible and ordered, colour never the sole carrier, 200%
 zoom clean at 360px, reduced motion honoured, Arabic mirrored, longest locale fitted, nothing from
 the `BRAND.md` section 6 list present, one primary action per view, every number in Plex Mono with
-its sample size, every status with its written label.
+its sample size, every status with its written label. Add to that, from the design system: at most
+one inverted surface per view, metric tiles with no chrome, alerts as a left accent rule rather
+than a tinted box, lane and status kept as separate signals, no card inside a card, a desktop
+layout traceable to the 360px view, and no chart series outside Vega 400, Ink 500 and Vega 200.
 
 **Fail** on any blocker or major, or on any check you could not perform. An unperformed check is a
 fail, never a pass with a note. Record the verdict, the reason and the evidence.

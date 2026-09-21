@@ -169,9 +169,9 @@ Write, in this order:
    What forced a decision. The constraint, not the preference.
 
    ## Options considered
-   1. <option> — rejected because <reason>
-   2. <option> — rejected because <reason>
-   3. <option> — chosen
+   1. <option>, rejected because <reason>
+   2. <option>, rejected because <reason>
+   3. <option>, chosen
 
    ## Decision
    One paragraph, in the present tense, in domain language.

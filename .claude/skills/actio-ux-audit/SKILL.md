@@ -38,6 +38,10 @@ right-aligned so a queue scans vertically, but a date the reader cannot act on i
 less than a state they can.
 ```
 
+The Rule row names where the rule lives. A brand finding cites `BRAND.md`. A finding
+against the platform design system cites `actio-design-system`, and quotes the rule rather
+than only naming the skill, so the designer can act on the row without opening the file.
+
 ### Severity
 
 | Severity | Means | Gate effect |
@@ -167,14 +171,77 @@ happen and somebody will meet it.
 | Dark | | Surfaces separate by lightening, never by shadow. Halo, never pure white. |
 | 200% zoom | | No clipping, no overlap |
 
+## 7. The platform design system
+
+These come from `actio-design-system`, which derives them from the approved references in
+`docs/design-reference/`. A break here is Major. Where the same thing also appears in
+section 1 it is a Blocker, and you file it against the ban.
+
+**Shell**
+
+- [ ] Sidebar 264px. Section labels in Plex Mono 12px uppercase, Ink 500, no second tier.
+- [ ] Top bar 64px, actions inline-end, exactly one primary action in the view.
+- [ ] Canvas at 1200px for data, 720px for reading. Neither width is invented per screen.
+
+**Inversion**
+
+- [ ] Exactly one inverted surface in the view, or none. Two is a finding on its own.
+- [ ] Nothing competes with it. The inverted surface and the primary button share one
+      accent budget, so no third emphatic element sits beside them.
+- [ ] The inverted surface carries the one thing the reader came for, not whatever happened
+      to look good inverted.
+
+**Metric tiles**
+
+- [ ] No border, no card chrome, no shadow. These are readings, separated by space alone.
+- [ ] Label in Plex Mono uppercase, 12px, Ink 500.
+- [ ] Figure in Plex Mono with tabular figures.
+- [ ] Every percentage carries `n=` in the sub-label.
+- [ ] Delta written as `+4pp`, never `+4%`, and carrying its arrow, so colour is never the
+      only signal.
+
+**Cards**
+
+- [ ] 12px radius, Ink 150 hairline, no shadow anywhere in the document flow.
+- [ ] 24px padding, 16px on mobile.
+- [ ] No card inside a card. Group with a hairline and space instead.
+- [ ] Every issue card carries its identifier in Plex Mono at the block-end inline-end
+      corner. It is how support conversations locate an item.
+
+**Alert rows**
+
+- [ ] Left accent rule 3px at radius 0, hairline border, Ink 50 ground.
+- [ ] Never a tinted fill. The tinted callout box is the reference pattern Actio rejects.
+
+**Queue**
+
+- [ ] Rows 44px, 52px on touch.
+- [ ] Hairline between rows. No zebra striping.
+- [ ] Lane and status read as separate signals and are never merged into one colour.
+- [ ] Dates right aligned in Plex Mono, so a long queue scans vertically.
+- [ ] Sorted overdue first, then in progress by deadline, then open, then closed. Never by
+      severity: severity is a judgement, a deadline is a fact.
+
+**Charts**
+
+- [ ] Vega 400, Ink 500, Vega 200 and nothing else. No fourth colour, no sibling hue, no
+      multi-hue ramp for ageing buckets.
+- [ ] Sample size beside every percentage.
+
+**Mobile**
+
+- [ ] The 360px view exists as a designed artefact, not as a note saying it will collapse.
+- [ ] The desktop layout derives from it, not the reverse. Section 4 asks this from the
+      reader's side; here you ask it of the spec.
+
 ---
 
 ## Running an audit
 
 1. Read the design spec or open the built surface. Read the task brief it claims to
    implement, and the relevant ADR.
-2. Work the six checklists in order. Colour and bans first, because they are objective and
-   fast, and a blocker there ends the audit early.
+2. Work the seven checklists in order. Colour and bans first, because they are objective
+   and fast, and a blocker there ends the audit early.
 3. Capture evidence as you go, into `.actio/runs/<run-id>/evidence/`. Screenshot at the
    real width. Measure contrast with both hex values, do not eyeball it.
 4. Write findings into `.actio/runs/<run-id>/ux-auditor/findings.md`, numbered, ordered by

@@ -63,13 +63,13 @@ different shape and lives in [`WORKFLOW.md`](./WORKFLOW.md).
 
 ## The roster
 
-### L0 — Product Lead
+### L0 · Product Lead
 
 **Shehab Beram.** Human. Sets the brief. The only role that can change scope, accept a
 release, or overrule a gate. Agents never assume his approval; when a decision is his, the
 agent stops and states the decision needed, the options, and its recommendation.
 
-### L1 — Orchestrator
+### L1 · Orchestrator
 
 | | |
 |---|---|
@@ -83,7 +83,7 @@ ledger, and runs the **utilisation check**: did every agent that should have run
 run, and was every agent that ran actually used. An agent whose output nobody consumed is a
 utilisation failure and gets reported, not hidden. Does not design, code, review or test.
 
-### L2 — Chapter leads
+### L2 · Chapter leads
 
 | Agent | Owns | Gate | Skills |
 |---|---|---|---|
@@ -91,22 +91,22 @@ utilisation failure and gets reported, not hidden. Does not design, code, review
 | [`engineering-lead`](../.claude/agents/engineering-lead.md) | Integration. Does it work end to end. | Engineering gate | `actio-code-review`, `actio-architecture` |
 | [`qc-lead`](../.claude/agents/qc-lead.md) | Evidence audit, final independent pass | Quality gate | `actio-test-protocol` |
 
-### L3 — Makers and checkers
+### L3 · Makers and checkers
 
 **Design chapter**
 
 | Agent | Owns | Gate | Skills beyond the protocol |
 |---|---|---|---|
-| [`ux-designer`](../.claude/agents/ux-designer.md) | Design specs for every surface | — | `actio-brand-guard`, `taste-skill`, `minimalist-skill`, `brandkit`, `output-skill`, `web-design-guidelines`, `composition-patterns` |
-| [`ux-auditor`](../.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design gate | `actio-ux-audit`, `actio-brand-guard`, `redesign-skill`, `web-design-guidelines`, `taste-skill` |
+| [`ux-designer`](../.claude/agents/ux-designer.md) | Design specs for every surface | – | `actio-design-system`, `actio-brand-guard`, `taste-skill`, `minimalist-skill`, `brandkit`, `output-skill`, `web-design-guidelines`, `composition-patterns` |
+| [`ux-auditor`](../.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design gate | `actio-design-system`, `actio-ux-audit`, `actio-brand-guard`, `redesign-skill`, `web-design-guidelines`, `taste-skill` |
 | [`ux-writer`](../.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy gate | `actio-bilingual-copy`, `actio-brand-guard`, `writing-guidelines` |
 
 **Engineering chapter**
 
 | Agent | Owns | Gate | Skills beyond the protocol |
 |---|---|---|---|
-| [`frontend-engineer`](../.claude/agents/frontend-engineer.md) | React and Next.js implementation | — | `actio-brand-guard`, `react-best-practices`, `composition-patterns`, `react-view-transitions`, `web-design-guidelines` |
-| [`backend-engineer`](../.claude/agents/backend-engineer.md) | Django and DRF implementation | — | `actio-django` |
+| [`frontend-engineer`](../.claude/agents/frontend-engineer.md) | React and Next.js implementation | – | `actio-design-system`, `actio-brand-guard`, `react-best-practices`, `composition-patterns`, `react-view-transitions`, `web-design-guidelines` |
+| [`backend-engineer`](../.claude/agents/backend-engineer.md) | Django and DRF implementation | – | `actio-django` |
 | [`peer-reviewer`](../.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review gate, 1 of 2 | `actio-code-review` |
 | [`code-analyst`](../.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review gate, 2 of 2 | `actio-code-analysis` |
 
@@ -114,7 +114,7 @@ utilisation failure and gets reported, not hidden. Does not design, code, review
 
 | Agent | Owns | Gate | Skills beyond the protocol |
 |---|---|---|---|
-| [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | — | `actio-test-protocol`, `actio-brand-guard` |
+| [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – | `actio-test-protocol`, `actio-brand-guard` |
 | [`release-engineer`](../.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release gate | `actio-release`, `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` |
 
 ---

@@ -127,17 +127,25 @@ and the brand rule it was about to break, at the point where fixing it costs not
 
 ## The gates
 
-| # | Gate | Owner | Passes when |
-|---|---|---|---|
-| 1 | Design authority | `tech-architect` | The ADR is written, the task briefs are unambiguous, and the change does not erode a system boundary |
-| 2 | Design | `ux-auditor` | No blocker or major findings remain, every state is covered, accessibility is measured not estimated, and the layout survives the longest locale |
-| 3 | Copy | `ux-writer` | Every string exists in English and Arabic, passes the competitor check, and no string concatenates a count |
-| 4 | Review, 1 of 2 | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, and its failure modes are handled |
-| 5 | Review, 2 of 2 | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
-| 6 | Engineering | `engineering-lead` | Both reviews ran and passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
-| 7 | Quality | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
-| 8 | Release | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
-| 9 | Run closure | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
+**This table is canonical.** The `name` column is the literal string written into
+`run.json` and echoed back in the owner's `handoff.json`. The utilisation check matches on
+it exactly, so a gate is never renamed for a run.
+
+| # | Gate | `name` | Owner | Passes when |
+|---|---|---|---|---|
+| 1 | Design authority | `design-authority` | `tech-architect` | The ADR is written, the task briefs are unambiguous, and the change does not erode a system boundary |
+| 2 | Design | `design` | `ux-auditor` | No blocker or major findings remain, every state is covered, accessibility is measured not estimated, and the layout survives the longest locale |
+| 3 | Copy | `copy` | `ux-writer` | Every string exists in English and Arabic, passes the competitor check, and no string concatenates a count |
+| 4 | Review, 1 of 2 | `review-1of2` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, and its failure modes are handled |
+| 5 | Review, 2 of 2 | `review-2of2` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
+| 6 | Engineering | `engineering` | `engineering-lead` | Both reviews ran and passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
+| 7 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
+| 8 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
+| 9 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
+
+The two review gates are separate names rather than one gate with two owners, so the
+utilisation check can say which reviewer is outstanding instead of reporting a single
+ambiguous failure.
 
 A stage does not start until its upstream gate reads pass. The orchestrator is the role
 that catches a skipped gate, and a skipped gate is a defect rather than a shortcut.

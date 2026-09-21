@@ -21,41 +21,64 @@ Written once at the start of a run, amended only by appending to `amendments`.
 {
   "run": "2026-09-20-privacy-preview",
   "brief": "Add the privacy preview screen ahead of the first response in a cycle. It must show the real group size, the reporting threshold, the fields a manager can filter by, and what happens to free text.",
-  "requested_by": "shehab",
   "opened": "2026-09-20T08:02:11Z",
-  "definition_of_done": [
+  "ships": true,
+  "done_means": [
     "The screen renders at 360px in all four locales, both themes",
     "Every figure is computed for the reader, never illustrative",
     "A cohort below threshold degrades without leaking its size",
     "Privacy invariant tests cover all three above",
     "qc-lead has issued a go"
   ],
-  "stages": [
-    { "stage": "architecture", "agents": ["tech-architect"], "gate": "design-authority", "gate_owner": "tech-architect", "depends_on": [] },
-    { "stage": "design", "agents": ["ux-designer", "ux-auditor"], "gate": "design", "gate_owner": "ux-auditor", "depends_on": ["architecture"] },
-    { "stage": "copy", "agents": ["ux-writer"], "gate": "copy", "gate_owner": "ux-writer", "depends_on": ["design"] },
-    { "stage": "build", "agents": ["frontend-engineer", "backend-engineer"], "gate": null, "gate_owner": null, "depends_on": ["architecture", "copy"] },
-    { "stage": "review", "agents": ["peer-reviewer", "code-analyst"], "gate": "review", "gate_owner": "both", "depends_on": ["build"] },
-    { "stage": "integration", "agents": ["engineering-lead"], "gate": "engineering", "gate_owner": "engineering-lead", "depends_on": ["review"] },
-    { "stage": "test", "agents": ["qc-engineer"], "gate": null, "gate_owner": null, "depends_on": ["integration"] },
-    { "stage": "quality", "agents": ["qc-lead"], "gate": "quality", "gate_owner": "qc-lead", "depends_on": ["test"] },
-    { "stage": "release", "agents": ["release-engineer"], "gate": "release", "gate_owner": "release-engineer", "depends_on": ["quality"] }
-  ],
   "out_of_scope": [
     "The WhatsApp variant of this message",
     "Changing the threshold itself"
   ],
-  "amendments": []
+  "plan": [
+    { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs", "consumes": ["run.json"], "produces": ["tech-architect/adr-0004-reporting-threshold.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
+    { "stage": 2, "agent": "ux-designer", "task": "Design spec, every surface and every state", "consumes": ["tech-architect/brief-frontend.md"], "produces": ["ux-designer/spec.md"], "blocked_by": ["design-authority"] },
+    { "stage": 2, "agent": "backend-engineer", "task": "Django and DRF implementation", "consumes": ["tech-architect/brief-backend.md"], "produces": ["<source paths>"], "blocked_by": ["design-authority"] },
+    { "stage": 3, "agent": "ux-auditor", "task": "Independent audit of the design spec", "consumes": ["ux-designer/spec.md"], "produces": ["ux-auditor/findings.md"], "blocked_by": [] },
+    { "stage": 4, "agent": "ux-writer", "task": "English and Arabic strings for every new surface", "consumes": ["ux-designer/spec.md", "ux-auditor/findings.md"], "produces": ["ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "blocked_by": ["design"] },
+    { "stage": 5, "agent": "frontend-engineer", "task": "React and Next.js implementation", "consumes": ["tech-architect/brief-frontend.md", "ux-designer/spec.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "produces": ["<source paths>"], "blocked_by": ["design", "copy"] },
+    { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>"], "produces": ["peer-reviewer/review.md"], "blocked_by": [] },
+    { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
+    { "stage": 7, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of2", "review-2of2"] },
+    { "stage": 8, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md"], "produces": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
+    { "stage": 9, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "produces": ["qc-lead/verdict.md"], "blocked_by": [] },
+    { "stage": 10, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/verdict.md"], "produces": ["release-engineer/release-notes.md", "evidence/post-deploy-smoke.log"], "blocked_by": ["quality"] }
+  ],
+  "gates": [
+    { "name": "design-authority", "owner": "tech-architect", "blocks": ["ux-designer", "backend-engineer"], "result": "pending" },
+    { "name": "design", "owner": "ux-auditor", "blocks": ["ux-writer", "frontend-engineer"], "result": "pending" },
+    { "name": "copy", "owner": "ux-writer", "blocks": ["frontend-engineer"], "result": "pending" },
+    { "name": "review-1of2", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "review-2of2", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "engineering", "owner": "engineering-lead", "blocks": ["qc-engineer"], "result": "pending" },
+    { "name": "quality", "owner": "qc-lead", "blocks": ["release-engineer"], "result": "pending" },
+    { "name": "release", "owner": "release-engineer", "blocks": [], "result": "pending" },
+    { "name": "run-closure", "owner": "orchestrator", "blocks": [], "result": "pending" }
+  ],
+  "utilisation": []
 }
 ```
 
 Rules for the plan:
 
-- Every stage names its agents, its gate, and the single agent that owns that gate.
-- `review` is the one stage with two gate owners. Both must pass.
-- A stage with no gate still produces handoffs. Not every stage gates; every stage records.
+- One `plan` entry per agent, not per stage. Two agents sharing a stage number run
+  concurrently, which is how `peer-reviewer` and `code-analyst` stay independent.
+- `consumes` and `produces` in the plan are what the utilisation check measures the actual
+  handoffs against. A plan entry with an empty `produces` cannot be verified, so fill it in
+  even where the paths are placeholders.
+- `blocked_by` names gates, never agents. A stage starts when every gate it names reads
+  `pass`.
+- The nine gate names are canonical and come from the gate table in `docs/WORKFLOW.md`.
+  **Never rename one for a run**, because the owner writes the same name back in its
+  handoff and the check matches on it literally.
 - Skipping an agent is a plan decision, made at planning time and written in
   `out_of_scope` with a reason. It is never a silent omission at run time.
+- Amend the plan by appending a new entry and recording the amendment in `ledger.md`.
+  Never edit a plan entry in place once the run has started.
 
 ---
 
@@ -86,16 +109,22 @@ editing history.
 
 ## Gate table
 
+Nine gates. These literal names go into `run.json` and come back in each owner's handoff.
+
 | Gate | Owner | Passes when |
 |---|---|---|
 | `design-authority` | `tech-architect` | ADR written, task briefs unambiguous, no boundary eroded |
 | `design` | `ux-auditor` | No blocker or major findings open, states covered, accessibility measured, survives the longest locale |
 | `copy` | `ux-writer` | Every string in English and Arabic, passes the competitor check, no string concatenates a count |
-| `review` | `peer-reviewer` **and** `code-analyst` | Both pass independently |
+| `review-1of2` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, failure modes handled |
+| `review-2of2` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
 | `engineering` | `engineering-lead` | Both reviews ran and passed, it builds, it migrates, suite green, works end to end with evidence |
 | `quality` | `qc-lead` | Evidence exists and shows what the log claims, untested surface named, product claims still hold |
 | `release` | `release-engineer` | Pre-flight clean, go from qc-lead, rollback plan written before deploy, post-deploy smoke passed |
-| `closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
+| `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
+
+The two review gates are separate names rather than one gate with two owners, so the check
+can tell which reviewer is outstanding instead of reporting a single ambiguous failure.
 
 A stage does not start until every gate it depends on reads pass. Enforce this before
 dispatching, not after.
@@ -155,7 +184,7 @@ For each agent in the run plan, in stage order:
 RUN=.actio/runs/2026-09-20-privacy-preview
 
 # 1. which agents in the plan have no handoff
-for a in $(jq -r '.stages[].agents[]' $RUN/run.json | sort -u); do
+for a in $(jq -r '.plan[].agent' $RUN/run.json | sort -u); do
   [ -f "$RUN/$a/handoff.json" ] || echo "NEVER_RAN: $a"
 done
 
@@ -185,11 +214,29 @@ while IFS=$'\t' read -r a p; do
   [ -e "$p" ] || echo "FALSE_CONSUMPTION: $a -> $p"
 done
 
+# 6. gates in the plan with no result, or whose evidence path is missing
+jq -r '.gates[] | select(.result=="pending") | "GATE_UNRESOLVED: \(.name) (owner \(.owner))"' $RUN/run.json
+jq -r '.agent as $a | .gates[]? | "\($a)\t\(.name)\t\(.evidence // "")"' $RUN/*/handoff.json |
+while IFS=$'\t' read -r a g e; do
+  [ -n "$e" ] && [ -e "$e" ] || echo "GATE_UNRESOLVED: $a certified $g with missing evidence '$e'"
+done
+
 # 7. gates certified by an agent the plan does not name as owner
 jq -r '.agent as $a | .gates[]? | "\($a)\t\(.name)"' $RUN/*/handoff.json |
 while IFS=$'\t' read -r a g; do
-  owner=$(jq -r --arg g "$g" '.stages[] | select(.gate==$g) | .gate_owner' $RUN/run.json)
-  [ "$owner" = "$a" ] || [ "$owner" = "both" ] || echo "GATE_SELF_CERTIFIED: $a claimed $g, owner is $owner"
+  owner=$(jq -r --arg g "$g" '.gates[] | select(.name==$g) | .owner' $RUN/run.json)
+  [ -n "$owner" ] || { echo "UNKNOWN_GATE: $a claimed '$g', not in the plan"; continue; }
+  [ "$owner" = "$a" ] || echo "GATE_SELF_CERTIFIED: $a claimed $g, owner is $owner"
+done
+
+# 8. a stage that started before every gate in its blocked_by read pass
+jq -r '.plan[] | select((.blocked_by|length)>0) | "\(.agent)\t\(.blocked_by|join(","))"' $RUN/run.json |
+while IFS=$'\t' read -r a gates; do
+  [ -f "$RUN/$a/handoff.json" ] || continue
+  for g in $(echo "$gates" | tr ',' ' '); do
+    r=$(jq -r --arg g "$g" '.gates[] | select(.name==$g) | .result' $RUN/run.json)
+    [ "$r" = "pass" ] || echo "GATE_SKIPPED: $a ran while gate $g was '$r'"
+  done
 done
 ```
 
@@ -218,7 +265,7 @@ Always as a table, always blocking, never buried in prose.
 | Finding | Agent | Detail | Action |
 |---|---|---|---|
 | UNUSED_OUTPUT | ux-writer | `ux-writer/strings.ar.json` appears in no consumed list | frontend-engineer built the screen without the Arabic catalogue. Re-dispatch frontend-engineer. |
-| GATE_UNRESOLVED | code-analyst | gate `review` has no entry | code-analyst ran but did not certify. Send back. |
+| GATE_UNRESOLVED | code-analyst | gate `review-2of2` has no entry | code-analyst ran but did not certify. Send back. |
 
 **Run status: blocked.** 2 findings. Stage `integration` will not be dispatched.
 ```
@@ -261,15 +308,15 @@ Written at closure, for Shehab. Plain, specific, no summary language.
 | Agent | Produced | Gate |
 |---|---|---|
 | tech-architect | ADR-004, 2 task briefs | design-authority: pass |
-| ux-designer | spec, 7 states | — |
+| ux-designer | spec, 7 states | – |
 | ux-auditor | 11 findings, 11 closed | design: pass |
 | ux-writer | 24 strings, EN and AR | copy: pass |
-| frontend-engineer | 6 files | — |
-| backend-engineer | 9 files, privacy invariant suite | — |
+| frontend-engineer | 6 files | – |
+| backend-engineer | 9 files, privacy invariant suite | – |
 | peer-reviewer | 4 comments, 4 resolved | review 1 of 2: pass |
 | code-analyst | 7 findings, 6 fixed, 1 accepted | review 2 of 2: pass |
 | engineering-lead | integration evidence | engineering: pass |
-| qc-engineer | 38 cases, 3 defects filed and fixed | — |
+| qc-engineer | 38 cases, 3 defects filed and fixed | – |
 | qc-lead | readiness report | quality: go |
 | release-engineer | deployed, tagged v0.4.0 | release: pass |
 
