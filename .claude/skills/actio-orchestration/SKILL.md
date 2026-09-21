@@ -35,7 +35,8 @@ Written once at the start of a run, amended only by appending to `amendments`.
     "Changing the threshold itself"
   ],
   "plan": [
-    { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs", "consumes": ["run.json"], "produces": ["tech-architect/adr-0004-reporting-threshold.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
+    { "stage": 1, "agent": "bug-historian", "task": "Regression brief: what has already broken on these surfaces", "consumes": ["run.json"], "produces": ["bug-historian/brief.md"], "blocked_by": [] },
+    { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs", "consumes": ["run.json", "bug-historian/brief.md"], "produces": ["tech-architect/adr-0004-reporting-threshold.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
     { "stage": 2, "agent": "ux-designer", "task": "Design spec, every surface and every state", "consumes": ["tech-architect/brief-frontend.md"], "produces": ["ux-designer/spec.md"], "blocked_by": ["design-authority"] },
     { "stage": 2, "agent": "backend-engineer", "task": "Django and DRF implementation", "consumes": ["tech-architect/brief-backend.md"], "produces": ["<source paths>"], "blocked_by": ["design-authority"] },
     { "stage": 3, "agent": "ux-auditor", "task": "Independent audit of the design spec", "consumes": ["ux-designer/spec.md"], "produces": ["ux-auditor/findings.md"], "blocked_by": [] },
@@ -43,17 +44,21 @@ Written once at the start of a run, amended only by appending to `amendments`.
     { "stage": 5, "agent": "frontend-engineer", "task": "React and Next.js implementation", "consumes": ["tech-architect/brief-frontend.md", "ux-designer/spec.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "produces": ["<source paths>"], "blocked_by": ["design", "copy"] },
     { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>"], "produces": ["peer-reviewer/review.md"], "blocked_by": [] },
     { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
-    { "stage": 7, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of2", "review-2of2"] },
-    { "stage": 8, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md"], "produces": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
-    { "stage": 9, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "produces": ["qc-lead/verdict.md"], "blocked_by": [] },
-    { "stage": 10, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/verdict.md"], "produces": ["release-engineer/release-notes.md", "evidence/post-deploy-smoke.log"], "blocked_by": ["quality"] }
+    { "stage": 6, "agent": "code-steward", "task": "Clean code: naming, shape, module headers, comments, maintainability", "consumes": ["<source paths>"], "produces": ["code-steward/findings.md"], "blocked_by": [] },
+    { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3"] },
+    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md", "code-steward/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "regression-guard"] },
+    { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md"], "produces": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
+    { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "produces": ["qc-lead/verdict.md"], "blocked_by": [] },
+    { "stage": 11, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/verdict.md"], "produces": ["release-engineer/release-notes.md", "evidence/post-deploy-smoke.log"], "blocked_by": ["quality"] }
   ],
   "gates": [
     { "name": "design-authority", "owner": "tech-architect", "blocks": ["ux-designer", "backend-engineer"], "result": "pending" },
     { "name": "design", "owner": "ux-auditor", "blocks": ["ux-writer", "frontend-engineer"], "result": "pending" },
     { "name": "copy", "owner": "ux-writer", "blocks": ["frontend-engineer"], "result": "pending" },
-    { "name": "review-1of2", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
-    { "name": "review-2of2", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "review-1of3", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "review-2of3", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "review-3of3", "owner": "code-steward", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "regression-guard", "owner": "bug-historian", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "engineering", "owner": "engineering-lead", "blocks": ["qc-engineer"], "result": "pending" },
     { "name": "quality", "owner": "qc-lead", "blocks": ["release-engineer"], "result": "pending" },
     { "name": "release", "owner": "release-engineer", "blocks": [], "result": "pending" },
@@ -66,13 +71,13 @@ Written once at the start of a run, amended only by appending to `amendments`.
 Rules for the plan:
 
 - One `plan` entry per agent, not per stage. Two agents sharing a stage number run
-  concurrently, which is how `peer-reviewer` and `code-analyst` stay independent.
+  concurrently, which is how `peer-reviewer`, `code-analyst` and `code-steward` stay independent.
 - `consumes` and `produces` in the plan are what the utilisation check measures the actual
   handoffs against. A plan entry with an empty `produces` cannot be verified, so fill it in
   even where the paths are placeholders.
 - `blocked_by` names gates, never agents. A stage starts when every gate it names reads
   `pass`.
-- The nine gate names are canonical and come from the gate table in `docs/WORKFLOW.md`.
+- The eleven gate names are canonical and come from the gate table in `docs/WORKFLOW.md`.
   **Never rename one for a run**, because the owner writes the same name back in its
   handoff and the check matches on it literally.
 - Skipping an agent is a plan decision, made at planning time and written in
@@ -109,22 +114,26 @@ editing history.
 
 ## Gate table
 
-Nine gates. These literal names go into `run.json` and come back in each owner's handoff.
+Eleven gates. These literal names go into `run.json` and come back in each owner's handoff.
 
 | Gate | Owner | Passes when |
 |---|---|---|
 | `design-authority` | `tech-architect` | ADR written, task briefs unambiguous, no boundary eroded |
 | `design` | `ux-auditor` | No blocker or major findings open, states covered, accessibility measured, survives the longest locale |
 | `copy` | `ux-writer` | Every string in English and Arabic, passes the competitor check, no string concatenates a count |
-| `review-1of2` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, failure modes handled |
-| `review-2of2` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
-| `engineering` | `engineering-lead` | Both reviews ran and passed, it builds, it migrates, suite green, works end to end with evidence |
+| `review-1of3` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, failure modes handled |
+| `review-2of3` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
+| `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
+| `regression-guard` | `bug-historian` | No known defect on these surfaces repeated, each checked by running its detection command, and every binding standing rule checked with its result recorded |
+| `engineering` | `engineering-lead` | All three reviews and the regression guard ran and passed, it builds, it migrates, suite green, works end to end with evidence |
 | `quality` | `qc-lead` | Evidence exists and shows what the log claims, untested surface named, product claims still hold |
 | `release` | `release-engineer` | Pre-flight clean, go from qc-lead, rollback plan written before deploy, post-deploy smoke passed |
 | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
 
-The two review gates are separate names rather than one gate with two owners, so the check
-can tell which reviewer is outstanding instead of reporting a single ambiguous failure.
+The three review gates are separate names rather than one gate with three owners, so the
+check can tell which reviewer is outstanding instead of reporting a single ambiguous
+failure. `regression-guard` is the only gate whose owner also runs at the start of the run:
+`bug-historian` publishes the brief in stage 1, and the guard checks it was honoured.
 
 A stage does not start until every gate it depends on reads pass. Enforce this before
 dispatching, not after.
@@ -265,7 +274,7 @@ Always as a table, always blocking, never buried in prose.
 | Finding | Agent | Detail | Action |
 |---|---|---|---|
 | UNUSED_OUTPUT | ux-writer | `ux-writer/strings.ar.json` appears in no consumed list | frontend-engineer built the screen without the Arabic catalogue. Re-dispatch frontend-engineer. |
-| GATE_UNRESOLVED | code-analyst | gate `review-2of2` has no entry | code-analyst ran but did not certify. Send back. |
+| GATE_UNRESOLVED | code-analyst | gate `review-2of3` has no entry | code-analyst ran but did not certify. Send back. |
 
 **Run status: blocked.** 2 findings. Stage `integration` will not be dispatched.
 ```
@@ -313,8 +322,10 @@ Written at closure, for Shehab. Plain, specific, no summary language.
 | ux-writer | 24 strings, EN and AR | copy: pass |
 | frontend-engineer | 6 files | – |
 | backend-engineer | 9 files, privacy invariant suite | – |
-| peer-reviewer | 4 comments, 4 resolved | review 1 of 2: pass |
-| code-analyst | 7 findings, 6 fixed, 1 accepted | review 2 of 2: pass |
+| peer-reviewer | 4 comments, 4 resolved | review-1of3: pass |
+| code-analyst | 7 findings, 6 fixed, 1 accepted | review-2of3: pass |
+| code-steward | 5 findings, 5 fixed | review-3of3: pass |
+| bug-historian | brief, guard, 1 new entry | regression-guard: pass |
 | engineering-lead | integration evidence | engineering: pass |
 | qc-engineer | 38 cases, 3 defects filed and fixed | – |
 | qc-lead | readiness report | quality: go |
@@ -322,7 +333,7 @@ Written at closure, for Shehab. Plain, specific, no summary language.
 
 ## Utilisation
 
-13 of 13 agents ran. 0 findings at closure. Every produced artefact was consumed.
+15 of 15 agents ran. 0 findings at closure. Every produced artefact was consumed.
 
 ## What needs you
 

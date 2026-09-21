@@ -49,13 +49,20 @@ Read this table before arguing with any rule below it.
 | **Desktop-first density** | **Reject** | The 360px view is designed first and desktop inherits from it. |
 | Rounded corners on every container | **Reject** | 8px controls, 12px cards, 16px modals, 999px pills, 0 on single-sided borders. Nothing else. |
 
-### The accent is an open decision for Shehab
+### The references do not define colour. Settled.
 
-The references are built on lime. Actio is built on Vega. This system implements Vega,
-because `BRAND.md` is the spec and the spec says Vega is the only colour Actio owns. If
-the lime look is what you actually want, that is a brand change rather than a design
-choice, and it belongs in `BRAND.md` and the guidelines PDF before it appears in a
-component. Raise it and it gets done properly; do not let it arrive one screen at a time.
+**The references are for look, feel and overall SaaS experience. They are never cited for
+a colour value.** The Product Lead has confirmed this: what they contribute is anatomy,
+density, hierarchy, interaction and the shape of a product like this one. What they
+contribute to the palette is nothing.
+
+Actio's accent is Vega `#00BFC4`, and `BRAND.md` is the only source for it. The lime in
+`ref-02` and `ref-03` sits beside Stellar `#E2E05A`, a Lumofy sibling accent that is
+banned in an Actio interface, so adopting it would break the suite as well as the brand.
+
+Any sentence in a design document that names a reference image as the reason for a colour
+is a defect. It is recorded in `BUGS.md` as BUG-0006 and the rule it produced binds
+`ux-designer`, `ux-auditor` and `frontend-engineer`.
 
 ---
 

@@ -14,9 +14,16 @@ The org is in [`TEAM.md`](./TEAM.md). The agents are in
 flowchart TD
   BRIEF(["brief"]):::human --> ORC
 
-  ORC["<b>orchestrator</b><br/>run plan · assignments · gate list"]:::orc --> ARCH
+  ORC["<b>orchestrator</b><br/>run plan · assignments · gate list"]:::orc --> BH
+  ORC --> ARCH
 
+  BH["<b>bug-historian</b><br/>regression brief<br/><i>what has already broken here</i>"]:::mem
   ARCH["<b>tech-architect</b><br/>ADR + task briefs"]:::make
+
+  BH -. "briefs every agent" .-> ARCH
+  BH -. " " .-> UXD
+  BH -. " " .-> FE
+  BH -. " " .-> BE
 
   ARCH --> UXD
   ARCH --> FE
@@ -41,14 +48,23 @@ flowchart TD
   UXW --> FE
   FE --> PR
   FE --> CA
+  FE --> CS
   BE --> PR
   BE --> CA
+  BE --> CS
 
-  PR{"<b>peer-reviewer</b><br/>judgement · boundaries<br/>failure modes"}:::gate
-  CA{"<b>code-analyst</b><br/>defects · security<br/>structural rot"}:::gate
+  PR{"<b>peer-reviewer</b><br/>1 of 3 · judgement<br/>boundaries · failure modes"}:::gate
+  CA{"<b>code-analyst</b><br/>2 of 3 · defects<br/>security · structural rot"}:::gate
+  CS{"<b>code-steward</b><br/>3 of 3 · readability<br/>comments · maintainability"}:::gate
 
-  PR --> ENGL
-  CA --> ENGL
+  PR --> RG
+  CA --> RG
+  CS --> RG
+
+  RG{"<b>bug-historian</b><br/>regression guard<br/>was a known defect repeated"}:::mem2
+  RG -- "repeated" --> FE
+  RG -- "repeated" --> BE
+  RG -- "clean" --> ENGL
 
   ENGL{"<b>engineering-lead</b><br/>engineering gate<br/>does it work end to end"}:::gate
   ENGL -- "reject" --> FE
@@ -67,16 +83,25 @@ flowchart TD
   REL --> CLOSE
 
   CLOSE{"<b>orchestrator</b><br/>utilisation check<br/>run report"}:::orc
-  CLOSE --> ACCEPT(["Shehab accepts"]):::human
+  CLOSE --> REC
+  REC["<b>bug-historian</b><br/>record every defect<br/>+ the rule it produces"]:::mem
+  REC --> ACCEPT(["Shehab accepts"]):::human
 
   classDef human fill:#00BFC4,stroke:#0C0C0C,stroke-width:2px,color:#0C0C0C
   classDef orc fill:#0C0C0C,stroke:#00BFC4,stroke-width:2px,color:#EFEFEF
   classDef make fill:#F6F6F4,stroke:#D8D8D4,color:#0C0C0C
   classDef gate fill:#E6FAFB,stroke:#02646B,stroke-width:2px,color:#0C0C0C
+  classDef mem fill:#022E33,stroke:#00BFC4,stroke-width:2px,color:#EFEFEF
+  classDef mem2 fill:#E6FAFB,stroke:#022E33,stroke-width:2px,color:#0C0C0C
 ```
 
 The design track and the build track run in parallel. They converge at the front end,
 which needs both the design spec and the string catalogue before it can be finished.
+
+`bug-historian` bookends the run. It opens by briefing every agent on what has already
+broken on these surfaces, and it closes by recording what broke this time and the standing
+rule that follows. The guard in the middle is where the brief is enforced rather than
+merely published.
 
 ---
 
@@ -136,16 +161,23 @@ it exactly, so a gate is never renamed for a run.
 | 1 | Design authority | `design-authority` | `tech-architect` | The ADR is written, the task briefs are unambiguous, and the change does not erode a system boundary |
 | 2 | Design | `design` | `ux-auditor` | No blocker or major findings remain, every state is covered, accessibility is measured not estimated, and the layout survives the longest locale |
 | 3 | Copy | `copy` | `ux-writer` | Every string exists in English and Arabic, passes the competitor check, and no string concatenates a count |
-| 4 | Review, 1 of 2 | `review-1of2` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, and its failure modes are handled |
-| 5 | Review, 2 of 2 | `review-2of2` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
-| 6 | Engineering | `engineering` | `engineering-lead` | Both reviews ran and passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
-| 7 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
-| 8 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
-| 9 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
+| 4 | Review, 1 of 3 | `review-1of3` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, and its failure modes are handled |
+| 5 | Review, 2 of 3 | `review-2of3` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
+| 6 | Review, 3 of 3 | `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
+| 7 | Regression guard | `regression-guard` | `bug-historian` | No known defect on these surfaces has been repeated, each checked by running its detection command, and every standing rule binding this run has been checked with its result recorded |
+| 8 | Engineering | `engineering` | `engineering-lead` | All three reviews ran and passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
+| 9 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
+| 10 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
+| 11 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
 
-The two review gates are separate names rather than one gate with two owners, so the
+The three review gates are separate names rather than one gate with three owners, so the
 utilisation check can say which reviewer is outstanding instead of reporting a single
-ambiguous failure.
+ambiguous failure. They run in parallel and none sees another's verdict first.
+
+`regression-guard` is the only gate whose owner also runs at the start of the run.
+`bug-historian` publishes the regression brief in stage 1, and the guard at stage 7 checks
+that the brief was honoured. An unchecked standing rule fails the gate exactly as a broken
+one does.
 
 A stage does not start until its upstream gate reads pass. The orchestrator is the role
 that catches a skipped gate, and a skipped gate is a defect rather than a shortcut.
@@ -202,12 +234,21 @@ without reading a transcript.
 │   ├── brief-backend.md
 │   ├── review.md
 │   └── handoff.json
+├── bug-historian/
+│   ├── plan.md
+│   ├── brief.md                  the opening regression brief, read by every agent
+│   ├── guard.md                  the stage 7 result, one row per known defect checked
+│   └── handoff.json
 ├── ux-designer/ ...
 ├── ux-auditor/
 │   ├── findings.md
 │   └── handoff.json
+├── code-steward/
+│   ├── findings.md
+│   └── handoff.json
 ├── ...
 └── evidence/
+    ├── regression/                api-issues-r01.log · bug-0007-detect.log
     ├── api-contract.log
     ├── privacy-invariants.log
     ├── queue-360px-ar.png
@@ -271,6 +312,12 @@ Use the orchestrator agent. Brief: add the privacy preview screen ahead of the
 first response in a cycle. It must show the real group size, the reporting
 threshold, the fields a manager can filter by, and what happens to free text.
 ```
+
+The orchestrator dispatches `bug-historian` first, before `tech-architect` and before any
+other agent plans. Nobody plans without the regression brief, because planning without it
+is exactly how a defect repeats. Every downstream agent lists `bug-historian/brief.md` in
+its `consumed`, and the utilisation check reports `UNUSED_OUTPUT` against `bug-historian`
+when one does not. That is what makes the coaching real rather than advisory.
 
 For a small, self-contained change you can go straight to the responsible agent, but the
 orchestrator still records the run and runs the utilisation check at the end. Skipping it

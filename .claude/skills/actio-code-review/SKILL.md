@@ -140,7 +140,7 @@ Suggested: take it from the endpoint response, which already returns `reporting_
 
 | Verdict | When | Handoff |
 |---|---|---|
-| `approved` | No blocker, no major. Minors listed. | `status: passed`, gate `review-1of2` result `pass` |
+| `approved` | No blocker, no major. Minors listed. | `status: passed`, gate `review-1of3` result `pass` |
 | `changes_requested` | One or more blocker or major | `status: rejected`, `needs` the author, round number |
 | `blocked` | The change cannot proceed as conceived. The brief or the ADR is wrong, not the code. | `status: escalated`, route to `tech-architect` or Shehab |
 

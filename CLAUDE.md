@@ -37,6 +37,7 @@ sentiment score.
 |---|---|
 | [`BRAND.md`](./BRAND.md) | The machine-readable brand spec. Tokens, contrast, type, components, copy rules. **Binding on every role.** Where it conflicts with a design instinct or a vendored skill, it wins. |
 | [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning. Versioned with `BRAND.md`. A change to one without the other is a defect. |
+| [`BUGS.md`](./BUGS.md) | The defect register. Every bug found, and every mistake an agent has made, with the standing rule it produced. **Read the entries for the surface you are about to change, before you plan.** Owned by `bug-historian`, which is the only agent that writes to it. |
 
 Never invent a colour, spacing value, radius, duration or type size. Every value is in
 `BRAND.md`. If the value you want is not there, the design is wrong, not the scale.
@@ -53,7 +54,8 @@ L0  Shehab Beram · Product Lead (human)
 L1  orchestrator
 L2  tech-architect · engineering-lead · qc-lead
 L3  ux-designer · ux-auditor · ux-writer · frontend-engineer · backend-engineer
-    peer-reviewer · code-analyst · qc-engineer · release-engineer
+    peer-reviewer · code-analyst · code-steward · qc-engineer · release-engineer
+Mem bug-historian, bookending every run
 ```
 
 Full charters, the org chart and the RACI are in [`docs/TEAM.md`](./docs/TEAM.md). The
@@ -68,8 +70,10 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 | `ux-writer` | Every string, English and Arabic | Copy gate |
 | `frontend-engineer` | React and Next.js implementation | – |
 | `backend-engineer` | Django and DRF implementation | – |
-| `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 2) |
-| `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 2) |
+| `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 3) |
+| `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 3) |
+| `code-steward` | Readability, naming, comments, maintainability | Review gate (3 of 3) |
+| `bug-historian` | BUGS.md, the standing rules, the regression brief | Regression guard |
 | `engineering-lead` | Integration. Does it actually work end to end. | Engineering gate |
 | `qc-engineer` | Testing APIs, code and product, with evidence | – |
 | `qc-lead` | Evidence audit, independent final pass, go or no-go | Quality gate |
@@ -82,11 +86,13 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 ```
 brief (Shehab)
   → orchestrator          run plan, assignments, gate list
+  → bug-historian        regression brief: what has already broken here
   → tech-architect        ADR + task briefs
   → ux-designer ⇄ ux-auditor        (loop until clean)   ┐ parallel with
     ux-writer             EN + AR strings                ┘ the engineering track
   → frontend-engineer / backend-engineer
-  → peer-reviewer AND code-analyst   (independent, both must pass)
+  → peer-reviewer AND code-analyst AND code-steward   (independent, all must pass)
+  → bug-historian        regression guard: was a known defect repeated
   → engineering-lead      integration gate
   → qc-engineer           test + evidence
   → qc-lead               evidence audit + independent pass + go/no-go
@@ -151,14 +157,18 @@ These apply to every agent and to any session in this repository.
    names removed. Protected cases leave the engagement queue entirely.
 8. **Nothing closes without evidence.** That is the product's entire claim. Enforce it as a
    guarded state transition, not as a convention.
-9. **Escalate to Shehab** when scope would change, a brand rule must be broken, two gates
-   disagree, or the same rejection loop runs three times.
+9. **Read `BUGS.md` before you plan.** A repeated defect is worse than a new one, because it
+   means the register was written and nobody read it. Standing rules in that file outrank
+   your instinct.
+10. **Escalate to Shehab** when scope would change, a brand rule must be broken, two gates
+    disagree, the same rejection loop runs three times, or a defect pattern reaches its
+    third occurrence.
 
 ---
 
 ## Skills
 
-`.claude/skills/` holds twelve house skills prefixed `actio-` and twenty-two vendored
+`.claude/skills/` holds fourteen house skills prefixed `actio-` and twenty-two vendored
 skills. Each agent declares the skills it is coupled with in its own file.
 
 | House skill | For |
@@ -166,6 +176,8 @@ skills. Each agent declares the skills it is coupled with in its own file.
 | `actio-agent-protocol` | Every agent. The five-step loop, artefacts, handoff schema. |
 | `actio-orchestration` | Run planning, gate enforcement, the utilisation check |
 | `actio-brand-guard` | Brand pre-flight, and the vendored skill policy |
+| `actio-bug-register` | The defect register, standing rules, the regression brief and guard |
+| `actio-clean-code` | Clean code and commenting standards |
 | `actio-design-system` | The platform: shell anatomy, the inversion rule, components, density |
 | `actio-ux-audit` | The UX audit rubric |
 | `actio-bilingual-copy` | English and Arabic product copy |
