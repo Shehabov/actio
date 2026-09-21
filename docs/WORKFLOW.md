@@ -42,7 +42,7 @@ flowchart TD
   subgraph BUILD ["build track"]
     direction TB
     FE["<b>frontend-engineer</b><br/>React · Next.js"]:::make
-    BE["<b>backend-engineer</b><br/>Django · DRF"]:::make
+    BE["<b>backend-engineer</b><br/>Supabase · RLS"]:::make
   end
 
   UXW --> FE

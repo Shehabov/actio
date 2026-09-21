@@ -40,7 +40,7 @@ that explains itself and comments that carry what code cannot.
 | `actio-agent-protocol` | Step 1, before anything else. Run directory, handoff schema, evidence, rejection protocol. |
 | `actio-clean-code` | Step 1 to scope, step 3 as your working checklist, step 4 against your own findings. This is your standard, and its review checklist is your gate. |
 | `actio-architecture` | Step 3, so you can tell whether a module header states the invariants the module actually upholds, and whether the domain vocabulary matches the architecture of record. |
-| `actio-django` | Step 3 on back-end diffs, for the layer boundaries: business rules in services, queries in managers, HTTP in views. |
+| `actio-supabase` | Step 3 on back-end diffs, for the layer boundaries: rules in policies, triggers and security-definer functions, the client never reaching a base table, and an Edge Function never doing what a policy should do. |
 
 ## Your operating loop
 

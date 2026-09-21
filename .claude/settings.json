@@ -30,12 +30,16 @@
       "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm test:*)",
-      "Bash(python manage.py check:*)",
-      "Bash(python manage.py makemigrations --check:*)",
-      "Bash(python manage.py test:*)",
-      "Bash(pytest:*)",
-      "Bash(ruff:*)",
-      "Bash(black --check:*)"
+      "Bash(supabase db lint:*)",
+      "Bash(supabase db diff:*)",
+      "Bash(supabase test db:*)",
+      "Bash(supabase status:*)",
+      "Bash(supabase start:*)",
+      "Bash(supabase stop:*)",
+      "Bash(supabase gen types:*)",
+      "Bash(supabase functions serve:*)",
+      "Bash(supabase migration list:*)",
+      "Bash(psql -c EXPLAIN:*)"
     ],
     "ask": [
       "Bash(git commit:*)",
@@ -44,7 +48,12 @@
       "Bash(gh pr:*)",
       "Bash(gh release:*)",
       "Bash(vercel:*)",
-      "Bash(python manage.py migrate:*)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase db reset:*)",
+      "Bash(supabase branches:*)",
+      "Bash(supabase functions deploy:*)",
+      "Bash(supabase secrets:*)",
+      "Bash(supabase link:*)",
       "Bash(npm publish:*)"
     ],
     "deny": [
@@ -54,7 +63,9 @@
       "Bash(rm -rf:*)",
       "Read(./.env)",
       "Read(./.env.*)",
-      "Read(./**/secrets/**)"
+      "Read(./**/secrets/**)",
+      "Bash(supabase db push --linked:*)",
+      "Bash(supabase secrets set:*)"
     ]
   },
   "env": {

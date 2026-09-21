@@ -92,6 +92,78 @@ running system, not only against a unit test.
 | Protected case in the engagement queue | Absent. The count reconciles; no title, no detail, no assignee. |
 | Protected case through search, export, or any list endpoint | Absent |
 | Employee requests their own cohort size | Returned. Disclosure to the reader about themselves is not a report about others. |
+| `authenticated` selects a base table directly | `42501`, insufficient privilege. **This is the case that proves the revoke actually happened**, and the one most likely to be missing. Without it every other case above can pass while the data is reachable by another path. |
+
+### Where they live
+
+`supabase/tests/invariants.test.sql`, pgTAP, run by `supabase test db` in continuous
+integration on every change. The file reads as a specification rather than as plumbing,
+because it is the product's claim made executable.
+
+```sql
+begin;
+select plan(9);
+
+-- I1
+select is_empty(
+  $$ select * from public.cohort_report('<cycle with 4 responses>', '{}'::jsonb) $$,
+  'a cohort of four returns nothing'
+);
+select lives_ok(
+  $$ select * from public.cohort_report('<cycle with 5 responses>', '{}'::jsonb) $$,
+  'a cohort of five reports'
+);
+
+-- I2, and standing rule R-01: the refusal must not name the filter
+select throws_ok(
+  $$ select * from public.cohort_report('<cycle>', '{"shift":"night"}'::jsonb) $$,
+  'P0001', 'below_threshold',
+  'narrowing below the floor is refused, and the error names only the invariant'
+);
+
+-- I3
+select is(
+  (select free_text from public.response_feedback where id = '<response with a name>'),
+  'the roster is late',
+  'free text is returned reworded with names removed'
+);
+
+-- I4
+select is_empty(
+  $$ select * from public.issue_queue where id = '<protected case id>' $$,
+  'a protected case never appears in the engagement queue'
+);
+
+-- the revoke itself
+select throws_ok(
+  $$ set local role authenticated; select * from public.responses limit 1 $$,
+  '42501',
+  'authenticated has no direct grant on responses'
+);
+
+select * from finish();
+rollback;
+```
+
+**A change that touches a policy, a grant, a view or a security-definer function and does
+not touch this file is a finding.** The surface moved and nobody re-proved the claim.
+
+### The RLS matrix
+
+Separate from the cases above, and run whenever a policy or a grant changes. Every table,
+every role, every command, positive and negative.
+
+| | `anon` | `respondent` | `team_lead` | `operations` | `leadership` | `protected_handler` |
+|---|---|---|---|---|---|---|
+| `responses` | deny | own only | deny | deny | deny | deny |
+| `cohorts` | deny | deny | deny | deny | deny | deny |
+| `issues` | deny | deny | own lane | own site | all | deny |
+| `evidence` | deny | deny | own lane | own site | all | deny |
+| `protected.cases` | deny | deny | deny | deny | deny | allow |
+
+A cell reading `deny` is tested by asserting `42501` or an empty set, not by assuming.
+A cell reading a scope is tested twice: once inside the scope expecting rows, once outside
+expecting none.
 
 ## 3. State machine
 

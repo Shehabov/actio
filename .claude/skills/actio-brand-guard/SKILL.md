@@ -53,13 +53,23 @@ Work through this. Every line is a yes or a finding. Do not ship on a maybe.
 
 - [ ] Every spacing value is one of 4, 8, 12, 16, 24, 32, 48, 64. **14, 18, 20 and 30 do
       not exist in this product.**
-- [ ] Radius: 8px controls, 12px cards, 16px modals, 999px pills, 0 on any element with a
-      border on one side only.
+- [ ] Radius: 8px controls, 12px cards, 999px pills, 0 on any element with a border on one
+      side only. A modal takes the card radius. There is no fourth radius token.
 - [ ] Nothing in the document flow carries a shadow. Only overlays lift.
-- [ ] One motion curve, `cubic-bezier(.2, 0, .2, 1)`. Nothing over 300ms. Transform and
-      opacity only.
+- [ ] Surfaces separate by lightness and space, not by outline: a panel lifts off the Ink 50
+      page with the tint step. The Ink 150 hairline stays for repeated records, structural
+      chrome edges and dividers inside one surface, where it separates rather than lifts.
+      The `BRAND.md` amendment moving panel surfaces to a tint step is still open with
+      Shehab, so either treatment is legal on a panel while the choice is recorded as an
+      override. Mixing the two inside one view is not.
+- [ ] One motion curve, `cubic-bezier(.2, 0, .2, 1)`. 120ms micro, 200ms panel, 300ms
+      ceiling. Transform and opacity only.
+- [ ] Every transition is triggered by a reader action. **Nothing animates on load.** The
+      one exception is a progress indicator, which reports work rather than decorating an
+      entrance.
 - [ ] `prefers-reduced-motion` honoured on every transition without exception.
-- [ ] Nothing counts up, nothing shimmers, no chart draws itself.
+- [ ] Nothing counts up, nothing shimmers, no chart draws itself. No spring, overshoot,
+      stagger or parallax.
 
 ### Copy
 
@@ -74,7 +84,8 @@ Work through this. Every line is a yes or a finding. Do not ship on a maybe.
 
 - [ ] Designed at 360px first, desktop inheriting from it.
 - [ ] Touch targets 48 by 48 minimum, including inside tables.
-- [ ] Every state covered: empty, loading, error, partial, dense, protected, offline.
+- [ ] All eight states covered: empty, loading, partial, error, dense, protected, below
+      threshold, offline.
 - [ ] Renders in both themes. A colour that works in only one mode is not part of the system.
 - [ ] Survives the longest locale, not the English one. Bahasa Indonesia runs 15 to 20%
       longer, Tagalog further.
@@ -98,7 +109,7 @@ Ordered by how often they occur, with the fix beside each.
 | A percentage with no sample size | It reads cleaner | It contradicts the product's own argument. Add `n=612`. |
 | Two primary buttons on one view | Both actions feel important | One is primary. The other is secondary, and if that is wrong the screen has two jobs. |
 | Rounded corners on a left accent rule | The component library rounds everything | Radius 0 on single-sided borders |
-| A shadow used to separate two cards | Depth is the habit | A hairline and space. Only overlays lift. |
+| A shadow used to separate two cards | Depth is the habit | The tint step and space. Only overlays lift. A hairline separates repeated records; it does not lift a panel. |
 | Title Case on a button | Most design systems do it | Sentence case. Everywhere. |
 | An empty state that apologises | It feels polite | An empty state is an invitation. Never "nothing here yet", never an apology. |
 | A toast that congratulates | It feels friendly | A toast states a fact in the past tense with one undo. It does not congratulate. |
@@ -120,10 +131,10 @@ kept for their craft, not for their aesthetics. Actio's brand overrides all of t
 | `web-design-guidelines` | Reviewing built UI against interface guidelines and accessibility | Nothing. This one aligns closely. |
 | `composition-patterns` | React component API design, compound components, avoiding boolean prop sprawl | Nothing. Structural, not visual. |
 | `react-best-practices` | React and Next.js performance, which is a user-safety concern on the target device | Nothing. |
-| `react-view-transitions` | Route and state transitions, within Actio's motion budget | 200ms maximum, one curve, transform and opacity only, reduced motion honoured. |
+| `react-view-transitions` | Route and state transitions, within Actio's motion budget | One curve `cubic-bezier(.2, 0, .2, 1)`; a view transition is a panel transition, so 200ms, and 300ms is the ceiling nothing exceeds. Transform and opacity only, reader-triggered, nothing animating on load, reduced motion honoured. |
 | `writing-guidelines` | Prose and docs review | Actio's register is narrower. `BRAND.md` §5 wins on voice. |
 | `output-skill` | Preventing truncated or placeholder output on long generation tasks | Nothing. |
-| `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Front-end deploy and cost work | Back end is Django and deploys elsewhere. |
+| `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Front-end deploy and cost work | Back end is Supabase and deploys through the Supabase CLI. |
 
 ### Conditional
 
@@ -160,7 +171,7 @@ When you depart from a vendored skill's advice, or from any default, write it in
 
 | Departed from | What it advised | What I did | Why |
 |---|---|---|---|
-| taste-skill | Layered shadow on the card to lift it off the ground | Hairline and space | BRAND.md: nothing in the document flow carries a shadow. Only overlays lift. |
+| taste-skill | Layered shadow on the card to lift it off the ground | The raised surface tint and space | BRAND.md: nothing in the document flow carries a shadow. Only overlays lift. |
 ```
 
 An override that is recorded is a decision. An override that is quiet is drift, and drift

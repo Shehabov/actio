@@ -42,6 +42,11 @@ The Rule row names where the rule lives. A brand finding cites `BRAND.md`. A fin
 against the platform design system cites `actio-design-system`, and quotes the rule rather
 than only naming the skill, so the designer can act on the row without opening the file.
 
+A finding against the smoothness doctrine cites `actio-design-system` the same way and
+quotes the specific rule it breaks, the one curve or the 300ms ceiling or the tint step,
+never the word smoothness on its own. Smoothness is not something a designer can act on.
+A named rule is.
+
 ### Severity
 
 | Severity | Means | Gate effect |
@@ -170,12 +175,18 @@ happen and somebody will meet it.
 | Offline | | Answers held on device, stated plainly, sent on reconnect |
 | Dark | | Surfaces separate by lightening, never by shadow. Halo, never pure white. |
 | 200% zoom | | No clipping, no overlap |
+| RTL | | Mirrored from logical properties alone. Numerals, charts, identifiers and the seal stay unmirrored. |
 
 ## 7. The platform design system
 
-These come from `actio-design-system`, which derives them from the approved references in
-`docs/design-reference/`. A break here is Major. Where the same thing also appears in
+These come from `actio-design-system`, which derives them from the seven approved references
+in `docs/design-reference/`. A break here is Major. Where the same thing also appears in
 section 1 it is a Blocker, and you file it against the ban.
+
+The references define look, feel and overall SaaS experience: anatomy, density, hierarchy
+and interaction. **They never define colour.** Vega is the accent and `BRAND.md` is the only
+source for it, so a spec that cites a reference image as the reason for a colour value is a
+finding on its own (BUG-0006).
 
 **Shell**
 
@@ -202,7 +213,12 @@ section 1 it is a Blocker, and you file it against the ban.
 
 **Cards**
 
-- [ ] 12px radius, Ink 150 hairline, no shadow anywhere in the document flow.
+- [ ] 12px radius, no shadow anywhere in the document flow. A card lifts off the page with
+      the tint step, white on the Ink 50 page, not with an outline. The Ink 150 hairline
+      stays between repeated records and as an internal divider, such as the rule under a
+      panel card's header. The `BRAND.md` amendment moving panel surfaces to a tint step is
+      still open with Shehab, so a hairline on a panel is not a finding by itself where the
+      spec's override table records the choice.
 - [ ] 24px padding, 16px on mobile.
 - [ ] No card inside a card. Group with a hairline and space instead.
 - [ ] Every issue card carries its identifier in Plex Mono at the block-end inline-end
@@ -210,7 +226,8 @@ section 1 it is a Blocker, and you file it against the ban.
 
 **Alert rows**
 
-- [ ] Left accent rule 3px at radius 0, hairline border, Ink 50 ground.
+- [ ] Left accent rule 3px at radius 0, the panel surface as the ground, Ink 150 hairline
+      between rows where alerts stack. **Never Ink 50, which is the page itself.**
 - [ ] Never a tinted fill. The tinted callout box is the reference pattern Actio rejects.
 
 **Queue**
@@ -234,6 +251,78 @@ section 1 it is a Blocker, and you file it against the ban.
 - [ ] The desktop layout derives from it, not the reverse. Section 4 asks this from the
       reader's side; here you ask it of the spec.
 
+**Smoothness**
+
+From the Smoothness section of `actio-design-system`, which reads `ref-06` as the primary
+reference for feel. Work these in order and quote the rule you file against.
+
+1. [ ] **Surface treatment.** Panels separate by a tint step and space. Repeated-record
+       lists separate by an Ink 150 hairline. Neither does the other's job: a hairline
+       lifting a panel off the page, or a tint standing in for a row rule, is the finding.
+       The `BRAND.md` amendment moving panels to a tint step is still open, so a panel on
+       either treatment is not a finding by itself where the spec's override table records
+       the choice. Mixing the two inside one view is.
+2. [ ] **Type.** The featured figure is Plex Mono 500 at Display size, 40/46, with its
+       label and meta at Caption and Small. No mid-size sits between the figure and its
+       meta to soften the jump. The jump is the composition.
+3. [ ] **Chrome.** No border, legend, axis, gridline, container or label-repeating icon
+       that could have been deleted before the element was styled.
+4. [ ] **Motion.** One curve, `cubic-bezier(.2, 0, .2, 1)`. 120ms micro, 200ms panel,
+       300ms ceiling. `transform` and `opacity` only. Reader-triggered only, nothing
+       animates on load, `prefers-reduced-motion` honoured on every transition.
+5. [ ] **Rhythm.** Every gap is 8, 16, 24 or 48, and the same value repeats down the page
+       rather than being varied to fill space.
+6. [ ] **Pill tabs.** The active tab takes the raised surface tint, never a Vega fill,
+       because the accent budget belongs to the primary action. Roving tabindex: Tab enters
+       the group once and lands on the active tab. Arrow keys move between tabs and the
+       panel updates on focus, not on a second keypress, wrapping at both ends, with Home
+       and End reaching the first and last. At 360px the group is full width with the tabs
+       dividing it equally, and four tabs have become a select rather than a horizontally
+       scrolling strip. Dark: `#1A1A18` active tint, Halo active label, `#A8A8A4` inactive.
+       RTL: the group mirrors and the arrow keys follow the visual order.
+7. [ ] **Collapsible sections.** Default open. A count beside the title only where the
+       number is actionable. State persists per device, not per account. The header is a
+       48px full-width `button` with `aria-expanded` and `aria-controls`, toggled by Enter
+       and Space, and focus stays on it through the toggle. Closed removes the body from
+       the document rather than hiding it, so nothing inside is still reachable by Tab. At
+       360px the title truncates before the count does. Dark: Halo title, `#A8A8A4` count
+       and chevron, still no rule and no ground. RTL: title inline-start, chevron
+       inline-end, and the 180deg rotation does not mirror.
+8. [ ] **Sparklines.** First and last period labels only, no axes, no gridlines, no
+       legend, 64px tall, and nothing asks the reader to read a value off the line. Where
+       a value has to be read, it is a panel chart and takes the chart rules above. Not
+       focusable, `aria-hidden`, with the trend written out in the panel text beside it.
+       One period renders a dot and no line. Below threshold it is not rendered at all. At
+       360px it is dropped below 120px of width rather than squeezed, and the two period
+       labels are never dropped. Dark: Vega 400 line held, `#A8A8A4` labels, a comparison
+       series at `#6E6E69`, both pairs measured because neither is in the §2 table. RTL:
+       the shape does not mirror, because §7.3 exempts charts.
+9. [ ] **Quote-led rows.** Hairline separated. No card, no avatar, and never a name: free
+       text comes back reworded with names removed, so the meta line carries site and
+       cohort only. One list is either all interactive or all static, never mixed. An
+       interactive row is one focusable element opened by Enter, with no second target
+       inside it. At 360px the quote keeps Body 15/24 and the meta wraps rather than
+       truncating. Dark: Halo quote, `#A8A8A4` meta, the separator moving from Ink 150 to
+       the `#1C1C1A` row rule. RTL: Arabic quotation marks, Latin runs and the date and
+       identifier isolated LTR, and the row grows past 80px rather than clipping.
+10. [ ] **Command palette.** Raised two steps and the only lifted surface in the product.
+        The lane reads as an 8px dot, never as a fill. Focus goes to the input and stays
+        there, arrow keys move the selection through `aria-activedescendant`, exactly one
+        row is selected whenever there are results, Escape returns focus to the trigger,
+        and Tab cycles inside the palette only. Matches stay ordered by section rather than
+        interleaved by score. At 360px it is a full-height sheet with no shadow and no
+        shortcut column, triggered by the top bar search icon. Dark: `#232320` surface with
+        the shadow dropped entirely, `#1A1A18` selected row. RTL: the palette mirrors, the
+        dot and the shortcut swap ends, and the arrow keys are unaffected.
+11. [ ] **Spec completeness.** Each of the five carries all seven headings: dimensions,
+        type, states, keyboard behaviour or a line saying it is not interactive, 360px,
+        dark mode and RTL. A heading left out is a Major on its own, filed against the
+        component rather than against the screen, because the `frontend-engineer` will
+        otherwise invent the answer in code where no auditor sees it.
+12. [ ] **The `ref-04` test.** Placed beside `ref-04`, a stranger can tell which product
+        routes work to a named owner and which one reports a mood. If they cannot, that is
+        the finding, whatever the palette.
+
 ---
 
 ## Running an audit
@@ -242,8 +331,10 @@ section 1 it is a Blocker, and you file it against the ban.
    implement, and the relevant ADR.
 2. Work the seven checklists in order. Colour and bans first, because they are objective
    and fast, and a blocker there ends the audit early.
-3. Capture evidence as you go, into `.actio/runs/<run-id>/evidence/`. Screenshot at the
-   real width. Measure contrast with both hex values, do not eyeball it.
+3. Capture evidence as you go, into `.actio/runs/<run-id>/evidence/`. Screenshot at 360px,
+   at 360px under 200% zoom, and at the widest breakpoint the surface claims to support.
+   Compute every contrast ratio from the two hex values and record both values with the
+   result, rather than reading the pair by eye.
 4. Write findings into `.actio/runs/<run-id>/ux-auditor/findings.md`, numbered, ordered by
    severity.
 5. Set the gate. Any open blocker or major means `design: fail`.

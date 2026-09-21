@@ -24,7 +24,7 @@ sentiment score.
 |---|---|
 | Users | Frontline employee, team lead, operations, site director or COO |
 | Buyer | Operations. The buyer is not the user. |
-| Stack | React and Next.js on the front end, Django and DRF on the back end |
+| Stack | React and Next.js on the front end, Supabase on the back end: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and Storage |
 | Channels | WhatsApp, SMS, web |
 | Locales | Bahasa Indonesia, English, Tagalog, Arabic (RTL) |
 | Target device | A low-cost Android handset, mid-shift, on a constrained connection |
@@ -69,7 +69,7 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 | `ux-auditor` | Independent audit of design and shipped UI | Design gate |
 | `ux-writer` | Every string, English and Arabic | Copy gate |
 | `frontend-engineer` | React and Next.js implementation | – |
-| `backend-engineer` | Django and DRF implementation | – |
+| `backend-engineer` | Supabase: schema, RLS, functions, Edge Functions | – |
 | `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 3) |
 | `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 3) |
 | `code-steward` | Readability, naming, comments, maintainability | Review gate (3 of 3) |
@@ -152,9 +152,11 @@ These apply to every agent and to any session in this repository.
    without its written label.
 6. **Reject bad input upstream.** A downstream agent that receives a bad handoff sends it
    back with a specific reason. It does not paper over it.
-7. **The privacy invariants are code, not policy.** No group below the reporting threshold
-   of 5 ever reports. A manager cannot filter below it. Free text is returned reworded with
-   names removed. Protected cases leave the engagement queue entirely.
+7. **The privacy invariants are enforced in the database, not in the client.** They are RLS
+   policies, revoked base tables and security-definer functions, so they hold against a
+   leaked key and a direct connection. No group below the reporting threshold of 5 ever
+   reports. A manager cannot filter below it. Free text is returned reworded with names
+   removed. Protected cases leave the engagement queue entirely.
 8. **Nothing closes without evidence.** That is the product's entire claim. Enforce it as a
    guarded state transition, not as a convention.
 9. **Read `BUGS.md` before you plan.** A repeated defect is worse than a new one, because it
@@ -182,7 +184,7 @@ skills. Each agent declares the skills it is coupled with in its own file.
 | `actio-ux-audit` | The UX audit rubric |
 | `actio-bilingual-copy` | English and Arabic product copy |
 | `actio-architecture` | Domain model, invariants, ADRs, task briefs |
-| `actio-django` | Django and DRF conventions for this product |
+| `actio-supabase` | Supabase: schema, RLS, functions, Edge Functions, pgTAP |
 | `actio-code-review` | Senior review rubric |
 | `actio-code-analysis` | Line-by-line defect and complexity rubric |
 | `actio-test-protocol` | Test planning, evidence, release readiness |
@@ -197,14 +199,21 @@ Vendored packs, unmodified from source:
 
 ### Design references
 
-Three approved references in [`docs/design-reference/`](./docs/design-reference/) set the
-platform shape: an assistant shell, an operations dashboard, and a minimal canvas. The
-dashboard is the primary one.
+Seven approved references in [`docs/design-reference/`](./docs/design-reference/) set the
+platform shape. `ref-02-ops-dashboard.png` is primary for **anatomy**, what an operations
+product is made of. `ref-06-insights-panel.webp` is primary for **feel**, and where the two
+disagree on surface treatment, `ref-06` wins. `ref-04-category-dashboard.png` is a
+**counter-example**, kept in the set to be recognised and refused: a sentiment heatmap of
+tinted cells on a red to green ramp, and a score per cohort presented as a thing to defend.
 
-**Take the structure, hold the surface to `BRAND.md`.** Anatomy, density, hierarchy and
-interaction come from the references. Colour, gradient, motion and copy style come from the
-spec. The references use a lime accent, soft gradients, tinted callouts, multi-hue chart
-ramps and Title Case, all of which Actio bans. The full adopt, adapt and reject table is in
+**Take the structure, hold the surface to `BRAND.md`.** The references define look, feel and
+overall SaaS experience: anatomy, density, hierarchy and interaction. **They never define
+colour.** Vega `#00BFC4` is the accent and `BRAND.md` is the only source for it. A document
+that cites a reference image as the reason for a colour value is a defect, recorded as
+BUG-0006. Colour, gradient, motion and copy style all come from the spec: the references use
+a lime accent, soft gradients, tinted callouts, multi-hue chart ramps and Title Case, all of
+which Actio bans. The full adopt, adapt and reject table, the smoothness doctrine `ref-06`
+produces and the `ref-04` test are in
 [`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md).
 
 **Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins** and the override is

@@ -55,7 +55,7 @@ question.
 | | [`ux-auditor`](./.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design |
 | | [`ux-writer`](./.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy |
 | | [`frontend-engineer`](./.claude/agents/frontend-engineer.md) | React and Next.js implementation | – |
-| | [`backend-engineer`](./.claude/agents/backend-engineer.md) | Django and DRF implementation | – |
+| | [`backend-engineer`](./.claude/agents/backend-engineer.md) | Supabase: schema, RLS, functions, Edge Functions | – |
 | | [`peer-reviewer`](./.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review, 1 of 3 |
 | | [`code-analyst`](./.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review, 2 of 3 |
 | | [`code-steward`](./.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review, 3 of 3 |
@@ -112,22 +112,31 @@ rules, and twenty-two vendored skills carry craft.
 
 | Pack | Source | Used by |
 |---|---|---|
-| **House** (14) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-django`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-test-protocol`, `actio-release` | All |
+| **House** (14) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-supabase`, `actio-test-protocol`, `actio-release` | All |
 | **Taste** (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
 | **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
 
 ### The platform
 
-[`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md) is built on three
-approved references in [`docs/design-reference/`](./docs/design-reference/): an assistant
-shell, an operations dashboard, and a minimal canvas. The dashboard is the primary one.
+[`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md) is built on seven
+approved references in [`docs/design-reference/`](./docs/design-reference/).
+`ref-02-ops-dashboard.png` is primary for **anatomy**, what an operations product is made
+of. `ref-06-insights-panel.webp` is primary for **feel**, and where the two disagree on
+surface treatment, `ref-06` wins. `ref-04-category-dashboard.png` is a **counter-example**,
+kept in the set to be recognised and refused: a sentiment heatmap of tinted cells on a red
+to green ramp, and a score per cohort presented as a thing to defend.
 
-**The structure comes from the references. The surface comes from `BRAND.md`.** Anatomy,
-density, hierarchy and interaction are adopted. Colour, gradient, motion and copy style are
-not: the references run on a lime accent with soft gradients, tinted callouts, multi-hue
-chart ramps and Title Case, all of which Actio bans. The skill carries the full adopt,
-adapt and reject table. The rule it adds that matters most is the **inversion rule**: one
-surface per view may go dark, and it carries the one thing the reader came for.
+**The structure comes from the references. The surface comes from `BRAND.md`.** They define
+look, feel and overall SaaS experience: anatomy, density, hierarchy and interaction. **They
+never define colour.** Vega `#00BFC4` is the accent and `BRAND.md` is the only source for
+it. Colour, gradient, motion and copy style are not adopted: the references run on a lime
+accent with soft gradients, tinted callouts, multi-hue chart ramps and Title Case, all of
+which Actio bans. The skill carries the full adopt, adapt and reject table. The rule it adds
+that matters most is the **inversion rule**: one surface per view may go dark, and it
+carries the one thing the reader came for. `ref-06` adds the **smoothness doctrine**:
+surfaces separating by lightness and space rather than by outline, one type scale used
+across its full range, chrome deleted before anything is styled, one motion curve with
+nothing animating on load, and a vertical rhythm regular enough to predict.
 
 Where a vendored skill and [`BRAND.md`](./BRAND.md) disagree, `BRAND.md` wins and the
 override is recorded. Several taste skills optimise for premium, decorative aesthetics

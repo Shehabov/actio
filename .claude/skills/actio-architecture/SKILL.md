@@ -56,17 +56,18 @@ pressure.
 
 | # | Invariant | Enforced where |
 |---|---|---|
-| I1 | No cohort below the reporting threshold of 5 ever reports | Query layer, not the view. A manager cannot reach the data to filter it. |
-| I2 | A manager cannot filter below the threshold | Same. The filter set is validated against resulting cohort size, server side. |
-| I3 | Free text is returned reworded, with names removed | Serialisation layer. The raw text never leaves the boundary. |
-| I4 | A protected case never appears in the engagement queue | Separate channel, separate store, separate permission. Not a flag on `Issue`. |
-| I5 | An issue cannot transition to closed without attached evidence | Guarded state transition, enforced in the model or service, not in the view |
-| I6 | An issue cannot be assigned to a lane that lacks authority for its category | Validated on assignment and on reassignment |
-| I7 | Every closure records who, when, and whether it was late | Immutable audit record |
-| I8 | Deadlines are in the site time zone, labelled | Serialisation. Never the reader's local time. |
+| I1 | No cohort below the reporting threshold of 5 ever reports | Base tables revoked from `anon` and `authenticated`; a security-definer function applies the threshold before returning anything. RLS is row-level and the threshold is an aggregate property, so a row policy cannot express it. |
+| I2 | A manager cannot filter below the threshold | The same function and the same revoke. The filtered set is counted inside the function and refused below the floor, so a manager never reaches the rows to filter them. |
+| I3 | Free text is returned reworded, with names removed | A view with `security_invoker = on` over a revoked base table. The raw column has no grant to anyone. |
+| I4 | A protected case never appears in the engagement queue | A separate schema with a separate grant, never a flag on `issues`. A flag can be forgotten in a `where` clause; a missing grant cannot. |
+| I5 | An issue cannot transition to closed without attached evidence | A `before update` trigger, security definer, `search_path` pinned. A trigger rather than a policy, because this is a rule about what a valid transition is, not about which rows are visible. |
+| I6 | An issue cannot be assigned to a lane that lacks authority for its category | The same trigger, on the lane change, so it holds on assignment and on reassignment alike. |
+| I7 | Every closure records who, when, and whether it was late | The same trigger writes the closure row. Insert only: no update or delete grant on `closures`. |
+| I8 | Deadlines are in the site time zone, labelled | `timestamptz` throughout, with the site time zone as its own labelled column. Never inferred from the reader. |
 
-Every one of these has a dedicated test in the privacy invariant module. See
-`actio-test-protocol`.
+Every one of these has a dedicated pgTAP test in `supabase/tests/invariants.test.sql`, run
+by `supabase test db`. See `actio-supabase` for the mechanisms and `actio-test-protocol` for
+the evidence.
 
 ---
 

@@ -111,10 +111,10 @@ utilisation failure and gets reported, not hidden. Does not design, code, review
 | Agent | Owns | Gate | Skills beyond the protocol |
 |---|---|---|---|
 | [`frontend-engineer`](../.claude/agents/frontend-engineer.md) | React and Next.js implementation | – | `actio-design-system`, `actio-brand-guard`, `react-best-practices`, `composition-patterns`, `react-view-transitions`, `web-design-guidelines` |
-| [`backend-engineer`](../.claude/agents/backend-engineer.md) | Django and DRF implementation | – | `actio-django` |
+| [`backend-engineer`](../.claude/agents/backend-engineer.md) | Supabase: schema, RLS, functions, Edge Functions | – | `actio-supabase`, `supabase`, `supabase-postgres-best-practices` |
 | [`peer-reviewer`](../.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review gate, 1 of 3 | `actio-code-review` |
 | [`code-analyst`](../.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review gate, 2 of 3 | `actio-code-analysis` |
-| [`code-steward`](../.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review gate, 3 of 3 | `actio-clean-code`, `actio-architecture`, `actio-django` |
+| [`code-steward`](../.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review gate, 3 of 3 | `actio-clean-code`, `actio-architecture`, `actio-supabase` |
 
 **Memory**
 

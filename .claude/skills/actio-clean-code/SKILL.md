@@ -99,7 +99,7 @@ def force_close(issue, override_reason): ...
 | File length | 400 lines. Past that it has more than one job. |
 | Class methods | 15 |
 | Import direction is one way | No circular imports, ever |
-| Layer boundaries hold | Business rules in services, queries in managers, HTTP in views. See `actio-django`. |
+| Layer boundaries hold | Rules in policies, triggers and security-definer functions. The client never reaches a base table. An Edge Function never does what a policy should do. See `actio-supabase`. |
 
 Order inside a file, consistently: imports, constants, types, public API, private helpers.
 A reader scanning top to bottom should meet the important things first.
@@ -155,30 +155,53 @@ Every module opens with a short header saying what it is for and what it must no
 This is the single highest-value comment in the repository for a model that will be handed
 this file alone.
 
-```python
-"""Reporting queries for survey cohorts.
-
-Every public callable here enforces the reporting threshold (I1) in the queryset,
-not in the caller, so there is no code path that returns a cohort below the floor.
-The default manager returns none() deliberately: reaching the full set has to be
-an explicit choice.
-
-Never add a function here that takes a pre-built queryset from outside this module.
-"""
+```sql
+-- 05_functions.sql · the reporting surface for survey cohorts.
+--
+-- I1 and I2. RLS is row-level and the threshold is a property of the SET, so no
+-- row policy can express it. The base tables are revoked from anon and
+-- authenticated in 07_grants.sql, and every callable here is the only granted
+-- path to response data. Each one applies the floor before it returns anything.
+--
+-- Every function here is security definer with search_path pinned to ''. An
+-- unpinned search_path lets a caller shadow an object and run their own code as
+-- the definer, which on this surface is the whole database.
+--
+-- Never add a function here that takes a pre-built query or a raw table name
+-- from outside this file.
 ```
 
-Every public function that is not self-evident gets a docstring saying what it returns,
-what it raises, and any invariant it upholds. Private helpers usually need only a good
+Every function that is not self-evident gets a comment saying what it returns, what it
+raises, and which invariant it upholds, by number. Private helpers usually need only a good
 name.
 
-```python
-def reportable(self, organisation):
-    """Cohorts large enough to report on for this organisation.
+```sql
+-- Cohorts large enough to report on for this organisation.
+--
+-- The organisation may raise its threshold, never lower it: greatest(5, ...) is
+-- the floor and it is deliberate. Returns an empty set rather than raising when
+-- nothing qualifies, because a caller rendering a report needs a page, not an
+-- exception. Raising is reserved for I2, where the refusal is the answer.
+create or replace function public.reportable_cohorts(p_org uuid)
+returns setof public.cohorts
+language sql
+stable
+security definer
+set search_path = ''
+as $$ ... $$;
+```
 
-    The organisation may raise its threshold, never lower it. Returns an empty
-    queryset rather than raising when nothing qualifies, because a caller
-    rendering a report needs a page, not an exception.
-    """
+A policy is code and gets the same treatment. Every policy carries a comment naming the
+invariant it upholds and why it is written the way it is, because a policy that reads as
+arbitrary is the one a future change relaxes.
+
+```sql
+-- I4. Protected cases live in their own schema with their own grant rather than
+-- behind a flag on issues, because a flag can be forgotten in a where clause and
+-- a missing grant cannot.
+create policy case_handler_only on protected.cases
+  for select to protected_handler
+  using ( (select auth.jwt() ->> 'role') = 'protected_handler' );
 ```
 
 ---

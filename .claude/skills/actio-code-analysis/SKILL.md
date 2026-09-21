@@ -21,29 +21,29 @@ Every finding carries file, line, what is wrong, why, the concrete fix, and a se
 
 | Hunt for | Signature |
 |---|---|
-| Off by one | `range(len(x))`, `<=` where `<` was meant, slicing at a boundary, pagination arithmetic |
+| Off by one | `<=` where `<` was meant, a keyset boundary that repeats or skips a row, threshold arithmetic using `>` where `>=` was meant |
 | Null and undefined paths | A value that can be `None` or `undefined` reaching an attribute access or a method call unchecked |
 | Unhandled promise rejection | An `async` call with no `await` and no `.catch`, a floating promise in an effect |
-| Swallowed exception | `except Exception: pass`, an empty `catch`, a `try` that logs and continues into an invalid state |
+| Swallowed exception | An empty `catch`, an `exception when others then null` block, a `try` that logs and continues into an invalid state |
 | Wrong boolean logic | De Morgan errors, `and`/`or` precedence, a negated condition that reads correctly but is not |
 | Wrong comparison | `==` on floats, identity where equality was meant, string comparison of numbers |
-| Timezone and DST | `datetime.now()` without a zone, `date` arithmetic across a DST boundary, a deadline in the server's zone rather than the site's |
-| Money as float | Currency in a float. Actio quotes `Rp 2.450.000`. Use integers or `Decimal`. |
+| Timezone and DST | `timestamp` where `timestamptz` was meant, date arithmetic across a DST boundary, a deadline rendered in the server zone rather than the site zone |
+| Money as float | Currency as `float` or `real`. Actio quotes `Rp 2.450.000`. Use `numeric` or minor units as `bigint`. |
 | Race condition | Read then write without a lock or a transaction, check-then-act, two requests both passing a uniqueness check |
-| Mutation of shared state | A default argument that is a list or dict, a module-level mutable, a React state object mutated in place |
-| Unawaited async | A coroutine created and dropped |
+| Mutation of shared state | A module-level mutable in an Edge Function reused across invocations, a React state object mutated in place |
+| Unawaited async | A promise created and dropped in an Edge Function, so the runtime freezes before it settles |
 | Incorrect early return | A guard that returns before a required side effect |
 
 ## 2. Security
 
 | Hunt for | Signature |
 |---|---|
-| Injection | String-built SQL, `raw()` with interpolation, `eval`, an unsanitised value reaching a shell |
-| Missing authorisation | A view with authentication but no object-level permission. **Every endpoint, every time.** |
-| Mass assignment | A serialiser with `fields = "__all__"`, an update that accepts arbitrary keys |
+| Injection | String-built SQL inside a function body, a `format()` without `%I` or `%L`, `eval`, an unsanitised value reaching a shell |
+| Missing authorisation | A table reachable with no policy covering the command, or an Edge Function trusting a client-supplied identity instead of the verified JWT. **Every table, every command.** |
+| Mass assignment | An `update` policy with no `with check`, or an RPC taking a whole row as jsonb and writing it unfiltered |
 | Secrets in code or logs | A key, token or password literal. A log line containing a phone number, a name, or a free-text response. |
 | Personal data in a URL | An identifier or a phone number in a query string. It lands in access logs and in referrers. |
-| Unsafe deserialisation | `pickle`, `yaml.load` without `SafeLoader` |
+| Unsafe deserialisation | Untrusted jsonb written straight into a typed column, or a webhook body parsed without schema validation |
 | SSRF | A user-supplied URL fetched server side |
 | Open redirect | A `next` parameter that is not validated against an allowlist |
 | Timing leak | An equality check on a secret that is not constant time |
@@ -53,15 +53,33 @@ Every finding carries file, line, what is wrong, why, the concrete fix, and a se
 
 | Hunt for | Signature |
 |---|---|
-| N+1 | An attribute crossing a relation inside a loop, a serialiser method field hitting the database |
-| Missing index | A filter or sort on an unindexed column, especially the queue's `(site, status, due)` |
-| Unbounded queryset | A list endpoint with no pagination, `.all()` rendered to a template |
-| Missing transaction | Two writes that must both happen, outside `atomic()` |
-| Non-reversible migration | No `reverse_code`, no stated reason |
-| Locking migration | `ALTER TABLE` on a large live table, an index built without `CONCURRENTLY` |
-| Model imported in a data migration | Import instead of `apps.get_model` |
-| `len()` on a queryset | Evaluates the whole set to count it |
-| Count in a loop | Should be one annotation |
+| N+1 | A query per row in a loop where PostgREST resource embedding would do it once |
+| Missing index | A filter, sort or **policy predicate** on an unindexed column, especially the queue's `(site, status, due)` |
+| Unbounded read | A PostgREST call with no `limit` and no keyset range |
+| Offset pagination | `offset` on a queue. Rows move while a reader pages, so they see duplicates and gaps. Keyset on `(due, id)`. |
+| Missing transaction | Two writes that must both happen, not wrapped in a function |
+| Non-reversible migration | No stated reason at the head of the migration file |
+| Locking migration | `alter table` rewriting a large live table, an index built without `concurrently` |
+| Hand-written migration | Migrations are generated by `supabase db diff`. A hand-written one has drifted from the declarative schema. |
+| `count(*)` in a loop | One aggregate, not one per row |
+
+## 3a. Row Level Security
+
+The class that replaces most of the old data-layer list, and the one a general scan never
+finds. Every hit here is at least a **major**, and most are blockers.
+
+| Hunt for | Why it hurts | Fix |
+|---|---|---|
+| `auth.uid()` called bare in a policy | It re-evaluates per row, so a queue scan becomes thousands of calls | `(select auth.uid())`, which Postgres treats as a constant for the scan |
+| `security definer` without `set search_path = ''` | A caller can shadow an object and run their own code as the definer | Pin it, and schema-qualify every reference in the body |
+| A view over protected data without `security_invoker = on` | It runs as its creator, silently bypassing the caller's policies | Set it on every view over a protected table |
+| A new table with no `enable row level security` | Open the moment anything is granted | Enable it in the same file that creates the table |
+| RLS enabled with no policy | Denies everything, looks like a bug, gets "fixed" by disabling RLS | Write the policy in the same migration |
+| Policies for `select` only | `insert`, `update` and `delete` fall to a broad grant added later to unblock someone | All four written explicitly, even where one is `false` |
+| `using` without `with check` on an update policy | A row can be updated into a state the caller could not have selected | Always both |
+| A `grant` on a base table holding response, cohort or protected data | Every threshold function above it becomes decoration | Revoke, and expose only the security-definer reporting surface |
+| `service_role` outside Edge Function secrets | It bypasses every policy. In a client bundle it is a full breach. | Blocker, always, no discussion |
+| A policy predicate calling a volatile function | Re-evaluated per row, and can leak timing | Mark the function `stable` and index what it reads |
 
 ## 4. Concurrency and async
 
@@ -108,7 +126,7 @@ Named smells and the refactor that resolves each:
 | Dead code | Unreachable, unreferenced, or behind a flag removed months ago | Delete it. Git remembers. |
 | Commented-out code | A block in comments | Delete it. Git remembers. |
 | Magic value | `if size < 5` with no name | `REPORTING_FLOOR`, defined once |
-| Layering violation | A business rule in a serialiser, a query in a view | See `actio-django` |
+| Layering violation | A rule in an Edge Function that a direct PostgREST call bypasses, or a grant on a base table | See `actio-supabase` |
 | Long parameter list of booleans | `render(true, false, true)` | Unreadable at the call site. Options object or separate functions. |
 
 ---
@@ -126,11 +144,11 @@ that touches UI, reporting, or the issue lifecycle.
 | A percentage rendered without its sample size | Contradicts the product's own argument |
 | A status rendered by colour with no written label | Fails for deuteranopia, and it is a brand rule |
 | White text on a Vega fill | 2.27:1. Measured. Fails. |
-| A reporting path that can return a cohort below the threshold | I1 |
-| A filter validated client side only | I2. Server side or it does not exist. |
-| Raw free text crossing the API boundary | I3 |
-| A protected case reachable from an engagement query | I4 |
-| A close path with no evidence check | I5. The product's entire claim. |
+| A grant on a base table holding response or cohort data | I1. RLS is row-level; the threshold is an aggregate property. The only safe path is revoked tables plus a threshold-applying security-definer function. |
+| A filter validated client side only, or a below-threshold error naming the filter | I2, and standing rule R-01. The error names the invariant, never the input. |
+| A view over free text without `security_invoker = on`, or a grant on the raw column | I3 |
+| A protected case reachable from an engagement query, or protected data as a flag on `issues` rather than a separate schema | I4 |
+| A close path with no evidence check, or the guard written as a policy rather than a before-update trigger | I5. The product's entire claim. |
 | An assignment with no lane-authority check | I6 |
 | A deadline rendered in the reader's time zone | I8 |
 | A string concatenated with a count | Breaks Indonesian and Tagalog plurals |
@@ -177,7 +195,7 @@ those makes the blocker at the top less likely to be read.
 4. For each finding, prove it. Trace the path, or write the failing case. A finding you
    could not reproduce is reported as suspected, and labelled as such.
 5. Run the tooling and read its output rather than trusting the exit code: type checker,
-   linter, complexity report, `assertNumQueries` on hot paths.
+   linter, complexity report, `supabase db lint`, and EXPLAIN ANALYZE on any query a policy filters.
 6. Write findings to `.actio/runs/<run-id>/code-analyst/findings.md`, ordered by severity.
 7. Set gate `review-2of3`. Any blocker or major means fail.
 

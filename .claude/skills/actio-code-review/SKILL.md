@@ -41,14 +41,18 @@ solves the wrong problem, its test quality does not matter.
 
 ### 3. Boundaries
 
-Actio's layering is in `actio-architecture` and `actio-django`. Check the seams.
+Actio's layering is in `actio-architecture` and `actio-supabase`. The back end is Supabase,
+so the seams are grants, policies, triggers, functions and views rather than application
+layers. Check them.
 
 | Check | Failure looks like |
 |---|---|
-| Is the logic in the right layer? | A business rule in a serialiser, so a management command skips it |
-| Did a concern leak across a seam the architect drew? | The client computing something only the server should know |
+| Is the rule in the right place? | A rule in an Edge Function rather than in a policy, a trigger or a security-definer function, so it holds only for callers who route through that function |
+| Can the client reach a base table at all? | A `grant select` left on `responses`, which makes every policy above it decoration |
+| Is the reporting threshold applied before anything is returned? | A row policy asked to carry an aggregate rule it cannot express, instead of revoked base tables and a threshold-applying security-definer function |
+| Does an Edge Function do what a policy should do? | The function filters by site, and a direct PostgREST call on the same table does not |
 | Does the front end know a back-end rule? | The threshold hardcoded in a React component |
-| Does a model reach into another app? | `issues/` importing from `protected/` |
+| Does a schema reach across a boundary the architect drew? | A `public` view selecting from `protected.cases` |
 | Is an invariant now enforced in two places? | Two checks that can disagree is worse than one |
 
 ### 4. Failure modes
@@ -59,6 +63,8 @@ than exotic.
 
 | Scenario | Ask |
 |---|---|
+| A caller skips the Edge Function and calls PostgREST directly | Is the rule in a policy, a trigger or a security-definer function, so it still holds? A rule that only an Edge Function applies is bypassed by a client that has the anon key and the table name. |
+| The anon key leaks | It is public by design. What does a holder of it reach? Every answer to that should be a revoke or a policy, not an assumption about the client. |
 | Connection drops mid-survey | Are the answers on the device? Do they send on reconnect? Do they double-send? |
 | Duplicate webhook | Providers redeliver routinely. Is this idempotent on the provider's message id? |
 | Retried outbound message | Billing is per message. Does a retry send twice and charge twice? |

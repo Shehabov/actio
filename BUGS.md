@@ -103,6 +103,8 @@ instinct.
 | R-02 | A citation of a `BRAND.md` section is checked against the file before it is written. Section numbers are not remembered, they are read. | BUG-0002 | every agent |
 | R-03 | Where two files define the same schema, one is the source and the other references it. Never two copies. | BUG-0003 | tech-architect, orchestrator |
 | R-04 | A value that is not on the spacing scale or the type scale is not written, even when it looks right. If the value you want is absent, the design is wrong. | BUG-0005 | ux-designer, frontend-engineer |
+| R-05 | A rule read from `BRAND.md` is checked against every other section that governs the same token or concept before it is relied on. The spec has contradicted itself before. | BUG-0008 | every agent |
+| R-06 | A surface, its border and its hover state are three different values. A surface at the same lightness as its own border has no edge, and in dark mode there is no shadow to rescue it. | BUG-0009 | ux-designer, ux-auditor, frontend-engineer |
 
 ---
 
@@ -320,6 +322,87 @@ image as the reason for a colour value.
 ### BUG-0007 · Below-threshold error named the filter that caused it
 
 Full entry in the format example at the top of this file. Closed 2026-09-20.
+
+---
+
+### BUG-0008 · BRAND.md contradicted itself in four places
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | shehab |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-smoothness |
+| Surface | BRAND.md |
+| Component | §1.1, §1.5, §6, §8 |
+| Agent at fault | none, inherited from the spec |
+| Class | brand |
+| Severity | major |
+| Evidence | BRAND.md v1.4, sections cited |
+| Fixed in | BRAND.md v1.5 |
+| Repeat of | none |
+
+**What happened.** Four contradictions surfaced when the design system was audited against
+the spec, each of which would have produced a defensible but different answer depending on
+which section a reader opened first.
+
+1. §1.1 named Halo `#EFEFEF` as page and cards, while §1.3 defined `ink-50 #F6F6F4` with no
+   stated purpose and §4 approved Ink 50 as a ground for the mark. Three light values, one
+   rule, and the rule named the darkest as the page.
+2. §6 banned "pills for tags only" while §1.5 carried a `radius-pill` token and §9 listed a
+   status pill in the build order. A status pill is not a tag.
+3. No breakpoint scale existed anywhere in the file, though the guidelines PDF carries
+   480, 768, 1024 and 1440.
+4. §8 required `DD MMM YYYY` while §5's own approved-copy example wrote "due 14 March".
+   The PDF distinguishes prose from tables; the condensation lost it.
+
+**Why it got through.** `BRAND.md` was condensed from a 70 page document and nothing
+re-read the condensed file against itself. No gate owns spec self-consistency, which is why
+this surfaced only when a skill was audited against it rather than when it was written.
+
+**The rule this produces.** R-05 below.
+
+**Who must be briefed.** ux-designer, ux-auditor, frontend-engineer, tech-architect.
+
+**How to detect it next time.** For any rule stated in `BRAND.md`, grep the file for the
+token or the concept it governs and confirm no other section states a different rule for
+the same thing. Run it on every spec amendment, not only on a rewrite.
+
+---
+
+### BUG-0009 · The dark popover had no edge
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | shehab |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-smoothness |
+| Surface | design system |
+| Component | `actio-design-system`, command palette and surface table |
+| Agent at fault | authoring pass |
+| Class | design-system |
+| Severity | major |
+| Evidence | the surface table and the dark mode token list |
+| Fixed in | this run |
+| Repeat of | none |
+
+**What happened.** `#232320` was specified as the raised-two-steps dark surface while also
+being the dark rule colour, so a popover and its own border sat at identical lightness. The
+palette then set its selected row to `#1A1A18`, the same value as the popover surface, so
+the selection was invisible too.
+
+**Why it got through.** Shadows are removed in dark mode, so the border is the only edge a
+popover has, and nothing checked that a surface and its border differ. The auditor's
+checklist tested contrast for text, never for two adjacent non-text surfaces.
+
+**The rule this produces.** R-06 below.
+
+**Who must be briefed.** ux-designer, ux-auditor, frontend-engineer.
+
+**How to detect it next time.** For every surface in the dark palette, assert its fill, its
+border and its hover state are three different values, and that each pair holds 3:1 for
+non-text contrast.
 
 ---
 

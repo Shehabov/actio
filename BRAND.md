@@ -3,7 +3,12 @@
 > **For agents.** This file is the source of truth for any Actio interface, document or asset.
 > If a rule here conflicts with a design instinct, follow this file.
 > Companion document: `Actio-Brand-Guidelines-v1.pdf` (human-facing, same content, more context).
-> Version 1.4 · September 2026.
+> Version 1.5 · September 2026.
+>
+> **v1.5 amends the spec.** Four self-contradictions were found and settled by the Product
+> Lead: the light ground, what may take the pill radius, the missing breakpoint scale, and
+> the date format. Each is marked **v1.5** below. `Actio-Brand-Guidelines-v1.pdf` has not
+> yet been updated to match, and by this file's own rule that is a defect until it is.
 
 ---
 
@@ -40,7 +45,13 @@ Emit these to `tokens.json` → CSS custom properties, Tailwind config, iOS/Andr
 }
 ```
 
-`cosmos` = primary dark (text, dark surfaces). `halo` = primary light (page, cards).
+`cosmos` = primary dark (text and dark surfaces).
+
+**v1.5, the light surface stack.** Light surfaces separate by lightness, not by outline:
+`ink-50` `#F6F6F4` is the page, white `#FFFFFF` is a panel raised one step, and white plus
+`shadow-overlay` is an overlay raised two steps. `halo` `#EFEFEF` is **not** the page. It is
+ the primary text colour in dark mode and the ground the mark reverses onto. A hairline
+separates repeated records in a list; it does not lift a surface off the page.
 `sirius` = **Lumofy parent only.** Permitted in the account switcher and parent wordmark. **Never** an Actio interface colour. Two accents makes a suite look incoherent.
 
 ### 1.2 Colour — Vega (the Actio accent)
@@ -110,7 +121,10 @@ Hue 182°. Chosen because it is the only gap in the Lumofy wheel: 33° from Auro
   "focus-offset": "2px",
   "motion-micro": "120ms cubic-bezier(0.2,0,0.2,1)",
   "motion-panel": "200ms cubic-bezier(0.2,0,0.2,1)",
-  "motion-max": "300ms"
+  "motion-max": "300ms",
+  "breakpoints": [480, 768, 1024, 1440],
+  "width-reading": "720px",
+  "width-data": "1200px"
 }
 ```
 
@@ -248,7 +262,8 @@ BANNED:
   mesh gradients, aurora blurs, glassmorphism, frosted panels
   glow, neon edges, coloured drop shadows
   Inter / Poppins / Montserrat as substitutes for the stack in §3
-  rounded-everything (radius is 8px controls / 12px cards; pills for tags only)
+  rounded-everything. v1.5: `radius-pill` 999px is for tags, status pills, tab groups and
+  the composer, and for nothing else. Never a card, a panel, an input or a primary button.
   3D blobs, floating spheres, isometric illustration
   sparkle / star / wand icons to denote AI
   stock photography of colleagues laughing at a laptop
@@ -340,7 +355,7 @@ Arabic sets roughly 15% shorter than English, so an interface designed for Bahas
 | Plurals | **Never concatenate a string containing a count.** Indonesian and Tagalog pluralise differently from English. |
 | Names | Support single-name users. Many Indonesian employees have one legal name; a form demanding a surname excludes them. |
 | Idiom | No idioms, metaphors or wordplay in any locale. |
-| Dates | `DD MMM YYYY`. Never numeric-only — `03/04` is ambiguous. |
+| Dates | **v1.5.** In tables, identifiers and any numeric column: `14 Mar 2026`. In running prose: `14 March`. Never numeric-only, because `03/04` is ambiguous. The prose form is why §5 writes "due 14 March" and that example is correct. |
 
 
 ---

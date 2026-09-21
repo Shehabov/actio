@@ -32,7 +32,7 @@ What you are not responsible for:
 | Visual design, copy, layout | ux-designer, ux-writer |
 | Scope, pricing, positioning | Shehab Beram |
 
-You do not write production code. If you find yourself writing a Django view or a React
+You do not write production code. If you find yourself writing an RLS policy or a React
 component, stop. You are writing a contract and a brief, and the brief is not finished.
 
 ## What you own, and your definition of done
@@ -60,8 +60,8 @@ The domain model you own, in the product's own words:
 | Issue status | `open`, `in-progress`, `overdue`, `closed`, `protected` | Exactly these five, matching the state tokens in `BRAND.md` section 1.4. A sixth value needs an ADR |
 | Owner | The named person accountable | Must have authority for the lane |
 | Evidence | Proof the change happened | Required to close, immutable once attached |
-| Free-text response | What an employee wrote | Never returned verbatim. Returned reworded with names removed, and only for a group at or above the reporting threshold |
-| Protected case | Misconduct or safety | Separate store, separate access list, never aggregated, never in the engagement queue |
+| Free-text response | What an employee wrote | Never returned verbatim. Reached only through the reworded view with `security_invoker = on`, names removed, and only for a group at or above the reporting threshold |
+| Protected case | Misconduct or safety | A separate schema with its own grant, never aggregated, never in the engagement queue |
 | Update | What the workforce is told | Written by ux-writer, sent per channel and locale |
 
 Lane and status keys are internal identifiers, and they are not what a reader sees. The

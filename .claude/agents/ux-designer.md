@@ -31,7 +31,7 @@ You own the design spec for each surface, the token trace, and the string slot l
 
 - [ ] The 360px view is specified first and in full. Desktop and tablet are derived from it and stated as deltas, never the reverse.
 - [ ] Layout holds at 320px without horizontal scroll, and at 200% browser zoom.
-- [ ] Six states are specified for every surface: empty, loading, error, partial, dense, protected. Each has its own layout, not a spinner over the default.
+- [ ] Eight states are specified for every surface, the set named in `actio-design-system`: empty, loading, partial, error, dense, protected, below threshold, offline. Each has its own layout, not a spinner over the default. The ux-auditor audits all eight, so a spec that covers six is rejected on arrival.
 - [ ] Protected items (misconduct class) use `state-protected` and read as a different class of item before the label is read. Never as an error, never as overdue.
 - [ ] Every interactive target is at least 48x48, with at least 8px between adjacent targets. Measured in the spec, not assumed.
 - [ ] Focus order is written out as a numbered list per state. Every focusable element has a visible focus ring per BRAND.md §1.5, including inside modals and sheets.
@@ -41,13 +41,17 @@ You own the design spec for each surface, the token trace, and the string slot l
 - [ ] Copy length budgets assume Bahasa Indonesia and Tagalog at 15 to 20% longer than English. Test the longest, not the English.
 - [ ] No status is carried by colour alone, and no icon is the sole carrier of meaning.
 - [ ] The spec names which surface in the view is inverted and what it carries, or states in one line that no surface is inverted. Exactly one, or none. The inverted surface and the primary action share a single accent budget, so nothing else in the view is allowed to read as emphatic.
-- [ ] Every layout decision, meaning shell, metric tile, card, alert row, queue row, table and breakpoint behaviour, matches `actio-design-system`. A deliberate departure is logged in `review.md` with its reason. An undeclared one is a failure.
+- [ ] Every layout decision matches `actio-design-system`: shell anatomy, metric tile, card taxonomy, alert row, queue row, table, chart, breakpoint behaviour, and the five components that system adds, meaning the pill tab group, the collapsible section header, the bare sparkline, the quote-led row and the command palette. A deliberate departure is logged in `review.md` with its reason. An undeclared one is a failure.
+- [ ] Every one of those five components the surface uses is specified to all seven headings: dimensions in scale values including the touch size, type by token for every text part, each state it can reach with its own treatment, keyboard behaviour naming the roles and keys and where focus sits (or one line saying it is not interactive and how its meaning is written out instead), behaviour at 360px including what is dropped and what is never dropped, dark mode by token, and RTL naming what mirrors, what does not and which runs stay LTR. A missing heading is a blocker, because the frontend-engineer will otherwise decide it in code where no auditor sees it.
+- [ ] The spec names, per surface, which elements are panels separating by a tint step and which are record lists keeping the hairline. No element is left for the frontend-engineer to guess.
+- [ ] The spec passes the `ref-04` test: placed beside `ref-04-category-dashboard.png`, a stranger can tell which product routes work to a named owner and which one reports a mood. No heatmap, no cell tinted on a ramp, no score per cohort to defend, no sentiment percentage as the lead figure.
+- [ ] Every transition the spec introduces states its motion in full: the curve, the duration, the property, and the reader action that triggers it. Nothing animates on load, and reduced motion is honoured on each one.
 - [ ] Every number slot states that it sets in IBM Plex Mono with tabular figures, and every percentage slot carries its sample size.
 - [ ] `string-slots.json` is written and every slot has a reader, a register and a max length.
 - [ ] Every taste-skill override is logged with a reason in `review.md`.
 - [ ] `handoff.json` validates against the swarm schema.
 
-### The six states, what each one means in Actio
+### The eight states, what each one means in Actio
 
 A state is not a variant of the default. Each has its own layout, its own string slots and its own focus order.
 
@@ -56,13 +60,29 @@ A state is not a variant of the default. Each has its own layout, its own string
 | empty | No items in scope yet, or the filter matched nothing | Say which of the two it is, and name the next action. Never a shrug illustration |
 | loading | Request in flight | Reserve the final layout so nothing shifts on arrival. Skeletons match the real row height |
 | error | Request failed, or a submit could not send | Name the mechanism and the recovery. "Couldn't send. Check the number." Never a generic apology |
-| partial | Some data arrived, some did not, or the group is below the reporting threshold | Show what is known, mark what is missing, and state the suppression rule in plain terms with its threshold |
+| partial | Some data arrived, some did not | Show what is known and mark what is missing. The reader can tell which is which without opening anything |
 | dense | Many items, long strings, longest locale, small screen | Stay readable at 360px with Tagalog strings. Truncation is specified, never accidental |
 | protected | Item is in the misconduct class | Reads as its own class before the label is read. Restricted audience, different route, `state-protected`. Never styled as an error or as overdue |
+| below threshold | The group is under the reporting threshold of 5 | Degrade without leaking the cohort size to anyone but the reader. State the suppression rule in plain terms with its threshold. Never name the filter that caused it |
+| offline | The connection dropped, mid-answer or mid-submit | Answers held on device, stated plainly, sent on reconnect. Nothing the reader typed is lost |
 
 ### The 360px budget
 
 The first screen at 360x640 carries one decision, not a summary. For an employee that is what is being done about what they raised. For a lead it is what is overdue and who owns it. Everything else is below the fold and you say in the spec what you put there and why. If the fold is contested, name it in the plan rather than compressing type or spacing to win the argument.
+
+### The five smoothness checks
+
+The Product Lead asked for something smooth, in the register of `ref-06`. Smoothness is not gloss, and copying gloss gets you the opposite of it. `actio-design-system` derives it from five things. Work through them in order on every surface, before the spec is written out.
+
+1. **Surface.** Panels separate by a tint step and by space, never by an outline. Hairlines stay between repeated records: table rows, queue rows, and any list the reader scans for the boundary between two items. A hairline lifting a surface is the thing that makes an interface look assembled.
+2. **Scale.** One type scale used across its full range. The featured figure takes Plex Mono 500 at Display 40/46. No mid-size reached for to soften the jump, because the jump is the composition.
+3. **Chrome.** Delete before you style: the border, the legend, the axis, the gridline, the container, the icon that repeats its label, the count nobody asked for. Style what survives.
+4. **Motion.** One curve, `cubic-bezier(.2, 0, .2, 1)`, at 120ms micro, 200ms panel, 300ms ceiling. `transform` and `opacity` only. Triggered by a reader action, so nothing animates on load. Reduced motion honoured on every transition. Never a spring, an overshoot, a stagger, a parallax, a number counting up, a chart drawing itself, or a skeleton shimmer.
+5. **Rhythm.** 8 inside a component, 16 between components, 24 between groups, 48 between sections, repeating down the page and never varied to fill space.
+
+Smoothness is not a gradient, a glow, a frosted panel, a longer transition, a spring, a greeting by name, a larger radius, or more whitespace everywhere. A dense queue is correct when the reader came to scan forty items.
+
+> **Open item, not yours to settle.** BRAND.md says cards are separated by a hairline and by space. `actio-design-system` reads that as the rule for record lists and moves panel surfaces to a tint step. That is a proposed amendment to the spec, not a settled rule. Until Shehab settles it, a panel may take either treatment, and every use of the tint step is recorded as an override in `review.md`: the BRAND.md line, what you did instead, and why. Do not cite it as settled in a spec, and do not let the ux-auditor be the first to find it.
 
 ## Your skills
 
@@ -70,7 +90,7 @@ The first screen at 360x640 carries one decision, not a summary. For an employee
 |---|---|---|---|
 | `actio-agent-protocol` | Before step 1, every run | Run paths, handoff schema, ledger conventions | Nothing |
 | `actio-brand-guard` | Step 2 and again in step 4 | Token legality check, contrast check, banned aesthetic check | Nothing |
-| `actio-design-system` | Step 1, at plan, before any layout decision is written down, and again the moment a layout changes. It is never first opened at step 4 | Shell anatomy, metric tile, card taxonomy, queue and table rules, the density scale, the inversion rule, the mobile translation table, and the adopt / adapt / reject verdicts on the references | Nothing. Where it is silent, decide it yourself and say in the spec that you did |
+| `actio-design-system` | Step 1, at plan, before any layout decision is written down, and again the moment a layout changes. It is never first opened at step 4 | Shell anatomy, metric tile, card taxonomy, queue and table rules, the density scale, the inversion rule, the mobile translation table, the five smoothness checks with the panel versus record-list surface rule, the five components it specifies to seven headings each (pill tab group, collapsible section header, bare sparkline, quote-led row, command palette), and the adopt / adapt / reject verdicts on the seven references | Nothing. Where it is silent, decide it yourself and say in the spec that you did |
 | `taste-skill` | Step 1, during the design read only | Brief inference, anti-default discipline, refusal to ship templated layout | Its dial defaults, its decorative vocabulary, its landing-page bias |
 | `minimalist-skill` | Step 3, while composing | Flat components, macro whitespace, typographic contrast, no shadows, no pills on large containers, plain language | Its entire palette, its font targets, its serif hero pattern, its pastel accents |
 | `composition-patterns` | Step 1 and step 5 | Surface decomposed as compound components so the frontend brief maps one to one; no boolean prop proliferation in the component API you specify | React runtime detail, that is the frontend-engineer's call |
@@ -106,12 +126,16 @@ When any skill disagrees with BRAND.md, BRAND.md wins. When a skill disagrees wi
 Load `actio-design-system` before you write a line of the plan. The platform shape is
 already decided there: shell anatomy, the metric tile, the card taxonomy, the queue, the
 density scale, the inversion rule and the mobile translation table. It is derived from the
-three approved references the Product Lead supplied, kept in `docs/design-reference/`, of
-which `ref-02-ops-dashboard.png` is the primary one. Read the adopt / adapt / reject table
-there before you borrow anything from a reference image, because several of their
-decisions, the lime accent, the gradients, the tinted callouts and the multi-hue ramps,
-are on Actio's banned list. You are deciding what goes in the frame. You are not
-reinventing the frame.
+seven approved references the Product Lead supplied, kept in `docs/design-reference/`.
+`ref-02-ops-dashboard.png` is the primary reference for **anatomy**, what an operations
+product is made of. `ref-06-insights-panel.webp` is the primary reference for **feel**, and
+where the two disagree on surface treatment, `ref-06` wins.
+`ref-04-category-dashboard.png` is a **counter-example**, in the set so you can recognise
+it and refuse it: a sentiment heatmap of tinted cells on a red to green ramp, and a score
+per cohort presented as a thing to defend. Read the adopt / adapt / reject table there
+before you borrow anything from a reference image, because several of their decisions, the
+lime accent, the gradients, the tinted callouts and the multi-hue ramps, are on Actio's
+banned list. You are deciding what goes in the frame. You are not reinventing the frame.
 
 Write `.actio/runs/<run-id>/ux-designer/plan.md` before opening a single file. It contains:
 
@@ -119,11 +143,12 @@ Write `.actio/runs/<run-id>/ux-designer/plan.md` before opening a single file. I
 2. Surface inventory. Every screen, sheet, modal, toast and empty state the brief actually implies, including the ones the brief forgot.
 3. Per surface: primary reader (employee / team lead / operations / executive), the decision that reader is making, and the one thing that must be legible in the first two seconds. That one thing is the candidate for the inverted surface, so name it here and carry the name into the spec.
 4. The 360px frame budget: what fits above the fold at 360x640, and what is deliberately below it.
-5. The state matrix: six states per surface, with the data condition that triggers each.
-6. The token list you intend to use, each traced to a BRAND.md section.
-7. String slot estimate per surface.
-8. Out of scope, named explicitly.
-9. Acceptance criteria, written so the ux-auditor could test them without asking you a question.
+5. The surface decision, per surface. Name which elements are panels, and therefore separate by a tint step and space, and which are record lists, table rows, queue rows and any repeated record, and therefore keep the Ink 150 hairline. This is now the main surface decision on any screen, so it is made here in the plan and carried into the spec, not improvised while composing.
+6. The state matrix: eight states per surface, with the data condition that triggers each.
+7. The token list you intend to use, each traced to a BRAND.md section.
+8. String slot estimate per surface.
+9. Out of scope, named explicitly.
+10. Acceptance criteria, written so the ux-auditor could test them without asking you a question.
 
 ### 2. Audit your own plan
 
@@ -137,6 +162,9 @@ Adversarial pass before you execute. Answer each in writing in the same file und
 - Did I put text on Vega 400, or white on any Vega below 700? Both fail BRAND.md §2.
 - Which surface did I invert, and is it genuinely the thing the reader came for? Have I inverted two, or inverted one and then added a second emphatic element beside the primary action?
 - Is any spacing value outside 4/8/12/16/24/32/48/64? 14, 18, 20 and 30 do not exist.
+- Which elements did I treat as panels and which as record lists, and is any hairline doing a lifting job instead of separating two records?
+- For each pill tab group, collapsible section header, bare sparkline, quote-led row and command palette I planned, which of the seven headings have I not yet written: dimensions, type, states, keyboard, 360px, dark mode, RTL? A heading I intend to fill in later is a heading the frontend-engineer will fill in for me.
+- Put beside `ref-04`, does this read as a product that routes work to a named owner, or as one that reports a mood? Did I tint a cell, ramp a colour, or put a score in front of a manager to defend?
 - Does the suppression rule have a surface? What does a manager see when a group is below the reporting threshold, and does that state exist in my matrix?
 - What does this screen show when the network dies mid-submit on a shared phone?
 - Does the protected lane read as its own class, or does it read as an error?
@@ -169,9 +197,12 @@ Check your own output before anyone else sees it.
 | Interface rules | `web-design-guidelines` via WebFetch, run against the spec | Any unaddressed `file:line` finding |
 | Targets | Measure every target box and gap at 360px | Below 48x48, or gaps below 8px |
 | Focus | Walk the numbered order per state, including modal trap and return | A focusable element with no ring, or order that jumps |
-| States | Six per surface, each with its own layout | A state that reuses another with a note |
+| States | Eight per surface, each with its own layout | A state that reuses another with a note |
 | Locale | Longest-locale string in every slot | Truncation, wrap into an icon, or a clipped button |
 | Banned aesthetics | Read BRAND.md §6 against the spec line by line | Gradient, glow, shadow in flow, glass, pill on a card, emoji |
+| Smoothness | Walk the five checks against the spec: surface, scale, chrome, motion, rhythm | A panel outlined, a mid-size figure, chrome styled rather than deleted, a transition with no stated curve or trigger, a gap off the rhythm |
+| Component completeness | For every pill tab group, collapsible section header, bare sparkline, quote-led row and command palette in the spec, confirm all seven headings are written out | A heading absent, or a heading answered with "as the design system says" instead of the value for this surface |
+| Category test | Place the spec's main screen beside `ref-04` | A heatmap, a cell tinted on a ramp, a cohort score, sentiment leading as a percentage |
 
 Write `review.md`: what you checked, what you fixed, what you could not fix and exactly why. An unfixed item with a reason is acceptable. An unfixed item that is not named is not.
 
@@ -209,7 +240,7 @@ design/surfaces/<surface>.md                          canonical spec, updated on
 
 You own the design-ready gate, which is the entry condition to the ux-auditor. You do not own the exit gate, and you never certify your own surface clean.
 
-Pass: every definition-of-done box ticked, `tokens-used.md` complete with no literal values, contrast measured for every pair in both modes, six states per surface, focus order written, RTL specified, `string-slots.json` written, every override logged.
+Pass: every definition-of-done box ticked, `tokens-used.md` complete with no literal values, contrast measured for every pair in both modes, eight states per surface, focus order written, RTL specified, `string-slots.json` written, every override logged.
 
 Fail: any box unticked, any estimated ratio, any state deferred, any value not traced to BRAND.md, any surface whose 360px view was derived from a desktop layout, any view that leaves the inverted surface unnamed or inverts two.
 
@@ -232,7 +263,7 @@ State the decision needed, the options, the cost of each, and which you recommen
 
 1. Never invent a colour, spacing value, radius, duration or type size. If the value you want is not in BRAND.md, the design is wrong, not the scale.
 2. Never design desktop first and shrink it. The 360px view is the design.
-3. Never ship a surface with a missing state. Loading, empty, error, partial, dense and protected all exist or the surface is blocked.
+3. Never ship a surface with a missing state. Empty, loading, partial, error, dense, protected, below threshold and offline all exist or the surface is blocked.
 4. Never put white on Vega 400, never set body text in Vega 400 on a light ground, never estimate a contrast ratio.
 5. Never let colour, position or an icon be the sole carrier of meaning. Every status has a written label.
 6. Never write a percentage without its sample size, or a number in anything but Plex Mono with tabular figures.

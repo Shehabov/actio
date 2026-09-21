@@ -21,3 +21,9 @@ dist/
 # Generated raster exports (the vectors are the source of truth)
 logo/**/*.png
 
+
+# Supabase agent skills: `npx skills add supabase/agent-skills` writes the real files to
+# .agents/skills/ (committed) and symlinks them into .claude/skills/ with an absolute
+# machine-local path, which breaks on any other clone. Ignore the symlinks, keep the source.
+.claude/skills/supabase
+.claude/skills/supabase-postgres-best-practices
