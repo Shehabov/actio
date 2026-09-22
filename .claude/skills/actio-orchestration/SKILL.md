@@ -190,7 +190,31 @@ For each agent in the run plan, in stage order:
    YES -> finding: GATE_SKIPPED
 ```
 
-### Supporting commands
+### Running it
+
+The check is implemented at `.actio/bin/utilisation-check.mjs` and that file is the only
+thing you run:
+
+```bash
+node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>
+```
+
+It exits 0 when clean and 1 when anything is found, so `run-closure` can depend on it. Add
+`--json` for the machine-readable form.
+
+The algorithm above is the specification; the script is the implementation. One source, one
+reference, never two copies (R-03). If you change one, change the other in the same commit.
+
+It separates **PENDING** from a finding: an agent whose gates have not passed, or whose
+inputs are not yet on disk, has not failed to run, and an artefact nobody has consumed yet
+because its planned consumer has not been dispatched is not an unused output. Without that
+separation the check raises a finding against every agent in the plan when run at run open,
+which is what made it unusable anywhere but closure.
+
+### Supporting commands, for reference
+
+**These are illustrative, not runnable as written: `jq` is not installed on the Product
+Lead's machine.** They document what each step does. Run the script above instead.
 
 ```bash
 RUN=.actio/runs/2026-09-20-privacy-preview

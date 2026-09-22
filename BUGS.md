@@ -113,11 +113,28 @@ instinct.
 
 ## Open
 
-_No open defects._
+This is an index derived from the entries below, never written from memory. Every entry
+whose `Status` row reads `open` appears here. The check is
+`grep -c '^| Status | open |' BUGS.md` against the number of rows in this table.
+
+| Id | What | Surface | Agent at fault | Needs |
+|---|---|---|---|---|
+| BUG-0014 | `BRAND.md` defines a body weight its own hard rule forbids | brand spec | none, a spec defect | shehab |
+| BUG-0015 | The orchestrator's own file calls twelve gates nine | orchestration | the pass that added the security and closure gates | a machinery fix |
+| BUG-0016 | Every `bug-historian` pass writes to one handoff path, so the guard destroys the brief's record | `.claude` | authoring pass | shehab |
+| BUG-0017 | `bug-historian.md` omits the security gate from the guard's position in the flow | `.claude` | the pass that added `security-analyst` | a machinery fix |
+| BUG-0019 | The `c2pa` namespace survived the BUG-0001 strip in three lockups | logo | the BUG-0001 fix | release-engineer |
+
+Entries live in the section below in id order, open and closed together, because a reader
+looking up an id should find it in one place. This index is how the open set is read.
 
 ---
 
-## Closed
+## Entries
+
+Every entry ever raised, in id order, open and closed together. The heading was `Closed`
+until 2026-09-22, when BUG-0018 found an open entry filed beneath it. Nothing here is ever
+removed; an entry closes and stays.
 
 ### BUG-0001 · Embedded content-credential manifests shipped inside brand assets
 
@@ -147,7 +164,16 @@ appears, not only from commit messages.
 
 **Who must be briefed.** release-engineer, any agent committing an asset.
 
-**How to detect it next time.** `grep -l 'c2pa\|xmpmeta\|Generator' logo/**/*.svg`
+**How to detect it next time.**
+`grep -rlE 'c2pa|xmpmeta|Generator|Adobe|Sketch|Figma' --include=*.svg .`
+Must return nothing.
+
+**Detection corrected 2026-09-22.** This entry published
+`grep -l 'c2pa\|xmpmeta\|Generator' logo/**/*.svg`. Without `globstar` that pattern expands
+to `logo/*/*.svg`, which is one file in this tree, so the command returned clean on a tree
+carrying three infected files. The entry was closed on a check that could not fire. See
+BUG-0019 and
+`.actio/runs/2026-09-22-site-insights/evidence/regression/bug-0001-detection-does-not-fire.txt`.
 
 ---
 
@@ -565,7 +591,7 @@ check applies to the agent count and the skill count.
 | Surface | brand spec |
 | Component | `BRAND.md` §3 |
 | Agent at fault | none, this is a spec defect |
-| Class | spec |
+| Class | brand |
 | Severity | minor |
 | Evidence | the `caption` token against §3's hard rules, three lines apart |
 | Fixed in | not fixed, needs Shehab |
@@ -583,7 +609,228 @@ hard rule gains the caption token as its single stated exception.
 token as precedent for any other sans weight outside 400 and 600.
 
 **How to detect it next time.** R-05 already covers it: a rule read from `BRAND.md` is
-checked against every other section governing the same token before it is relied on.
+checked against every other section governing the same token before it is relied on. The
+command is `grep -nE 'caption|Two body weights' BRAND.md`, which returns both lines eight
+apart and shows the contradiction without needing the whole section read.
+
+**Register correction, 2026-09-22.** `Class` read `spec`, which is not in the taxonomy at
+the head of this file, so the entry could not be found by a class search. Corrected to
+`brand`, matching BUG-0008, which this entry names as its parent. The correction is
+recorded rather than made silently.
+
+---
+
+### BUG-0015 · The orchestrator's own file calls twelve gates nine
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | orchestrator, in its handoff for this run |
+| Raised on | 2026-09-22 |
+| Run | 2026-09-22-site-insights |
+| Surface | orchestration |
+| Component | `.claude/agents/orchestrator.md` line 125 |
+| Agent at fault | the pass that added the security and closure gates |
+| Class | process |
+| Severity | blocker |
+| Evidence | `.actio/runs/2026-09-22-site-insights/evidence/regression/stage1-baseline.txt`, section D-0004 |
+| Fixed in | not fixed |
+| Repeat of | BUG-0013 |
+
+**What happened.** The `run.json` block in `orchestrator.md` carries twelve gate objects.
+The sentence immediately below it reads "The nine gate names above are the canonical ones
+from the gate table". Every other prose site agrees on twelve: `orchestrator.md` line 24,
+`actio-orchestration` lines 82 and 119, `README.md` lines 39 and 152. One line disagrees
+with the list printed directly above it, and an orchestrator reading the prose rather than
+counting the block plans a nine-gate run with no security gate, no regression guard and no
+closure.
+
+**Why it got through.** R-09 exists precisely for this and binds the orchestrator, and
+BUG-0013's own detection command was never run against the file BUG-0013 was raised in.
+The fix updated the tables it was looking at and left the sentence under the JSON block.
+That is R-08's failure on top of R-09's.
+
+**The rule this produces.** None new. R-09 already states it. What this entry adds is the
+evidence that a standing rule with no detection run against its own origin file does not
+bind anything.
+
+**Who must be briefed.** orchestrator, tech-architect, every gate owner.
+
+**How to detect it next time.**
+`sed -n '/^| # | Gate |/,/^$/p' docs/WORKFLOW.md | grep -cE '^\| [0-9]+ \|'` gives the
+canonical count. Then
+`grep -rniE '\b(nine|ten|eleven|twelve|thirteen) gates?\b' --include=*.md . | grep -v '/.actio/runs/'`
+must return no line whose number differs from it.
+
+---
+
+### BUG-0016 · Every bug-historian pass writes to one handoff path, so the guard destroys the brief's record
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | orchestrator, in its handoff for this run |
+| Raised on | 2026-09-22 |
+| Run | 2026-09-22-site-insights |
+| Surface | .claude |
+| Component | `.claude/agents/bug-historian.md`, `actio-agent-protocol` handoff schema, the `docs/WORKFLOW.md` flowchart |
+| Agent at fault | authoring pass |
+| Class | process |
+| Severity | blocker |
+| Evidence | `.actio/runs/2026-09-22-site-insights/orchestrator/handoff.json`, machinery finding 5; this run's own `bug-historian/` directory |
+| Fixed in | not fixed, needs Shehab |
+| Repeat of | none |
+
+**What happened.** `bug-historian` runs at least twice in a run, at stage 1 for the brief
+and at stage 7 for the guard, and the `docs/WORKFLOW.md` flowchart adds a third recording
+pass. The protocol fixes exactly one handoff path per agent per run. The stage 7 guard
+therefore writes over the stage 1 brief's handoff at
+`.actio/runs/<run-id>/bug-historian/handoff.json`, taking the brief's `produced[]`, its
+timing and its status with it. The orchestrator's utilisation check runs at closure, after
+the overwrite, so it can never see that the brief was produced or that fourteen downstream
+agents consumed it.
+
+**Why it got through.** No gate owns the protocol. The handoff schema was written for
+agents that run once, and `bug-historian` is the only role whose own file says it runs
+twice, so the collision exists in exactly one place and nothing compares the two documents.
+
+**The rule this produces.** Pending Shehab's decision, because the fix is a change to the
+handoff schema and that is a process change. Written today it would read: an artefact path
+an agent writes more than once in a run carries the pass in its name, so no pass overwrites
+another's record.
+
+**Who must be briefed.** orchestrator, bug-historian, every agent that reads a handoff.
+
+**How to detect it next time.**
+`ls .actio/runs/<run-id>/bug-historian/` after stage 7, and confirm a stage 1 record still
+exists. In this run the mitigation is an archival copy at
+`bug-historian/handoff-stage1-brief.json`, named in the stage 1 `produced[]`. That is a
+workaround and not a fix, and it does not stop the canonical path being overwritten.
+
+---
+
+### BUG-0017 · bug-historian.md omits the security gate from the guard's position in the flow
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | orchestrator, in its handoff for this run |
+| Raised on | 2026-09-22 |
+| Run | 2026-09-22-site-insights |
+| Surface | .claude |
+| Component | `.claude/agents/bug-historian.md`, the "You run twice" section |
+| Agent at fault | the pass that added `security-analyst` |
+| Class | contract |
+| Severity | major |
+| Evidence | `.actio/runs/2026-09-22-site-insights/orchestrator/handoff.json`, machinery finding 4; `run.json` `blocked_by` on the stage 7 entry |
+| Fixed in | not fixed |
+| Repeat of | BUG-0013 |
+
+**What happened.** `bug-historian.md` says the guard runs "After `review-1of3`,
+`review-2of3` and `review-3of3`, before `engineering`". The `docs/WORKFLOW.md` flowchart
+has an edge from the security gate into the regression guard, and the canonical plan in
+`actio-orchestration` puts `security` in the guard's `blocked_by`. A `bug-historian`
+following its own file starts the guard on a diff the security sweep has not seen, and the
+security findings then arrive after the gate that was supposed to consider them.
+
+**Why it got through.** Same root as BUG-0013. `security-analyst` was added where it was
+used and not where the sequence was written out in prose, and no check derives the prose
+sequence from the flowchart.
+
+**The rule this produces.** None new. R-09 covers the enumeration, R-03 covers the same
+sequence living in three files.
+
+**Who must be briefed.** bug-historian, orchestrator, security-analyst, engineering-lead.
+
+**How to detect it next time.**
+`grep -rn 'review-1of3' .claude docs | grep -v '/.actio/runs/'` and confirm every list of
+the gates that precede `regression-guard` also names `security`.
+
+---
+
+### BUG-0018 · The register's own Open section said there were no open defects while one was open
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | bug-historian, reading its own file at the start of this run |
+| Raised on | 2026-09-22 |
+| Run | 2026-09-22-site-insights |
+| Surface | BUGS.md |
+| Component | `BUGS.md`, the Open section and BUG-0014's placement |
+| Agent at fault | bug-historian |
+| Class | process |
+| Severity | major |
+| Evidence | `BUGS.md` as consumed by `orchestrator` at run open: the Open section against BUG-0014's `Status` row |
+| Fixed in | this run, 2026-09-22 |
+| Repeat of | BUG-0013 |
+
+**What happened.** BUG-0014 was recorded with `Status: open`, appended under the `Closed`
+heading, and the `Open` section was left reading "No open defects." Every agent that opened
+the register to see what was outstanding was told nothing was. The orchestrator consumed
+`BUGS.md` at run open on 2026-09-22 and could not have seen the one open defect in it.
+
+**Why it got through.** The Open section is a prose index over the entry list and nothing
+derived it from the list. That is R-09 exactly, in the file that publishes R-09. No gate
+checks the register, because the register is the thing that checks everything else, which
+makes `bug-historian` the only reader who can catch this and the only agent who can cause
+it.
+
+**The rule this produces.** None new. R-09 already states it. The Open section is now a
+table naming each open entry by id, so it cannot disagree with the entries without a reader
+seeing both at once, and the `Closed` heading is now `Entries`, because an open defect
+filed under `Closed` is the same lie in a different place.
+
+**Who must be briefed.** bug-historian, and every agent that reads this register to find
+out what is outstanding.
+
+**How to detect it next time.** `grep -c '^| Status | open |' BUGS.md` must equal the
+number of data rows in the Open table. Run it before every handoff that touches this file.
+
+---
+
+### BUG-0019 · The c2pa namespace survived the BUG-0001 strip in three lockups
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | bug-historian, stage 1 baseline of this run |
+| Raised on | 2026-09-22 |
+| Run | 2026-09-22-site-insights |
+| Surface | logo |
+| Component | `logo/svg/bilingual/actio-bilingual-vega-on-light.svg`, `logo/svg/guides/actio-horizontal-clearspace.svg`, `logo/svg/tagline/actio-tagline-horizontal-vega-on-light.svg` |
+| Agent at fault | the BUG-0001 fix |
+| Class | process |
+| Severity | major |
+| Evidence | `.actio/runs/2026-09-22-site-insights/evidence/regression/bug-0001-detection-does-not-fire.txt` |
+| Fixed in | not fixed |
+| Repeat of | BUG-0001 |
+
+**What happened.** BUG-0001 stripped roughly 5KB of embedded base64 provenance from the
+supplied lockups and was closed. Three of the nineteen SVGs under `logo/` still carry
+`xmlns:c2pa="http://c2pa.org/manifest"` on the root element. The payload is gone; the
+assertion of tool authorship is not. The namespace declaration is the manifest's own hook
+and it ships to every browser that loads the file.
+
+**Why it got through.** BUG-0001's published detection command was
+`grep -l 'c2pa\|xmpmeta\|Generator' logo/**/*.svg`. Without `globstar` that glob expands to
+`logo/*/*.svg`, which is one file in this tree, and the command returns clean. The entry was
+closed on a check that examines a single file and cannot reach the three that carry the
+defect. A wrong detection command is worse than none, because it produces a clean result
+that reads as proof.
+
+**The rule this produces.** None new. R-08 states the search. This entry widens how R-08 is
+read: "the file" means everywhere the value lives, which here is nineteen files across six
+directories rather than the one that was noticed. It also adds a condition on closing any
+entry: the detection command is run and seen to fire on the unfixed state before the fix,
+so a command that cannot fire is caught while it still matters.
+
+**Who must be briefed.** frontend-engineer, release-engineer, ux-designer.
+
+**How to detect it next time.**
+`grep -rlE 'c2pa|xmpmeta|Generator|Adobe|Sketch|Figma' --include=*.svg .` Recursive, not a
+glob. Must return nothing. The five seal files under `logo/svg/mark/` are clean as of
+2026-09-22, which is the set the empty state draws from.
 
 ---
 
@@ -591,12 +838,20 @@ checked against every other section governing the same token before it is relied
 
 The point of the register. Reviewed by `bug-historian` at the start of every run.
 
-| Pattern | Occurrences | Standing rule |
-|---|---|---|
-| A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004 | R-03 |
-| A spec value written from memory rather than read from the file | BUG-0002, BUG-0005 | R-02, R-04 |
-| A reference image treated as a source of values | BUG-0006, BUG-0011 | R-07 |
-| A fix applied in one place and missed in another in the same file | BUG-0009, BUG-0012 | R-08 |
+| Pattern | Occurrences | Standing rule | State |
+|---|---|---|---|
+| A count or an index written in prose rather than derived from the list it describes | BUG-0013, BUG-0015, BUG-0018 | R-09 | **three, escalated to shehab 2026-09-22** |
+| A fix applied where the defect was noticed and missed where the same value also lives | BUG-0009, BUG-0012, BUG-0019 | R-08 | **three, escalated to shehab 2026-09-22** |
+| A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004, BUG-0017 | R-03 | **three, escalated to shehab 2026-09-22** |
+| A spec value written from memory rather than read from the file | BUG-0002, BUG-0005 | R-02, R-04 | repeat |
+| A reference image treated as a source of values | BUG-0006, BUG-0011 | R-07 | repeat |
+| A spec that contradicts itself and is relied on by both readings | BUG-0008, BUG-0014 | R-05 | repeat |
 
 Two occurrences of a pattern makes it a repeat. A third escalates to Shehab as a process
 failure rather than a defect, because the register was written and not read.
+
+Three patterns crossed that line on 2026-09-22, all three in the machinery rather than in
+the product. They are carried in `bug-historian`'s handoff for run
+`2026-09-22-site-insights` as `decisions_for_shehab`, each with options and a
+recommendation. They are recorded here so the next run's brief does not raise them again as
+if they were new.

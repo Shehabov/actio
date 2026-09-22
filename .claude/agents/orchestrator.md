@@ -122,7 +122,7 @@ Run id format: `YYYY-MM-DD-<short-slug>`, for example `2026-09-20-overdue-lane-c
 }
 ```
 
-The nine gate names above are the canonical ones from the gate table in `docs/WORKFLOW.md`, in its order. Never rename one for a run, because the owner writes the same name back in its handoff and the utilisation check matches on it literally.
+The twelve gate names above are the canonical ones from the gate table in `docs/WORKFLOW.md`, in its order. Never rename one for a run, because the owner writes the same name back in its handoff and the utilisation check matches on it literally.
 
 Paths in `consumes` and `produces` are written relative to `.actio/runs/<run-id>/`. The plan above is the full default flow. Delete the stages this change does not touch and record each deletion in `out_of_scope`; do not leave a stage in the plan with an empty task.
 

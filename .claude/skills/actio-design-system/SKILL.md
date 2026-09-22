@@ -966,7 +966,7 @@ Every surface ships all of these. An uncovered state is a Major audit finding.
 | Error | What happened, then the next step. The control beside the message where the action is possible from that screen. |
 | Dense | The realistic worst case: 40 issues, longest locale, longest names |
 | Protected | Row present, count reconciles, nothing to open |
-| Below threshold | Degrades without leaking the cohort size to anyone but the reader |
+| Below threshold | Degrades without leaking the cohort size **to the cohort's own members, and to nobody else**. On a manager-facing surface the reader is precisely the person who must not learn it, so "anyone but the reader" is the wrong test and was a defect here (BUG-0020). |
 | Offline | Answers held on device, stated plainly, sent on reconnect |
 
 ---

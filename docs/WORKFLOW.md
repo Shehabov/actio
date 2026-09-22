@@ -171,7 +171,7 @@ it exactly, so a gate is never renamed for a run.
 | 6 | Review, 3 of 3 | `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
 | 7 | Security | `security` | `security-analyst` | Every applicable pass in `actio-security` ran with evidence, no critical or high open, audits clean or accepted in writing, no secret in tree or history, every client-reachable table has RLS with a policy, no `service_role` outside Edge Function secrets |
 | 8 | Regression guard | `regression-guard` | `bug-historian` | No known defect on these surfaces has been repeated, each checked by running its detection command, and every standing rule binding this run has been checked with its result recorded |
-| 9 | Engineering | `engineering` | `engineering-lead` | All three reviews and the security gate passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
+| 9 | Engineering | `engineering` | `engineering-lead` | All three reviews, the security gate **and the regression guard** passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
 | 10 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
 | 11 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
 | 12 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |

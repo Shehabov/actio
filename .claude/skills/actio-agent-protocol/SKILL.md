@@ -78,6 +78,45 @@ problem that is quiet is a defect.
 
 Write `handoff.json`. The orchestrator parses it, so the key names are fixed.
 
+**Every handoff carries a `stage` key**, matching the `stage` of the plan entry it answers.
+The utilisation check pairs handoffs to plan entries by it.
+
+**An agent that runs more than once in a plan writes one handoff per pass.** The first pass
+writes `handoff.json`; every later pass writes `handoff-stage<N>.json`. `bug-historian` is
+the case this exists for: it publishes the regression brief at stage 1 and runs the guard at
+stage 7, and while both passes wrote one path the guard destroyed the brief's record before
+closure, so every downstream `consumed[]` pointing at the brief read as `FALSE_CONSUMPTION`
+against agents that had done nothing wrong. Recorded as BUG-0016.
+
+**A promised input that never arrived, and that you worked around, goes in
+`missing_inputs[]`, not in `blockers[]`.** A blocker stops the run. An input you routed
+around without stopping is a fact the next agent needs and the utilisation check must see,
+and it belongs in neither the prose summary nor the blocker list.
+
+**Defects in the machinery itself go in `machinery_findings[]`**: an agent definition, a
+skill or this protocol being ambiguous, self-contradictory, or missing something the task
+needed. Name the file. This is as valuable as the feature work and it is how the swarm is
+maintained.
+
+---
+
+## What you may assume is installed
+
+Checked on the Product Lead's machine, Windows 11 with Git Bash. Assuming otherwise wastes
+a dispatch.
+
+| Available | Not available |
+|---|---|
+| `node`, `perl`, `git`, `grep`, `sed`, `awk`, `find` | **`jq`.** Parse JSON with `node -e` instead. |
+
+**Do not write a multi-line artefact through a Bash heredoc.** `cat > file <<EOF` does not
+reliably terminate in this environment: it hangs and is killed at the timeout with no file
+created. Use the file-writing tool, or write a script file and run it. This is recorded as
+BUG-0023 and it has cost more than one agent its whole turn.
+
+**Commands can be slow here.** A Bash call that would be instant elsewhere can exceed two
+minutes. Prefer the dedicated search and read tools over shell loops.
+
 ---
 
 ## Run artefacts

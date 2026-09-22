@@ -147,6 +147,10 @@ computed for the requesting employee rather than illustrative.
 
 Auth: employee token. An employee may only request a cycle they are in.
 
+Both payloads below are returned to **the employee the cohort is about, on an employee
+token, and to no other reader**. `cohort_size` on a manager-facing endpoint is the leak
+I1 forbids. Do not copy these shapes onto a manager path.
+
 200, cohort at or above threshold:
 
 ```json
