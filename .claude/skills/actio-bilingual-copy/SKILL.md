@@ -75,7 +75,8 @@ One row per string. This is the artefact `frontend-engineer` and `backend-engine
 consume, and the one `ux-auditor` checks lengths against.
 
 Path: `.actio/runs/<run-id>/ux-writer/strings.md`, with machine-readable
-`strings.en.json` and `strings.ar.json` beside it.
+`strings-en.json` and `strings-ar.json` beside it. Those two names are the ones the run plan
+tracks, so they are not varied.
 
 | Key | Reader | EN | AR | Max | Context | AR reviewed |
 |---|---|---|---|---|---|---|

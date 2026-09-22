@@ -8,9 +8,11 @@ description: Build the Actio back end on Supabase. Use when writing schema, migr
 The back end is Supabase: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and
 Storage. There is no Django.
 
-Two vendored skills carry the general craft and are loaded alongside this one:
+Two vendored skills carry the general craft and are read alongside this one:
 `supabase` for products, clients and CLI, and `supabase-postgres-best-practices` for schema,
-indexes, locking and query performance. **This skill carries only what is specific to
+indexes, locking and query performance. They live at `.agents/skills/supabase/SKILL.md` and
+`.agents/skills/supabase-postgres-best-practices/SKILL.md`; their `.claude/skills/` symlinks
+are machine-local and gitignored, so read them by path rather than expecting them preloaded. **This skill carries only what is specific to
 Actio**, and where it disagrees with either, this skill wins because the invariants are the
 product's claim.
 
@@ -115,6 +117,8 @@ begin
 
   -- I1 and I2 in one place. Below the floor, nothing is returned, and the
   -- error names the invariant rather than the filter that tripped it.
+  -- Manager-facing only. An employee's view of their own cohort returns
+  -- below_threshold: true instead; see the Below threshold row in actio-architecture.
   if v_n < v_floor then
     raise exception 'below_threshold' using errcode = 'P0001';
   end if;
@@ -175,10 +179,18 @@ grant usage on schema protected to protected_handler;
 
 alter table protected.cases enable row level security;
 
+-- Access is a named assignment, not a role name read from the token: boundary B8 in
+-- tech-architect calls a permission derived from a role name erosion.
 create policy case_handler_only on protected.cases
   for select to protected_handler
-  using ( (auth.jwt() ->> 'role') = 'protected_handler' );
+  using ( exists (
+    select 1 from protected.handlers h
+     where h.user_id = (select auth.uid())
+       and h.organisation_id = protected.cases.organisation_id ) );
 ```
+
+`protected.handlers.user_id` and `organisation_id` are indexed, like every column a policy
+filters on.
 
 The engagement queue reconciles its count from a view that returns the count alone and no
 row content, so a reader can see that something exists without seeing what.
@@ -270,7 +282,7 @@ shape; only the transport does.
 |---|---|
 | Reads | A view or an RPC, never a base table. Base tables are revoked. |
 | Writes | An RPC for anything with a rule. Direct table writes only where a policy fully expresses the rule. |
-| Errors | `raise exception '<snake_case_code>' using errcode = 'P0001'`. The code reaches the client in `message`. Copy belongs to `ux-writer`. |
+| Errors | `raise exception '<snake_case_code>' using errcode = 'P0001'`. The code reaches the client in PostgREST's `message`, and the front end's data client wraps it into the one error shape in `actio-architecture`. Edge Functions return that shape directly. Copy belongs to `ux-writer`. |
 | Pagination | Keyset on `(due, id)` for the queue. Never `offset`, because rows move while a reader pages. |
 | Times | `timestamptz` throughout. The site time zone is its own labelled column, never inferred. |
 | Enums | Postgres enum types, not check constraints on text, so the wire format and the schema cannot drift. |

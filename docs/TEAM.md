@@ -135,7 +135,7 @@ enforced rather than merely published. It is the only agent that writes to `BUGS
 
 | Agent | Owns | Gate | Skills beyond the protocol |
 |---|---|---|---|
-| [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – | `actio-test-protocol`, `actio-brand-guard` |
+| [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – | `actio-test-protocol`, `actio-brand-guard`, `actio-design-system` |
 | [`release-engineer`](../.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release gate | `actio-release`, `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` |
 
 ---
@@ -152,15 +152,15 @@ of the one it checks.
 | `code-analyst` | The diff, for facts | Reads line by line for defects and rot. Runs independently of `peer-reviewer` so that a plausible design does not carry a real bug past both. |
 | `code-steward` | The diff, for the next reader | Reads for naming, shape, module headers and comments that say why. Correct code nobody can safely change is a cost that arrives later, and no other role is looking for it. |
 | `security-analyst` | The diff, for what can be broken into | Reads for exposure, authorisation and supply chain. The other reviewers read for whether the code is right; this one reads for whether it can be taken. A leak here costs the product its claim, not a password reset. |
-| `bug-historian` | The diff, against history | Reads for whether a defect already recorded on this surface has been committed again. The other three read the change on its own terms and cannot see a repeat. |
+| `bug-historian` | The diff, against history | Reads for whether a defect already recorded on this surface has been committed again. The other four read the change on its own terms and cannot see a repeat. |
 | `qc-lead` | `qc-engineer` | Audits whether the evidence exists and what was **not** tested. Untested surface is the finding this role exists to catch. |
 
 All three review gates must pass, and so must the security gate and the regression guard. `engineering-lead`
 refuses to proceed if any did not run, and treats that as a utilisation failure rather than
 an oversight.
 
-The three reviewers run in parallel and none sees another's verdict first, so no reviewer
-anchors on another's conclusion.
+The three reviewers and the security-analyst run in parallel and none sees another's
+verdict first, so no reviewer anchors on another's conclusion.
 
 ---
 

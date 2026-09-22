@@ -165,8 +165,10 @@ change that touched a user-facing flow.
 
 ### Edge Functions
 
-Deployed after the schema they depend on, never before. Secrets are set with
-`supabase secrets set` and never committed. The `service_role` key lives here and nowhere
+Deployed after the schema they depend on, never before. Secrets are never committed. The
+release engineer checks them with `supabase secrets list`; setting one with
+`supabase secrets set` is denied in `.claude/settings.json`, so a missing secret goes to
+Shehab, as the credential owner, to set. The `service_role` key lives here and nowhere
 else: a hit for it in anything the browser downloads stops the release.
 
 ---
@@ -183,7 +185,7 @@ product. Smoke the critical paths and attach evidence.
 - [ ] No new error class in the logs.
 - [ ] The Arabic and Indonesian variants of the changed screen load.
 
-Evidence goes to `.actio/runs/<run-id>/evidence/post-deploy-*`.
+Evidence goes to `.actio/runs/<run-id>/evidence/release/post-deploy-*`.
 
 ---
 
@@ -194,7 +196,7 @@ git tag -a v0.4.0 -m "Privacy preview"
 git push origin v0.4.0
 ```
 
-The note is written in Actio's voice: what changed, what it means for the reader, what
+The note is written to `.actio/runs/<run-id>/release-engineer/release-note.md` in Actio's voice: what changed, what it means for the reader, what
 cannot be done yet. No marketing tone, no exclamation marks, no emoji.
 
 ```markdown
@@ -232,9 +234,9 @@ Decide fast, explain afterwards. A rollback is cheap; a bad release on a shift i
 
 ```
 1. Front end: promote the previous Vercel deployment.
-2. Back end: redeploy the previous image.
+2. Back end: redeploy the previous Edge Functions from the previous release tag.
 3. Migrations: if the deploy was backward compatible, leave them.
-   If it was not, run the reverse migration, in the order the docstring states.
+   If it was not, run the reverse migration, in the order `rollback.md` states.
 4. Verify the product works on the previous version.
 5. Write the rollback record: what happened, when, what was reverted, what data
    was affected, what the fix will be.
@@ -255,14 +257,15 @@ Confirm before, not after, unless he already authorised it for this run:
   change.
 - A rollback that loses data written since the deploy.
 - Releasing with a known blocker, which is his override to make and is recorded in the
-  ledger.
+  ledger by the orchestrator.
 
 ---
 
 ## Release record
 
-Written at `.actio/runs/<run-id>/release-engineer/release.md`, and referenced from the
-handoff.
+Written at `.actio/runs/<run-id>/release-engineer/deploy-log.md`, with the full pre-flight
+output in `preflight.md` and the rollback plan in `rollback.md` beside it, all referenced
+from the handoff.
 
 ```markdown
 # Release · v0.4.0 · 2026-03-20T16:02:44Z
@@ -272,13 +275,13 @@ handoff.
 
 ## Pre-flight
 
-All 24 checks pass. Output: `evidence/preflight.log`.
+All 24 checks pass. Output: `release-engineer/preflight.md`.
 
 ## Rollback plan, written before deploy
 
-Front end: promote deployment `dpl_8Fh2...`. Back end: redeploy image `actio-api:0.3.4`.
-Migrations `0031` and `0032` are additive and stay. `0033` makes `cohort_size_at_preview`
-non-null and reverses cleanly with `migrate surveys 0032`.
+Front end: promote deployment `dpl_8Fh2...`. Back end: redeploy Edge Functions from tag
+`v0.3.4`. Migrations `0031` and `0032` are additive and stay. `0033` makes
+`cohort_size_at_preview` non-null and reverses with the script recorded in `rollback.md`.
 
 ## Sequence
 
@@ -286,10 +289,10 @@ non-null and reverses cleanly with `migrate surveys 0032`.
 |---|---|---|
 | 16:02 | back end deploy | ok, health green |
 | 16:05 | migrate | 3 applied, 1.2s |
-| 16:06 | API smoke | ok, `evidence/post-deploy-api.json` |
-| 16:09 | front end preview | ok, `evidence/post-deploy-preview.png` |
+| 16:06 | API smoke | ok, `evidence/release/post-deploy-api.json` |
+| 16:09 | front end preview | ok, `evidence/release/post-deploy-preview.png` |
 | 16:14 | promote | ok |
-| 16:16 | product smoke, phone viewport, EN and AR | ok, `evidence/post-deploy-flow-*.png` |
+| 16:16 | product smoke, phone viewport, EN and AR | ok, `evidence/release/post-deploy-flow-*.png` |
 | 16:20 | error rate vs previous hour | unchanged |
 | 16:22 | tag v0.4.0 | pushed |
 ```

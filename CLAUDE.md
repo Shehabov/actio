@@ -31,7 +31,7 @@ sentiment score.
 
 ---
 
-## The two files that bind everything
+## The files that bind everything
 
 | File | Authority |
 |---|---|
@@ -182,8 +182,9 @@ These apply to every agent and to any session in this repository.
 
 ## Skills
 
-`.claude/skills/` holds fifteen house skills prefixed `actio-` and twenty-four vendored
-skills. Each agent declares the skills it is coupled with in its own file.
+`.claude/skills/` holds fifteen house skills prefixed `actio-` and twenty-two vendored
+skills. Each agent declares the skills it is coupled with in the `skills:` field of its
+frontmatter, which is what preloads them. A skill named only in the body is not loaded.
 
 | House skill | For |
 |---|---|
@@ -243,8 +244,13 @@ vocabulary. The per-skill verdicts are in
 
 - The agents work autonomously. Do not ask permission to run the loop. Ask only for
   decisions that are genuinely the Product Lead's.
-- Start any substantial change by invoking `orchestrator`. It builds the run plan and
-  dispatches. Do not hand work straight to a maker and skip the gates.
+- Start any substantial change by running `orchestrator` as the main thread:
+  `claude --agent orchestrator`, or `"agent": "orchestrator"` in `.claude/settings.json`.
+  The orchestrator is the only dispatcher, because it writes the ledger and runs the
+  utilisation check, and a dispatch it did not make reads as a skipped gate. It builds the
+  run plan and dispatches. Every other agent that needs another role run again
+  says so in its handoff's `next`, and the orchestrator dispatches it. Do not hand work
+  straight to a maker and skip the gates.
 - Small, self-contained changes may go directly to the responsible agent, but the
   orchestrator still records the run and runs the utilisation check at the end.
 - Brand assets live in `logo/`. Never redraw the seal. The arcs are mathematically defined

@@ -75,15 +75,17 @@ the evidence.
 
 One file per decision. Numbered, immutable once accepted. Supersede rather than edit.
 
-Path: `.actio/runs/<run-id>/tech-architect/adr-<nnn>-<slug>.md`, then copied to
-`docs/adr/` on release.
+Path: `docs/architecture/adr/ADR-NNNN-<slug>.md`, four digits, sequential, never reused.
+This is the only home. `.actio/runs/` is gitignored, so the run folder lists the ADR by that
+path in `produced` rather than holding a copy.
 
 ```markdown
-# ADR-004 · The reporting threshold is a system invariant, not a setting
+# ADR-0004 · The reporting threshold is a system invariant, not a setting
 
 - **Status.** Accepted
 - **Date.** 2026-09-20
 - **Run.** 2026-09-20-privacy-preview
+- **Invariants touched.** I1, I2
 - **Supersedes.** none
 - **Superseded by.** none
 
@@ -133,7 +135,7 @@ Path: `.actio/runs/<run-id>/tech-architect/brief-<frontend|backend>.md`
 # Task brief · backend · 2026-09-20-privacy-preview
 
 **For.** backend-engineer
-**ADRs that bind this.** ADR-004
+**ADRs that bind this.** ADR-0004
 **Invariants that bind this.** I1, I2, I3
 
 ## What to build
@@ -180,8 +182,8 @@ render and must still tell the employee what will happen.
 
 | Error | Status | Body |
 |---|---|---|
-| Cycle not found, or employee not in it | 404 | `{"detail": "not_found"}` |
-| Cycle closed | 409 | `{"detail": "cycle_closed", "closed_on": "2026-03-14"}` |
+| Cycle not found, or employee not in it | 404 | `{"error": {"code": "not_found", "message_key": "error.not_found", "fields": {}, "trace_id": "…"}}` |
+| Cycle closed | 409 | `{"error": {"code": "cycle_closed", "message_key": "error.cycle_closed", "fields": {"closed_on": ["2026-03-14"]}, "trace_id": "…"}}` |
 
 `manager_can_filter_by` is read from tenant configuration, never hardcoded.
 
@@ -206,7 +208,7 @@ render and must still tell the employee what will happen.
 ## Out of scope
 
 - The screen. The copy. The WhatsApp variant.
-- Changing the threshold or its configurability. See ADR-004.
+- Changing the threshold or its configurability. See ADR-0004.
 
 ## Open question, not a blocker
 
@@ -222,11 +224,12 @@ picks it.
 | Concern | Convention |
 |---|---|
 | Naming | Nouns, plural, the domain's language. `/issues/`, `/cycles/`, not `/items/`. |
-| Errors | `{"detail": "<snake_case_code>"}` plus any fields the client needs to render. A code, never a sentence, because copy is the writer's. |
+| Errors | One shape everywhere: `{"error": {"code": "<snake_case_code>", "message_key": "error.<code>", "fields": {}, "trace_id": ""}}`. A code, never a sentence, because copy is the writer's. Edge Functions return it directly; an RPC raises the code (see `actio-supabase`) and the front end's data client wraps PostgREST's error into this shape, so a component reads one shape only. |
 | Pagination | Cursor, not offset. Queues are long and rows move. |
 | Times | ISO 8601 UTC in the payload. The site time zone is a separate labelled field. The client never guesses. |
-| Numbers | Integers where the domain is integral. Percentages as integers, with `n` beside them, always. |
-| Enums | Snake case strings, never integers. A wire format a human can read in a log is worth more than two bytes. |
+| Numbers | Integers where the domain is integral. A rate is a fraction from 0 to 1 named `<name>_rate`, with `<name>_n` beside it, always. The client formats the percentage. |
+| Enums | Snake case strings, never integers. A wire format a human can read in a log is worth more than two bytes. Every enum field ships a `<field>_label_key` beside it; the client resolves the words from the string catalogue. |
+| Below threshold | A manager-facing report raises `below_threshold` and returns nothing (I1, I2). An employee's view of their own cohort, such as the privacy preview, returns 200 with `below_threshold: true`, because it discloses nothing about others and the screen must still render. No other endpoint uses the second form without an ADR. |
 | Nullability | Explicit. A field that can be absent is documented as such in the brief. |
 | Idempotency | Every write that a retry could duplicate takes an idempotency key. Messaging is billed per message. |
 

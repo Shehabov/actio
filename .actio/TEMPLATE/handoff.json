@@ -1,6 +1,7 @@
 {
   "run": "<yyyy-mm-dd>-<short-slug>",
   "agent": "<agent-name>",
+  "stage": "<the stage number of the plan entry this answers. A later pass writes handoff-stage<N>.json>",
   "status": "passed",
   "started": "<ISO 8601 UTC, from `date -u +%Y-%m-%dT%H:%M:%SZ`>",
   "finished": "<ISO 8601 UTC>",
@@ -23,6 +24,12 @@
       "why": "<specifically why it blocks you>",
       "needs": "<agent-name or 'shehab'>"
     }
+  ],
+  "missing_inputs": [
+    "<a promised input that never arrived and that you worked around>"
+  ],
+  "machinery_findings": [
+    "<an agent file, skill or protocol that was ambiguous or wrong, with the file named>"
   ],
   "decisions_for_shehab": [
     {

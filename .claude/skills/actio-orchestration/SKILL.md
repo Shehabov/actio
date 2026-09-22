@@ -11,11 +11,20 @@ done by the right agents, in the right order, with every gate resolved.
 The question this skill exists to answer, asked after every stage: **did every agent that
 should have run actually run, and was every agent that ran actually used?**
 
+**The orchestrator runs as the main thread and is the only dispatcher.** Every dispatch
+has to land in the ledger and in the utilisation check, and one made by any other role
+would not. `.claude/settings.json` sets
+`"agent": "orchestrator"`, and `claude --agent orchestrator` does the same explicitly.
+Every other agent is a subagent of the orchestrator: it hands off with `next` and
+`blockers[].needs`, and the orchestrator does the routing.
+
 ---
 
 ## run.json
 
-Written once at the start of a run, amended only by appending to `amendments`.
+Written once at the start of a run, amended only by appending to `amendments`. The one
+exception is `gates[].result` and `gates[].evidence`, which only `.actio/bin/sync-gates.mjs`
+writes, copying each owner's own record out of its handoff (BUG-0027).
 
 ```json
 {
@@ -37,20 +46,21 @@ Written once at the start of a run, amended only by appending to `amendments`.
   "plan": [
     { "stage": 1, "agent": "bug-historian", "task": "Regression brief: what has already broken on these surfaces", "consumes": ["run.json"], "produces": ["bug-historian/brief.md"], "blocked_by": [] },
     { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs", "consumes": ["run.json", "bug-historian/brief.md"], "produces": ["tech-architect/adr-0004-reporting-threshold.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
-    { "stage": 2, "agent": "ux-designer", "task": "Design spec, every surface and every state", "consumes": ["tech-architect/brief-frontend.md"], "produces": ["ux-designer/spec.md"], "blocked_by": ["design-authority"] },
-    { "stage": 2, "agent": "backend-engineer", "task": "Supabase: schema, RLS policies, functions, Edge Functions", "consumes": ["tech-architect/brief-backend.md"], "produces": ["<source paths>"], "blocked_by": ["design-authority"] },
-    { "stage": 3, "agent": "ux-auditor", "task": "Independent audit of the design spec", "consumes": ["ux-designer/spec.md"], "produces": ["ux-auditor/findings.md"], "blocked_by": [] },
-    { "stage": 4, "agent": "ux-writer", "task": "English and Arabic strings for every new surface", "consumes": ["ux-designer/spec.md", "ux-auditor/findings.md"], "produces": ["ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "blocked_by": ["design"] },
-    { "stage": 5, "agent": "frontend-engineer", "task": "React and Next.js implementation", "consumes": ["tech-architect/brief-frontend.md", "ux-designer/spec.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "produces": ["<source paths>"], "blocked_by": ["design", "copy"] },
-    { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>"], "produces": ["peer-reviewer/review.md"], "blocked_by": [] },
-    { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
-    { "stage": 6, "agent": "code-steward", "task": "Clean code: naming, shape, module headers, comments, maintainability", "consumes": ["<source paths>"], "produces": ["code-steward/findings.md"], "blocked_by": [] },
-    { "stage": 6, "agent": "security-analyst", "task": "Security sweep: secrets, exposure, authorisation, injection, dependencies, robustness", "consumes": ["<source paths>"], "produces": ["security-analyst/findings.md", "evidence/security/"], "blocked_by": [] },
+    { "stage": 2, "agent": "ux-designer", "task": "Design spec, every surface and every state", "consumes": ["tech-architect/brief-frontend.md", "bug-historian/brief.md"], "produces": ["ux-designer/spec.md", "ux-designer/string-slots.json"], "blocked_by": ["design-authority"] },
+    { "stage": 2, "agent": "backend-engineer", "task": "Supabase: schema, RLS policies, functions, Edge Functions", "consumes": ["tech-architect/brief-backend.md", "bug-historian/brief.md"], "produces": ["<source paths>"], "blocked_by": ["design-authority"] },
+    { "stage": 3, "agent": "ux-auditor", "task": "Independent audit of the design spec", "consumes": ["ux-designer/spec.md", "bug-historian/brief.md"], "produces": ["ux-auditor/findings.md"], "blocked_by": [] },
+    { "stage": 4, "agent": "ux-writer", "task": "English and Arabic strings for every new surface", "consumes": ["ux-designer/spec.md", "ux-designer/string-slots.json", "ux-auditor/findings.md", "bug-historian/brief.md"], "produces": ["ux-writer/strings.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "blocked_by": ["design"] },
+    { "stage": 5, "agent": "frontend-engineer", "task": "React and Next.js implementation", "consumes": ["tech-architect/brief-frontend.md", "ux-designer/spec.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json", "bug-historian/brief.md"], "produces": ["<source paths>"], "blocked_by": ["design", "copy"] },
+    { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["peer-reviewer/verdict.json", "peer-reviewer/comments.md"], "blocked_by": [] },
+    { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
+    { "stage": 6, "agent": "code-steward", "task": "Clean code: naming, shape, module headers, comments, maintainability", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["code-steward/findings.md"], "blocked_by": [] },
+    { "stage": 6, "agent": "security-analyst", "task": "Security sweep: secrets, exposure, authorisation, injection, dependencies, robustness", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["security-analyst/findings.md", "evidence/security/"], "blocked_by": [] },
     { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security"] },
-    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md", "code-steward/findings.md", "security-analyst/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"] },
-    { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md"], "produces": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
-    { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "produces": ["qc-lead/verdict.md"], "blocked_by": [] },
-    { "stage": 11, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/verdict.md"], "produces": ["release-engineer/release-notes.md", "evidence/post-deploy-smoke.log"], "blocked_by": ["quality"] }
+    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/verdict.json", "peer-reviewer/comments.md", "code-analyst/findings.md", "code-steward/findings.md", "security-analyst/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"] },
+    { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md", "bug-historian/brief.md"], "produces": ["qc-engineer/test-log.md", "qc-engineer/defects.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
+    { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "qc-engineer/defects.md", "evidence/<test artefacts>"], "produces": ["qc-lead/readiness.md"], "blocked_by": [] },
+    { "stage": 11, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/readiness.md"], "produces": ["release-engineer/preflight.md", "release-engineer/deploy-log.md", "release-engineer/release-note.md", "release-engineer/rollback.md", "evidence/release/"], "blocked_by": ["quality"] },
+    { "stage": 12, "agent": "bug-historian", "task": "Record: every defect and agent mistake raised in this run, into BUGS.md", "consumes": ["qc-engineer/defects.md", "qc-lead/readiness.md", "bug-historian/guard.md"], "produces": ["bug-historian/record.md"], "blocked_by": ["release"] }
   ],
   "gates": [
     { "name": "design-authority", "owner": "tech-architect", "blocks": ["ux-designer", "backend-engineer"], "result": "pending" },
@@ -73,7 +83,11 @@ Written once at the start of a run, amended only by appending to `amendments`.
 Rules for the plan:
 
 - One `plan` entry per agent, not per stage. Two agents sharing a stage number run
-  concurrently, which is how `peer-reviewer`, `code-analyst` and `code-steward` stay independent.
+  concurrently once both are due, which is how `peer-reviewer`, `code-analyst`,
+  `code-steward` and `security-analyst` stay independent.
+- An entry is due when every gate in its `blocked_by` reads `pass` **and** every path in its
+  `consumes` is on disk. That is why `tech-architect` shares stage 1 with `bug-historian`
+  but still waits for `bug-historian/brief.md`.
 - `consumes` and `produces` in the plan are what the utilisation check measures the actual
   handoffs against. A plan entry with an empty `produces` cannot be verified, so fill it in
   even where the paths are placeholders.
@@ -111,6 +125,9 @@ editing history.
 | 14:11:09 | escalated | orchestrator | rejection loop round 3, to shehab |
 | 15:02:00 | correction | orchestrator | 12:58:33 was round 2 not round 3, miscounted |
 ```
+
+A run starts with a `run opened` line and ends with a `run closed` line, both written by the
+orchestrator.
 
 ---
 
@@ -182,22 +199,37 @@ For each agent in the run plan, in stage order:
    NO  -> finding: GATE_UNRESOLVED
 
 7. GATE OWNERSHIP
-   For each gates[] entry: does the plan name this agent as its owner?
+   For each gates[] entry: is the gate in run.json gates[] at all?
+   NO  -> finding: UNKNOWN_GATE
+   Does the plan name this agent as its owner?
    NO  -> finding: GATE_SELF_CERTIFIED
 
 8. NO SKIPPED DEPENDENCY
-   Did this agent start before every gate in depends_on read pass?
+   Did this agent start before every gate in blocked_by read pass?
    YES -> finding: GATE_SKIPPED
+
+9. THE LOOP WAS WORKED
+   Is there a non-empty plan.md with an Audit section, and a non-empty review.md?
+   NO  -> finding: LOOP_SKIPPED
+
+10. TIMING IS COHERENT
+   Is started at or before finished?
+   NO  -> finding: NO_TIMING
 ```
 
 ### Running it
 
 The check is implemented at `.actio/bin/utilisation-check.mjs` and that file is the only
-thing you run:
+thing you run. The check reads gate results from `run.json`, so sync them from the owners'
+handoffs first, every time:
 
 ```bash
+node .actio/bin/sync-gates.mjs .actio/runs/<run-id>
 node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>
 ```
+
+Skipping the sync leaves every gate `pending`, so no blocked stage ever becomes due and the
+run stalls. The sync copies an owner's latest record and never decides a gate.
 
 It exits 0 when clean and 1 when anything is found, so `run-closure` can depend on it. Add
 `--json` for the machine-readable form.
@@ -288,6 +320,11 @@ done
 | `GATE_UNRESOLVED` | A gate has no result, or its evidence path is missing | The gate has not passed. Do not proceed on an unresolved gate. |
 | `GATE_SELF_CERTIFIED` | An agent passed a gate it does not own | Void the gate. Dispatch the real owner. |
 | `GATE_SKIPPED` | A stage started before its dependency passed | Stop the run. Re-run the stage after the gate resolves, because its inputs were not valid. |
+| `UNKNOWN_GATE` | A handoff or a `blocked_by` names a gate that is not in `run.json` | Send it back. The gate names are canonical and are never renamed for a run. |
+| `LOOP_SKIPPED` | No `plan.md` with an Audit section, or no `review.md` | Send it back. The deliverable without the loop is not accepted. |
+| `NO_TIMING` | `started` is after `finished`, or either is missing where required | Send it back. Timestamps come from the shell. |
+| `STALLED` | A dispatched agent with no handoff and no blocker | Ask it for a status. If it has no plan file either, it never started, so re-dispatch. |
+| `ORPHAN_EVIDENCE` | A file in `evidence/` that no handoff cites | A test ran and nobody read the result. Route it to the agent whose gate it belongs to. |
 | `REJECTION_LOOP` | The same reject between the same two agents three times | Escalate to Shehab. Do not dispatch a fourth round. |
 | `IDLE_AGENT` | Work is queued for an agent with no handoff and no blocker | Dispatch it, or record why it is not needed. |
 
@@ -300,7 +337,7 @@ Always as a table, always blocking, never buried in prose.
 
 | Finding | Agent | Detail | Action |
 |---|---|---|---|
-| UNUSED_OUTPUT | ux-writer | `ux-writer/strings.ar.json` appears in no consumed list | frontend-engineer built the screen without the Arabic catalogue. Re-dispatch frontend-engineer. |
+| UNUSED_OUTPUT | ux-writer | `ux-writer/strings-ar.json` appears in no consumed list | frontend-engineer built the screen without the Arabic catalogue. Re-dispatch frontend-engineer. |
 | GATE_UNRESOLVED | code-analyst | gate `review-2of3` has no entry | code-analyst ran but did not certify. Send back. |
 
 **Run status: blocked.** 2 findings. Stage `integration` will not be dispatched.
@@ -316,7 +353,7 @@ past a finding because the finding looks minor.
 | Signal | Check |
 |---|---|
 | Rejection loop | Count `blockers[].needs` pointing at the same agent across handoffs from the same source. Three is the limit. |
-| Stall | A dispatched agent with no handoff and no blocker. Ask it for a status; if it has no plan file either, it never started. |
+| Stall (`STALLED`) | A dispatched agent with no handoff and no blocker. Ask it for a status; if it has no plan file either, it never started. |
 | Ping-pong | Two agents each rejecting to the other. Neither is wrong; the contract between them is. Route to `tech-architect`, or escalate if it is a scope question. |
 | Silent scope narrowing | An agent's `produced` covers less than its task brief asked for, and no blocker explains the gap. This is the one the ledger catches and nothing else does. |
 

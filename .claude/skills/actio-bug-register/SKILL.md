@@ -52,7 +52,9 @@ rather than only the code.
 
 | The defect passed | So the finding is |
 |---|---|
-| `peer-reviewer` and `code-analyst` | The review rubric has a hole. Name it. |
+| `peer-reviewer`, `code-analyst` and `code-steward` | The review rubric has a hole. Name it. |
+| `security-analyst` | The security catalogue or its sweep has a hole. Name the pass. |
+| `bug-historian`'s regression guard | The entry's detection command did not catch it. Fix the command. |
 | `qc-engineer` | The test matrix has a hole. Name the surface that was untested. |
 | `ux-auditor` | The audit checklist has a hole. |
 | No gate, it was found in production | Which gate *should* have owned it? |
@@ -136,8 +138,10 @@ Rules for the brief:
 
 ## The regression guard
 
-Run after the reviews and before the engineering gate. This is `bug-historian`'s gate,
-`regression-guard`.
+Run after all four reviews (`review-1of3`, `review-2of3`, `review-3of3` and `security`)
+and before the engineering gate. This is `bug-historian`'s gate, `regression-guard`.
+Evidence goes to `.actio/runs/<run-id>/evidence/regression/` and the result to
+`.actio/runs/<run-id>/bug-historian/guard.md`.
 
 For every entry in the brief:
 

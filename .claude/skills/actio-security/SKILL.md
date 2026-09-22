@@ -20,8 +20,10 @@ OWASP Top 10, and Actio's own invariants in `actio-architecture`.
 
 ## How to run it
 
-On every diff, in this order. The order is deliberate: a finding in A or B makes the rest
-moot, so stop and report rather than completing the sweep.
+On every diff, in this order. The order is deliberate: a critical in pass 1 or 2, secrets
+(B) or exposure (F), makes the rest moot, so stop and report rather than completing the
+sweep. The gate fails on that finding, the handoff names the passes not yet run, and the
+whole sweep runs on the resubmission.
 
 | # | Pass | Tooling |
 |---|---|---|
@@ -411,7 +413,9 @@ environment with real data, in which case treat it as a disclosure.
 
 ## The sweep
 
-Run whole, every time. Record each command and its output.
+Run whole, every time, unless a critical in pass 1 or 2 stops it as described above. Record
+each command and its output to `.actio/runs/<run-id>/evidence/security/`. The base is the
+one in `run.json`; the commands write it as `origin/main`.
 
 ```bash
 # B. secrets, working tree and history

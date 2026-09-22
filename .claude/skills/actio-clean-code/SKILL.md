@@ -201,7 +201,10 @@ arbitrary is the one a future change relaxes.
 -- a missing grant cannot.
 create policy case_handler_only on protected.cases
   for select to protected_handler
-  using ( (select auth.jwt() ->> 'role') = 'protected_handler' );
+  using ( exists (
+    select 1 from protected.handlers h
+     where h.user_id = (select auth.uid())
+       and h.organisation_id = protected.cases.organisation_id ) );
 ```
 
 ---
@@ -227,7 +230,8 @@ to `peer-reviewer`.
 
 - Fail loudly and early. A swallowed exception is a defect that will surface somewhere
   unrelated.
-- Never `except Exception: pass`. Catch what you can handle and let the rest rise.
+- Never `exception when others then null` in plpgsql, and never an empty `catch {}` in
+  TypeScript. Catch what you can handle and let the rest rise.
 - Error messages name what happened and what to do. No blame on the reader.
 - Custom exception types carry the domain: `EvidenceRequired`, `LaneLacksAuthority`,
   `BelowThreshold`. `ValueError("bad")` tells nobody anything.

@@ -152,6 +152,10 @@ decorative vocabulary. The per-skill verdicts are in
 ladder. [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) for the delivery flow, the twelve gates and
 the handoff schema. [`CLAUDE.md`](./CLAUDE.md) is the operating manual the agents load.
 
+**Running the swarm:** start the orchestrator as the main thread with
+`claude --agent orchestrator` and give it the brief. It is the only role that dispatches,
+so every stage lands in the ledger and the utilisation check can see it.
+
 ---
 
 ## What Actio does
@@ -208,7 +212,7 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 | [`CLAUDE.md`](./CLAUDE.md) | The operating manual every agent loads. What Actio is, the org, the flow, the hard rules. |
 | [`BUGS.md`](./BUGS.md) | The defect register. Every bug found and every mistake an agent made, with the standing rule it produced. Owned by `bug-historian`. |
 | [`.claude/agents/`](./.claude/agents/) | The sixteen agent definitions |
-| [`.claude/skills/`](./.claude/skills/) | Fifteen house skills and twenty-four vendored ones |
+| [`.claude/skills/`](./.claude/skills/) | Fifteen house skills and twenty-two vendored ones |
 | [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
 | [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run. |
 | [`logo/`](./logo/) | The seal and the lockups, in every colourway. See [`logo/README.md`](./logo/README.md) for which file to use where. |

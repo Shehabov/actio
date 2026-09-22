@@ -273,6 +273,7 @@ One file per agent per run. The orchestrator parses these, so the key names are 
 {
   "run": "2026-09-20-privacy-preview",
   "agent": "ux-auditor",
+  "stage": 3,
   "status": "passed",
   "started": "2026-09-20T09:14:02Z",
   "finished": "2026-09-20T09:41:55Z",
@@ -299,6 +300,7 @@ One file per agent per run. The orchestrator parses these, so the key names are 
 
 | Field | Meaning |
 |---|---|
+| `stage` | The `stage` of the plan entry this handoff answers. A later pass by the same agent writes `handoff-stage<N>.json`. |
 | `status` | `passed`, `blocked`, `rejected`, `escalated` |
 | `consumed` | What this agent read. This is how the orchestrator proves an upstream agent was actually used. |
 | `produced` | What it wrote. Every path must exist on disk. |
@@ -311,7 +313,16 @@ One file per agent per run. The orchestrator parses these, so the key names are 
 
 ## Starting a run
 
-Invoke `orchestrator` with the brief. It writes the run plan, dispatches, and reports back.
+The orchestrator runs as the **main thread** of the session. It is the only role that
+dispatches, so every stage lands in the ledger and the utilisation check can see it, and as
+the main thread it keeps the full subagent nesting depth for the agents below it. `.claude/settings.json` sets `"agent": "orchestrator"`, so
+opening `claude` in this repository starts the session as the orchestrator. To be explicit,
+run `claude --agent orchestrator`. Every other agent runs as its subagent, hands off with
+`next`, and never dispatches anyone itself.
+
+Give the orchestrator the brief. It writes the run plan, dispatches, and reports back. After
+every stage it runs `node .actio/bin/sync-gates.mjs .actio/runs/<run-id>` and then
+`node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>`.
 
 ```
 Use the orchestrator agent. Brief: add the privacy preview screen ahead of the

@@ -21,16 +21,16 @@ plan rather than editing the plan in place, so the revision is visible.
 |---|---|---|
 | | | |
 
-**Acceptance criteria** — how I will know this is done, stated so someone else could verify it.
+**Acceptance criteria**: how I will know this is done, stated so someone else could verify it.
 
 1.
 2.
 
-**Out of scope** — named so nobody mistakes it for an oversight.
+**Out of scope**: named so nobody mistakes it for an oversight.
 
 -
 
-**Rules that constrain this** — cite the file and section, not the value.
+**Rules that constrain this**: cite the file and section, not the value.
 
 | Rule | Source |
 |---|---|

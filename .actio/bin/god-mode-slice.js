@@ -130,7 +130,7 @@ const SLICES = {
   review: () => [
     go('peer-reviewer', `Stage 6. Review everything under ${DIR}/backend/ and ${DIR}/frontend/ as a senior
        engineer: problem fit, design, layer boundaries, failure modes, test quality, rollout safety. Write
-       ${DIR}/peer-reviewer/review.md. You own review-1of3.`),
+       ${DIR}/peer-reviewer/verdict.json and ${DIR}/peer-reviewer/comments.md. You own review-1of3.`),
     go('code-analyst', `Stage 6. Read every line under ${DIR}/backend/ and ${DIR}/frontend/ for defects,
        security holes, data-layer problems and structural rot. Pay particular attention to the threshold
        path and anything that could leak a group size. Write ${DIR}/code-analyst/findings.md with file,
@@ -156,7 +156,7 @@ const SLICES = {
   ],
   integrate: () => [
     go('engineering-lead', `Stage 8. All three reviews, security and the regression guard have run. Read
-       ${DIR}/peer-reviewer/review.md, ${DIR}/code-analyst/findings.md, ${DIR}/code-steward/findings.md,
+       ${DIR}/peer-reviewer/verdict.json, ${DIR}/peer-reviewer/comments.md, ${DIR}/code-analyst/findings.md, ${DIR}/code-steward/findings.md,
        ${DIR}/security-analyst/findings.md and ${DIR}/bug-historian/guard.md. Decide the integration gate:
        does the seam between front end and back end hold, does the architecture conform to the ADR, what did
        this touch that nobody tested. Write ${DIR}/engineering-lead/verdict.md. You own the engineering gate
@@ -171,7 +171,7 @@ const SLICES = {
   quality: () => [
     go('qc-lead', `Stage 10. Audit ${DIR}/qc-engineer/test-log.md and the evidence under ${DIR}/evidence/
        rather than trusting the log. Name the untested locale, state and device. Re-verify that Actio's own
-       product claims still hold. Write ${DIR}/qc-lead/verdict.md with a go or no-go. You own the quality gate.`),
+       product claims still hold. Write ${DIR}/qc-lead/readiness.md with a go or no-go. You own the quality gate.`),
   ],
   ship: () => [
     go('release-engineer', `Stage 11. Run the release pre-flight ONLY. This run produced artefacts under
@@ -181,11 +181,11 @@ const SLICES = {
        Do NOT push, deploy, tag or commit anything. You own the release gate.`),
   ],
   close: () => [
-    go('orchestrator', `Stage 12. Close the run. Run the utilisation check:
-       \`node .actio/bin/utilisation-check.mjs .actio/runs/${RUN}\` from ${REPO}. It is the implementation of
-       the eight-step algorithm in actio-orchestration; do not re-derive it by hand and do not use jq, which
-       is not installed. Report every finding by its code. Then run
-       \`node .actio/bin/sync-gates.mjs .actio/runs/${RUN}\` so run.json reflects what the owners recorded.
+    go('orchestrator', `Stage 12. Close the run. First run
+       \`node .actio/bin/sync-gates.mjs .actio/runs/${RUN}\` from ${REPO} so run.json reflects what the owners
+       recorded. Then run the utilisation check: \`node .actio/bin/utilisation-check.mjs .actio/runs/${RUN}\`.
+       It is the implementation of the algorithm in actio-orchestration; do not re-derive it by hand and do
+       not use jq, which is not installed. Report every finding by its code.
        Write the run report at ${DIR}/report.md: what shipped, what each gate decided, every blocker, and a
        consolidated list of every machinery_finding every agent raised across all twelve stages. You own
        run-closure. Do not paper over a finding: a clean report that is not true is the worst outcome here.`),

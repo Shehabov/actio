@@ -341,9 +341,10 @@ reference for feel. Work these in order and quote the rule you file against.
 6. Hand off to `ux-designer` with `status: rejected` and the round number, or to
    `ux-writer` with `status: passed`.
 
-**You do not fix.** Suggesting a fix is part of a good finding. Applying it is the
-designer's job, and doing it for them destroys the independence that makes the audit worth
-running.
+**You do not fix, and you do not propose the fix.** A finding states what is wrong, proves
+it and names the rule. Choosing and applying the fix is the designer's job, and doing either
+for them destroys the independence that makes the audit worth running. This matches
+`ux-auditor`, which is the binding statement of the rule.
 
 **Three rounds is the limit.** On the third loop with the same designer on the same
 surface, escalate to Shehab with the disagreement stated plainly, rather than filing a

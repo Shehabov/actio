@@ -5,7 +5,7 @@
  * The orchestrator's reason for existing: did every agent that should have run actually
  * run, and was every agent that ran actually used?
  *
- * This file is the executable form of the eight-step algorithm in
+ * This file is the executable form of the utilisation-check algorithm in
  * `.claude/skills/actio-orchestration/SKILL.md`. That skill originally published the check
  * as twelve `jq` one-liners; `jq` is not installed on the Product Lead's machine, so the
  * single most important routine in the swarm could not be run as documented. Recorded as
@@ -44,7 +44,12 @@ const F = {
   NO_TIMING: 'NO_TIMING',
 }
 
-const runDir = resolve(process.argv[2] || '.')
+const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'))
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log('Usage: node .actio/bin/utilisation-check.mjs <run-dir> [--json]\nRun node .actio/bin/sync-gates.mjs <run-dir> first, so run.json carries the owners\' gate results.')
+  process.exit(0)
+}
+const runDir = resolve(positional[0] || '.')
 const asJson = process.argv.includes('--json')
 const findings = []
 const raise = (code, subject, detail) => findings.push({ code, subject, detail })
@@ -155,12 +160,24 @@ function pairWithPlan(agent, entries, records) {
   if (entries.length === 1) return records.map((r) => ({ rec: r, entry: entries[0] }))
   const byStage = new Map(entries.map((e) => [String(e.stage), e]))
   const unmatched = [...entries].sort((a, b) => a.stage - b.stage)
+  // handoff.json is always the first pass. A plain localeCompare sorts `handoff-stage7.json`
+  // ahead of it, which paired the stage-7 guard with the stage-1 entry when no stage was declared.
+  const order = (f) => (f === 'handoff.json' ? -1 : Number((f.match(/\d+/) || [Infinity])[0]))
+  // A stage is declared by the handoff's `stage` field, or else by the number in its file
+  // name, so `handoff-stage1-brief.json` pairs with stage 1 and never with the stage-7 guard.
+  const declaredStage = (r) => {
+    if (r.handoff && r.handoff.stage != null) return String(r.handoff.stage)
+    const m = r.file !== 'handoff.json' && r.file.match(/stage(\d+)/)
+    return m ? m[1] : null
+  }
   return records
     .slice()
-    .sort((a, b) => a.file.localeCompare(b.file))
+    .sort((a, b) => order(a.file) - order(b.file))
     .map((r) => {
-      const declared = r.handoff && r.handoff.stage != null ? byStage.get(String(r.handoff.stage)) : null
-      const entry = declared || unmatched.shift() || entries[entries.length - 1]
+      const declared = byStage.get(declaredStage(r)) || null
+      const entry = declared || unmatched[0] || entries[entries.length - 1]
+      const i = unmatched.indexOf(entry)
+      if (i !== -1) unmatched.splice(i, 1)
       return { rec: r, entry }
     })
 }
@@ -292,9 +309,17 @@ for (const [agent, entries] of planByAgent) {
 }
 
 // Gates nobody resolved. Only counted once every agent that could resolve one has run.
+// An owner that runs more than once (bug-historian's brief, then its guard) sets its gate on
+// a later pass, so a pending gate is only unresolved once the owner has handed off for every
+// pass it has in the plan, or has named the gate in a handoff.
 for (const g of gates) {
-  if (g.result === 'pending' && (handoffsByAgent.get(g.owner) || []).length > 0) {
-    raise(F.GATE_UNRESOLVED, g.owner, `gate "${g.name}" still reads pending although its owner has handed off`)
+  const owned = handoffsByAgent.get(g.owner) || []
+  const passes = plan.filter((e) => e.agent === g.owner)
+  const named = owned.some((r) => ((r.handoff && r.handoff.gates) || []).some((x) => x.name === g.name))
+  const covered = new Set(pairWithPlan(g.owner, passes, owned).map((p) => p.entry))
+  const allPassesRan = passes.length > 0 && passes.every((e) => covered.has(e))
+  if (g.result === 'pending' && (named || allPassesRan)) {
+    raise(F.GATE_UNRESOLVED, g.owner, `gate "${g.name}" still reads pending although its owner has handed off (run sync-gates.mjs first if the owner recorded a result)`)
   }
 }
 
@@ -309,10 +334,10 @@ if (asJson) {
   console.log(`Utilisation check: ${run.run}`)
   console.log(`  plan ${plan.length} agents, ${handoffs.length} handoffs on disk, ${gates.length} gates\n`)
   if (real.length === 0) console.log('  No findings.')
-  for (const f of real) console.log(`  ${f.code}: ${f.subject} — ${f.detail}`)
+  for (const f of real) console.log(`  ${f.code}: ${f.subject}: ${f.detail}`)
   if (pending.length) {
     console.log(`\n  Not yet due (${pending.length}):`)
-    for (const f of pending) console.log(`    ${f.subject} — ${f.detail}`)
+    for (const f of pending) console.log(`    ${f.subject}: ${f.detail}`)
   }
 }
 

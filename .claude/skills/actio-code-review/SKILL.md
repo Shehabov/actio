@@ -6,13 +6,14 @@ description: Review Actio code the way a senior engineer reviews a colleague: de
 # Senior review
 
 This review asks whether the change is the right change, simply built. It is not a defect
-scan. `code-analyst` reads the same diff line by line for facts, independently, and both
-must pass. Two reviews exist because a plausible design can carry a real bug past a
+scan. `code-analyst` reads the same diff line by line for facts, `code-steward` for
+readability and `security-analyst` for security, each independently, and all four must
+pass. Separate reviews exist because a plausible design can carry a real bug past a
 reviewer who is reading for design, and a correct line can implement the wrong thing.
 
 **Not your job here:** formatting, import order, naming conventions a linter enforces,
-line-level bugs, security scanning. Those belong to the formatter, the linter, or
-`code-analyst`. Filing them here is noise that buries the findings only you can produce.
+line-level bugs, security scanning. Those belong to the formatter, the linter,
+`code-analyst` or `security-analyst`. Filing them here is noise that buries the findings only you can produce.
 
 ---
 
@@ -140,13 +141,17 @@ Suggested: take it from the endpoint response, which already returns `reporting_
 | **Minor** | Worth fixing, does not hold the gate. Say so explicitly so nobody guesses. |
 | **Question** | You do not understand something. Ask. A question is not a finding and does not hold the gate on its own. |
 
+`peer-reviewer` writes each comment to `comments.md` in the What, Why, Suggested and Rule
+block set out in its agent file, and uses `note` for an observation that needs no action.
+The content is the one described here; the agent file's form is the one written.
+
 ---
 
 ## Verdicts
 
 | Verdict | When | Handoff |
 |---|---|---|
-| `approved` | No blocker, no major. Minors listed. | `status: passed`, gate `review-1of3` result `pass` |
+| `approved` | No blocker, no major. Minors listed. | `status: passed`, gate `review-1of3` result `pass`, `next` is `bug-historian` for the regression guard |
 | `changes_requested` | One or more blocker or major | `status: rejected`, `needs` the author, round number |
 | `blocked` | The change cannot proceed as conceived. The brief or the ADR is wrong, not the code. | `status: escalated`, route to `tech-architect` or Shehab |
 

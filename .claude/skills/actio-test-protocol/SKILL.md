@@ -16,7 +16,8 @@ path from the handoff.
 
 ## Test plan template
 
-Written before testing starts, at `.actio/runs/<run-id>/qc-engineer/test-plan.md`.
+Written before testing starts, at `.actio/runs/<run-id>/qc-engineer/plan.md`, the same file
+that carries the step 2 audit.
 
 ```markdown
 # Test plan · 2026-09-20-privacy-preview
@@ -74,7 +75,7 @@ For every endpoint the change touches:
 curl -sS -X GET "$API/cycles/$CYCLE/privacy-preview/" \
   -H "Authorization: Bearer $EMPLOYEE_TOKEN" \
   -D "$EV/api-preview-200.headers" \
-  | tee "$EV/api-preview-200.json" | jq .
+  | tee "$EV/api-preview-200.json" \n  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.stringify(JSON.parse(s),null,2)))"
 ```
 
 ## 2. Privacy invariants
@@ -233,7 +234,7 @@ Naming: `<surface>-<case>.<ext>`, for example `queue-360-ar.png`, `inv-i2-filter
 ## Defect report
 
 ```markdown
-### D-02 · Blocker · Below-threshold error names the filter that caused it
+### D-02 · Critical · Below-threshold error names the filter that caused it
 
 **Surface.** API, `POST /api/reports/`
 **Owner.** backend-engineer
@@ -247,7 +248,7 @@ Naming: `<surface>-<case>.<ext>`, for example `queue-360-ar.png`, `inv-i2-filter
 **Expected.** `{"detail": "below_threshold"}`
 **Actual.** `{"detail": "below_threshold", "field": "shift"}`
 
-**Why it is a blocker.** Naming the field lets a manager binary-search filters to isolate
+**Why it is critical.** Naming the field lets a manager binary-search filters to isolate
 an individual, which is exactly what I2 exists to prevent. The invariant holds on the data
 and leaks through the error.
 ```
@@ -282,9 +283,9 @@ is never empty by omission: if everything really was tested, say that explicitly
 
 | # | Severity | What | Fixed by |
 |---|---|---|---|
-| D-02 | Blocker | Below-threshold error named the filter | backend-engineer |
-| D-05 | Major | Arabic privacy preview clipped the threshold row at 360px | frontend-engineer |
-| D-07 | Major | Preview figures cached for 60s, so they were not live | backend-engineer |
+| D-02 | Critical | Below-threshold error named the filter | backend-engineer |
+| D-05 | High | Arabic privacy preview clipped the threshold row at 360px | frontend-engineer |
+| D-07 | High | Preview figures cached for 60s, so they were not live | backend-engineer |
 
 ## Knowingly untested
 
@@ -309,7 +310,11 @@ Beyond the engineer's plan I probed, by blast radius:
 | Nothing closes without evidence | yes, `evidence/sm-close-no-evidence.log` |
 | Nothing reports below threshold | yes, `evidence/inv-i1.log` |
 | Nothing routes to someone without authority | yes, `evidence/sm-lane-authority.log` |
+| Every open item has an owner and a date | yes, `evidence/sm-accept-no-owner.log` |
 ```
+
+The example shows content, not order. `readiness.md` follows the nine sections, in the
+order, fixed in `qc-lead`'s agent file.
 
 ---
 
@@ -328,10 +333,12 @@ Trust nothing, check everything. In order:
 5. **Run your own pass**, chosen by blast radius rather than convenience. Do not re-run
    the suite; probe where a failure would hurt most.
 6. **Re-verify the product's claims.** Nothing closes without evidence, nothing reports
-   below threshold, nothing routes to someone without authority.
+   below threshold, nothing routes to someone without authority, every open item has an
+   owner and a date.
 
 A no-go from this role is overturned only by Shehab, and the override is recorded in the
-ledger.
+ledger by the orchestrator. `qc-lead` does not dispatch a re-test itself; it sets `next` to
+`qc-engineer` in its handoff and the orchestrator runs it.
 
 ---
 

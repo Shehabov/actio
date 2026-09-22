@@ -81,6 +81,11 @@ Write `handoff.json`. The orchestrator parses it, so the key names are fixed.
 **Every handoff carries a `stage` key**, matching the `stage` of the plan entry it answers.
 The utilisation check pairs handoffs to plan entries by it.
 
+**You never dispatch another agent.** Only the orchestrator dispatches, because it writes
+the ledger and runs the utilisation check, and a dispatch it did not make reads as a skipped
+gate. To send work back or forward, set
+`next` and `blockers[].needs` and return. The orchestrator routes it.
+
 **An agent that runs more than once in a plan writes one handoff per pass.** The first pass
 writes `handoff.json`; every later pass writes `handoff-stage<N>.json`. `bug-historian` is
 the case this exists for: it publishes the regression brief at stage 1 and runs the guard at
@@ -150,6 +155,7 @@ date -u +%Y-%m-%dT%H:%M:%SZ
 {
   "run": "2026-09-20-privacy-preview",
   "agent": "ux-auditor",
+  "stage": 3,
   "status": "passed",
   "started": "2026-09-20T09:14:02Z",
   "finished": "2026-09-20T09:41:55Z",
@@ -169,6 +175,8 @@ date -u +%Y-%m-%dT%H:%M:%SZ
     }
   ],
   "blockers": [],
+  "missing_inputs": [],
+  "machinery_findings": [],
   "decisions_for_shehab": [],
   "next": "ux-writer"
 }
@@ -178,12 +186,15 @@ date -u +%Y-%m-%dT%H:%M:%SZ
 |---|---|
 | `run` | The run id, identical across every agent in the run |
 | `agent` | Your agent name, matching your file name |
+| `stage` | The `stage` of the plan entry this handoff answers |
 | `status` | `passed`, `blocked`, `rejected`, `escalated`. Nothing else. |
 | `started`, `finished` | ISO 8601 UTC, from the shell |
 | `consumed` | Every path you actually read. This is how the orchestrator proves an upstream agent was used. Listing something you did not read is falsifying the record. |
 | `produced` | Every path you wrote. Each one must exist on disk. |
 | `gates` | Only gates **you** own. Certifying another agent's gate is a defect. |
 | `blockers` | `{ "what": "", "why": "", "needs": "<agent-name or 'shehab'>" }` |
+| `missing_inputs` | Promised inputs that never arrived and that you worked around |
+| `machinery_findings` | Defects in an agent file, a skill or this protocol, with the file named |
 | `decisions_for_shehab` | `{ "question": "", "options": [], "recommendation": "" }`. Never a bare question. |
 | `next` | The agent that should run next, `"shehab"`, or `null` at run closure |
 

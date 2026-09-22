@@ -15,7 +15,11 @@
  *   - It only ever copies a result an owner recorded. It never decides a gate.
  *   - It refuses a result from an agent the plan does not name as that gate's owner, which
  *     is GATE_SELF_CERTIFIED and belongs to the checker, not to a sync step.
- *   - It never downgrades a result that is already recorded, so re-running is safe.
+ *   - When an owner records the same gate more than once (a fail, a fix, then a re-review
+ *     that passes), the owner's latest record wins, judged by the handoff's `finished` time
+ *     and then by pass number. Refusing every change after the first result used to pin a
+ *     gate at `fail` for good, so the stage it blocked could never become due and the run
+ *     stalled. Re-running is still safe: the same handoffs always give the same answer.
  *   - It rewrites only `gates[].result` and `gates[].evidence`. Nothing else in run.json.
  *
  * Usage:  node .actio/bin/sync-gates.mjs <run-dir> [--dry-run]
@@ -24,7 +28,12 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-const runDir = resolve(process.argv[2] || '.')
+const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'))
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log('Usage: node .actio/bin/sync-gates.mjs <run-dir> [--dry-run]')
+  process.exit(0)
+}
+const runDir = resolve(positional[0] || '.')
 const dryRun = process.argv.includes('--dry-run')
 const runJsonPath = join(runDir, 'run.json')
 
@@ -50,12 +59,18 @@ for (const entry of readdirSync(runDir)) {
     } catch {
       continue
     }
-    for (const g of h.gates || []) claims.push({ agent: entry, file, ...g })
+    const pass = file === 'handoff.json' ? 0 : Number((file.match(/\d+/) || [1])[0])
+    const at = Date.parse(h.finished || '') || 0
+    for (const g of h.gates || []) claims.push({ agent: entry, file, pass, at, ...g })
   }
 }
 
 const applied = []
 const refused = []
+
+// Oldest first, so the owner's latest record is the one left standing.
+claims.sort((a, b) => a.at - b.at || a.pass - b.pass)
+const latest = new Map()
 
 for (const c of claims) {
   const gate = gateByName.get(c.name)
@@ -67,14 +82,16 @@ for (const c of claims) {
     refused.push(`${c.agent} certified "${c.name}", owned by ${gate.owner} (GATE_SELF_CERTIFIED)`)
     continue
   }
-  if (gate.result === c.result) continue
-  if (gate.result !== 'pending' && gate.result !== undefined) {
-    refused.push(`"${c.name}" already reads "${gate.result}"; ${c.agent} now claims "${c.result}". Not overwritten.`)
-    continue
-  }
+  latest.set(c.name, c)
+}
+
+for (const [name, c] of latest) {
+  const gate = gateByName.get(name)
+  if (gate.result === c.result && (!c.evidence || gate.evidence === c.evidence)) continue
+  const was = gate.result
   gate.result = c.result
   if (c.evidence) gate.evidence = c.evidence
-  applied.push(`${c.name} -> ${c.result}  (${c.agent})`)
+  applied.push(`${name}: ${was} -> ${c.result}  (${c.agent}, ${c.file})`)
 }
 
 if (applied.length && !dryRun) {

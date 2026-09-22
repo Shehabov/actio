@@ -6,7 +6,8 @@ description: Analyse Actio code line by line for defects, security issues, data-
 # Code analysis
 
 Read the diff line by line for facts. `peer-reviewer` reads the same diff for judgement,
-independently. Both gates must pass, and they are separate because a well-designed change
+`code-steward` for readability and `security-analyst` for security, each independently.
+All four gates must pass, and they are separate because a well-designed change
 can carry a real bug and a correct line can implement the wrong thing.
 
 **Not your job:** whether this is the right solution, whether the abstraction is sound,
@@ -181,6 +182,9 @@ insert to fail and asserts `issue.status` is unchanged.
 | **Major** | A real defect on a path that is reachable but not routine, or a complexity breach over threshold |
 | **Minor** | A latent problem or a smell below threshold. Worth fixing, does not hold the gate. |
 
+`code-analyst` labels these S1, S2 and S3 in `findings.md`: S1 is Blocker, S2 is Major, S3
+is Minor.
+
 Rank by severity. Never pad the list with style opinions a formatter owns: every one of
 those makes the blocker at the top less likely to be read.
 
@@ -199,5 +203,6 @@ those makes the blocker at the top less likely to be read.
 6. Write findings to `.actio/runs/<run-id>/code-analyst/findings.md`, ordered by severity.
 7. Set gate `review-2of3`. Any blocker or major means fail.
 
-Handoff goes to `engineering-lead` on pass, or back to the author with `status: rejected`
-and the round number on fail.
+Handoff goes to `bug-historian` on pass, whose regression guard runs once all four reviews
+are in and before `engineering-lead`, or back to the author with `status: rejected` and the
+round number on fail.
