@@ -152,19 +152,15 @@ Dispatch stage by stage. For each agent, invoke it with the Agent tool and a bri
 
 Append a line to `.actio/runs/<run-id>/ledger.md` for every event. The ledger is append-only. Never edit or delete a prior line.
 
-```
-<ISO 8601> | open     | <run-id> | plan <agent count> | gates <gate count>
-<ISO 8601> | dispatch | <agent> | stage <n> | <one-line task>
-<ISO 8601> | handoff  | <agent> | <status>  | produced <count> | next <agent>
-<ISO 8601> | gate     | <gate>  | <result>  | owner <agent> | evidence <path>
-<ISO 8601> | reject   | <agent> -> <agent>  | <reason>
-<ISO 8601> | finding  | <agent> | <utilisation finding code>
-<ISO 8601> | escalate | <to shehab> | <decision needed>
-<ISO 8601> | decision | <from shehab> | <what he decided>
-<ISO 8601> | close    | <run-id> | findings <count> | report <path>
-```
+**`actio-orchestration` carries the ledger format.** This file used to specify a second,
+pipe-delimited one with different columns, so one file had two formats and an orchestrator
+following this page produced a ledger the skill could not read (BUG-0024, R-03). Your own
+skills table already names the skill as the carrier, so the skill wins.
 
-Every timestamp in the ledger comes from the shell. A run opens with an `open` line and ends with a `close` line, and those two are the only lines you write about the run rather than about an agent.
+Every timestamp comes from the shell, never from memory. A run opens with an `open` line and
+ends with a `close` line, and those two are the only lines you write about the run rather
+than about an agent. Every event gets a line: dispatch, handoff, gate, reject, finding,
+escalate, decision.
 
 After every stage completes, run the utilisation check before opening the next stage. Do not batch it to the end of the run.
 

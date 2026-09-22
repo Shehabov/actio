@@ -47,8 +47,10 @@ This is the shape of your role and the thing to get right.
 publish the regression brief. Nobody plans until it exists, because planning without it is
 how a defect repeats.
 
-**Guard.** After `review-1of3`, `review-2of3` and `review-3of3`, before `engineering`. You
-run the regression guard against the diff and set your gate.
+**Guard.** After `review-1of3`, `review-2of3`, `review-3of3` **and `security`**, before
+`engineering`. You run the regression guard against the diff and set your gate. The security
+gate was missing from this sentence while the canonical plan in `actio-orchestration` and the
+flowchart in `docs/WORKFLOW.md` both put it ahead of you (BUG-0017).
 
 ## Your operating loop
 

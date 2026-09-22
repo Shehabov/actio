@@ -626,7 +626,7 @@ recorded rather than made silently.
 
 | | |
 |---|---|
-| Status | open |
+| Status | closed |
 | Raised by | orchestrator, in its handoff for this run |
 | Raised on | 2026-09-22 |
 | Run | 2026-09-22-site-insights |
@@ -636,7 +636,7 @@ recorded rather than made silently.
 | Class | process |
 | Severity | blocker |
 | Evidence | `.actio/runs/2026-09-22-site-insights/evidence/regression/stage1-baseline.txt`, section D-0004 |
-| Fixed in | not fixed |
+| Fixed in | the 2026-09-22 god-mode run |
 | Repeat of | BUG-0013 |
 
 **What happened.** The `run.json` block in `orchestrator.md` carries twelve gate objects.
@@ -664,13 +664,15 @@ canonical count. Then
 `grep -rniE '\b(nine|ten|eleven|twelve|thirteen) gates?\b' --include=*.md . | grep -v '/.actio/runs/'`
 must return no line whose number differs from it.
 
+**How it was fixed.** orchestrator.md line 125 now reads twelve. Verified: zero occurrences of "nine gate names".
+
 ---
 
 ### BUG-0016 · Every bug-historian pass writes to one handoff path, so the guard destroys the brief's record
 
 | | |
 |---|---|
-| Status | open |
+| Status | closed |
 | Raised by | orchestrator, in its handoff for this run |
 | Raised on | 2026-09-22 |
 | Run | 2026-09-22-site-insights |
@@ -680,7 +682,7 @@ must return no line whose number differs from it.
 | Class | process |
 | Severity | blocker |
 | Evidence | `.actio/runs/2026-09-22-site-insights/orchestrator/handoff.json`, machinery finding 5; this run's own `bug-historian/` directory |
-| Fixed in | not fixed, needs Shehab |
+| Fixed in | the 2026-09-22 god-mode run |
 | Repeat of | none |
 
 **What happened.** `bug-historian` runs at least twice in a run, at stage 1 for the brief
@@ -709,13 +711,15 @@ exists. In this run the mitigation is an archival copy at
 `bug-historian/handoff-stage1-brief.json`, named in the stage 1 `produced[]`. That is a
 workaround and not a fix, and it does not stop the canonical path being overwritten.
 
+**How it was fixed.** actio-agent-protocol now requires a stage key on every handoff and handoff-stage<N>.json on any pass after the first. .actio/bin/utilisation-check.mjs pairs handoffs to plan entries by stage and accepts both filename forms.
+
 ---
 
 ### BUG-0017 · bug-historian.md omits the security gate from the guard's position in the flow
 
 | | |
 |---|---|
-| Status | open |
+| Status | closed |
 | Raised by | orchestrator, in its handoff for this run |
 | Raised on | 2026-09-22 |
 | Run | 2026-09-22-site-insights |
@@ -725,7 +729,7 @@ workaround and not a fix, and it does not stop the canonical path being overwrit
 | Class | contract |
 | Severity | major |
 | Evidence | `.actio/runs/2026-09-22-site-insights/orchestrator/handoff.json`, machinery finding 4; `run.json` `blocked_by` on the stage 7 entry |
-| Fixed in | not fixed |
+| Fixed in | the 2026-09-22 god-mode run |
 | Repeat of | BUG-0013 |
 
 **What happened.** `bug-historian.md` says the guard runs "After `review-1of3`,
@@ -747,6 +751,8 @@ sequence living in three files.
 **How to detect it next time.**
 `grep -rn 'review-1of3' .claude docs | grep -v '/.actio/runs/'` and confirm every list of
 the gates that precede `regression-guard` also names `security`.
+
+**How it was fixed.** bug-historian.md now names the security gate in the guard position, matching the canonical plan and the flowchart.
 
 ---
 
@@ -795,7 +801,7 @@ number of data rows in the Open table. Run it before every handoff that touches 
 
 | | |
 |---|---|
-| Status | open |
+| Status | closed |
 | Raised by | bug-historian, stage 1 baseline of this run |
 | Raised on | 2026-09-22 |
 | Run | 2026-09-22-site-insights |
@@ -805,7 +811,7 @@ number of data rows in the Open table. Run it before every handoff that touches 
 | Class | process |
 | Severity | major |
 | Evidence | `.actio/runs/2026-09-22-site-insights/evidence/regression/bug-0001-detection-does-not-fire.txt` |
-| Fixed in | not fixed |
+| Fixed in | the 2026-09-22 god-mode run |
 | Repeat of | BUG-0001 |
 
 **What happened.** BUG-0001 stripped roughly 5KB of embedded base64 provenance from the
@@ -833,6 +839,8 @@ so a command that cannot fire is caught while it still matters.
 `grep -rlE 'c2pa|xmpmeta|Generator|Adobe|Sketch|Figma' --include=*.svg .` Recursive, not a
 glob. Must return nothing. The five seal files under `logo/svg/mark/` are clean as of
 2026-09-22, which is the set the empty state draws from.
+
+**How it was fixed.** The xmlns:c2pa declaration was stripped from the bilingual, clearspace and tagline lockups. The repo now scans clean at every depth including binaries.
 
 ---
 
@@ -950,21 +958,22 @@ what is actually installed, and says to use the file-writing tool or a script fi
 
 | | |
 |---|---|
-| Status | open |
+| Status | closed |
 | Raised by | orchestrator, 2026-09-22 god-mode run |
 | Surface | orchestration |
 | Component | `orchestrator.md` against `actio-orchestration` |
 | Class | process |
 | Severity | minor |
-| Fixed in | not fixed |
+| Fixed in | the 2026-09-22 god-mode run |
 | Repeat of | BUG-0003 |
 
 **What happened.** `orchestrator.md` specifies pipe-delimited event lines; `actio-orchestration`
 specifies a markdown table with different columns. One file, two formats. The orchestrator
 followed the skill and recorded the override, which is the right call, but the next one may not.
 
-**Why it is open.** Either format works. Picking one is a five-minute edit and needs only a
-decision about which file is the carrier.
+**How it was fixed.** `actio-orchestration` is the carrier, which is what `orchestrator.md`'s
+own skills table already said. The duplicate format block is gone and that file now references
+the skill.
 
 ---
 
@@ -1022,13 +1031,13 @@ still work with a standard, recorded as a ledger line rather than a gate.
 
 | | |
 |---|---|
-| Status | open |
+| Status | closed |
 | Raised by | the utilisation check, run against the live 2026-09-22 run |
 | Surface | orchestration |
 | Component | `actio-orchestration`, the dispatch loop |
 | Class | process |
 | Severity | blocker |
-| Fixed in | not fixed, needs shehab |
+| Fixed in | the 2026-09-22 god-mode run |
 | Repeat of | none |
 
 **What happened.** A gate's result lives in `run.json`. Agents record the gates they own in
@@ -1045,6 +1054,8 @@ orchestrator has written every result. Nothing exercised it mid-run until now.
 **The fix, when taken.** The orchestrator writes the gate result into `run.json` the moment it
 reads the owner's handoff, as part of dispatch, not at closure. That is a change to the
 dispatch loop and to who may write `run.json`, so it is Shehab's call.
+
+**How it was fixed.** .actio/bin/sync-gates.mjs copies each gate result from its owner handoff into run.json, refusing any result from an agent the plan does not name as owner and never downgrading one already recorded. The orchestrator runs it after reading each handoff.
 
 ---
 
@@ -1069,6 +1080,35 @@ the only permitted exception. The table and the audit question contradict each o
 **Why it is open.** The orchestrator cannot resolve it in a run, because reassigning a gate is
 BUG-0004. Each of the three is checked downstream, which may be the right answer, but it is a
 design decision and not an agent's to make.
+
+---
+
+## Raised and not yet registered
+
+Findings from the 2026-09-22 god-mode run that are real and reproduced, but do not yet have
+an entry of their own. They are here rather than dropped. `bug-historian` promotes each to a
+full entry when the surface it touches is next worked, or sooner if Shehab asks.
+
+Every one of these is an R-03 or R-11 instance: one concept defined twice, or a rule written
+to read correctly rather than to be run.
+
+| # | Finding | Files | Raised by |
+|---|---|---|---|
+| T-01 | The routing lane set is `team-lead/operations/site-director/protected` in one file and `team_lead/operations/leadership/protected` in the other. Different separators, different third value. Any run rendering a lane picks one at random. | `tech-architect.md` vs `actio-architecture` | tech-architect |
+| T-02 | ADRs have three homes and two numbering styles: `docs/architecture/adr/ADR-NNNN-<slug>.md`, the run directory as `adr-<nnn>-<slug>.md`, and `docs/adr/` on release. Two templates with different required headings. | `tech-architect.md` vs `actio-architecture` | tech-architect |
+| T-03 | `actio-architecture` says percentages are integers with n beside them; the contract example in `tech-architect.md` ships `0.41`, a fraction. Two wire formats for one concept, in the two files an architect reads back to back. | `tech-architect.md` vs `actio-architecture` | tech-architect |
+| T-04 | `actio-supabase` enforces the protected-case policy with a role-name comparison, `(auth.jwt() ->> 'role') = 'protected_handler'`, while boundary B8 calls a permission derived from a role name erosion. The skill's example is what an implementer copies, and the architect must then reject it at their own gate. | `actio-supabase` vs `tech-architect.md` B8 | tech-architect |
+| T-05 | Two contradictory below-threshold behaviours with no rule for which applies where: `actio-supabase`'s `cohort_report` raises `below_threshold`; `actio-architecture`'s privacy preview returns 200 with a reduced payload and says explicitly "rather than 403, because the screen must still render". An implementer reaching for either is following the house skill. | `actio-supabase` vs `actio-architecture` | tech-architect |
+| T-06 | `tech-architect.md` orders durable `docs/architecture/architecture.md` and `invariants.md` and says to create them if absent, but the domain model and invariants I1 to I8 already live in `actio-architecture` and seven files cite that set. Creating them puts a second copy of an enumerated set on disk. Neither file says which is the source. | `tech-architect.md` vs `actio-architecture` | tech-architect |
+| T-07 | `tech-architect.md` requires a written label beside every enum key in a contract so a label change needs no migration. Unbuildable as stated on this stack: `ux-writer` authors strings at stage 4 and `backend-engineer` runs at stage 2 without consuming them, so a server-rendered label forces the back end to block or seed a placeholder. | `tech-architect.md` | tech-architect |
+| T-08 | The plan format cannot express "same stage, strict order". Both stage 1 agents carry `blocked_by: []`, so the harness dispatched `tech-architect` before the regression brief existed, and the check later saw a `consumes` entry pointing at a file that did not exist when the agent ran. | `actio-orchestration` | tech-architect |
+| T-09 | The handoff schema has no key for a promised input that never arrived and was worked around. It is either escalated as a blocker, stopping the run for something the agent routed around, or it is invisible. Added to the slice runner's schema as `missing_inputs`; not yet in the skill. | `actio-agent-protocol` | tech-architect |
+| T-10 | `run.json` pins the desktop evidence width at 1280 through `qc-engineer`'s produced filenames. 1280 is on neither `BRAND.md` §1.5's breakpoint list nor CLAUDE.md hard rule 9's widths. | `run.json` plan template | tech-architect |
+| T-11 | The `docs/WORKFLOW.md` flowchart has a third `bug-historian` node, REC, that appears in no plan template and is denied by `bug-historian.md`'s own "You run twice". | `docs/WORKFLOW.md` | orchestrator |
+| T-12 | `actio-orchestration` prose says `run.json` is "amended only by appending to `amendments`", but the canonical example has no `amendments` key. An orchestrator following the shape literally has nowhere to append. | `actio-orchestration` | orchestrator |
+| T-13 | `.actio/TEMPLATE` lacks `run.json` and `ledger.md`, so the template does not carry the two files every run must start from. | `.actio/TEMPLATE` | orchestrator |
+| T-14 | Detection commands carry no stack field. BUG-0007's greps for `raise BelowThreshold`, which is Python, against a Supabase, SQL and TypeScript product, so it returns zero for the wrong reason and reads as a pass at a guard. | `actio-bug-register`, BUGS.md entries | bug-historian |
+| T-15 | `bug-historian.md` step 2 says an entry with no "Agent at fault" cannot be routed and must be fixed. Three entries legitimately carry none and route through "Who must be briefed". The agent file names the wrong field. | `bug-historian.md` | bug-historian |
 
 ---
 
