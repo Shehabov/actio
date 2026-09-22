@@ -38,6 +38,10 @@ const F = {
   GATE_SELF_CERTIFIED: 'GATE_SELF_CERTIFIED',
   GATE_SKIPPED: 'GATE_SKIPPED',
   UNKNOWN_GATE: 'UNKNOWN_GATE',
+  // The two checks that used to live only in orchestrator.md's parallel taxonomy (BUG-0025).
+  // They are real and are kept; they just live here now with everything else.
+  LOOP_SKIPPED: 'LOOP_SKIPPED',
+  NO_TIMING: 'NO_TIMING',
 }
 
 const runDir = resolve(process.argv[2] || '.')
@@ -261,6 +265,21 @@ for (const [agent, entries] of planByAgent) {
       if (g.result === 'pass' && g.evidence && !locate(g.evidence)) {
         raise(F.GATE_UNRESOLVED, label, `gate "${g.name}" passed on evidence ${g.evidence}, which does not exist`)
       }
+    }
+
+    // 9. THE FIVE-STEP LOOP WAS ACTUALLY WORKED
+    //    plan.md carries the step-1 plan and its audit; review.md carries the step-4 review.
+    //    An agent that produced its deliverable without either skipped the loop.
+    const agentDir = join(runDir, agent)
+    const planMd = join(agentDir, 'plan.md')
+    const reviewMd = join(agentDir, 'review.md')
+    if (!existsSync(planMd) || !nonEmpty(planMd)) raise(F.LOOP_SKIPPED, label, 'no plan.md: steps 1 and 2 of the loop left no trace')
+    else if (!/##\s*audit/i.test(readFileSync(planMd, 'utf8'))) raise(F.LOOP_SKIPPED, label, 'plan.md has no Audit section, so step 2 was skipped')
+    if (!existsSync(reviewMd) || !nonEmpty(reviewMd)) raise(F.LOOP_SKIPPED, label, 'no review.md: step 4 left no trace')
+
+    // 10. TIMING IS COHERENT
+    if (h.started && h.finished && new Date(h.started) > new Date(h.finished)) {
+      raise(F.NO_TIMING, label, `started ${h.started} is after finished ${h.finished}`)
     }
 
     // 8. NO SKIPPED DEPENDENCY

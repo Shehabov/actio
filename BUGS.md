@@ -108,6 +108,8 @@ instinct.
 | R-07 | A reference image is never cited beside a value. References define anatomy, density, hierarchy and interaction. Every colour, size, weight and radius comes from `BRAND.md`. A hex and a `ref-0` citation in the same sentence is always a defect. | BUG-0006, BUG-0011 | every agent |
 | R-08 | A defect is not closed until the file has been searched for every other instance of the same value or pattern. A fix applied where the defect was noticed and missed where it also lives is the same defect, still open. | BUG-0012 | bug-historian, every agent |
 | R-09 | When a gate, an agent, a skill or any other member of an enumerated set is added, every enumeration of that set and every count of it is updated in the same change. A count in prose is derived from the list, never remembered. | BUG-0013 | orchestrator, every agent |
+| R-10 | A privacy rule names which reader it protects against. "The reader", "the user" and "anyone but the reader" are not readers: an employee, a manager, a site lead and an administrator are. A rule that does not say whose eyes it guards against has not been written. | BUG-0020 | every agent |
+| R-11 | A command published in a skill is executable on the Product Lead's machine and has been executed at least once. A skill that names a tool states that the tool is installed. Documentation that cannot run is not documentation. | BUG-0021, BUG-0022, BUG-0023 | every agent |
 
 ---
 
@@ -834,6 +836,242 @@ glob. Must return nothing. The five seal files under `logo/svg/mark/` are clean 
 
 ---
 
+---
+
+### BUG-0020 · The below-threshold rule named the wrong reader
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | tech-architect, 2026-09-22 god-mode run |
+| Surface | design system |
+| Component | `actio-design-system`, state coverage table |
+| Class | design-system |
+| Severity | blocker |
+| Fixed in | this run |
+| Repeat of | none |
+
+**What happened.** The Below threshold state read "Degrades without leaking the cohort size
+to anyone but the reader". On a manager-facing surface the reader is precisely the person who
+must not learn it. The rule as written permitted the exact disclosure the product exists to
+prevent.
+
+**Why it got through.** "The reader" is unambiguous on an employee-facing surface, which is
+where the phrase was first written, and nothing forced a second reading against the manager
+case. The invariant register does not classify surfaces by reader.
+
+**The rule this produces.** R-10 below.
+
+**How to detect it next time.** Grep the specs for "the reader" and for "the user" near a
+privacy rule. Every one must name which reader.
+
+---
+
+### BUG-0021 · The utilisation check was written in a tool that is not installed
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | orchestrator and bug-historian independently, 2026-09-22 god-mode run |
+| Surface | orchestration |
+| Component | `actio-orchestration`, the utilisation check |
+| Class | process |
+| Severity | blocker |
+| Fixed in | this run |
+| Repeat of | none |
+
+**What happened.** The check that proves every agent ran and every output was consumed, which
+is the orchestrator's stated reason for existing, was published as twelve `jq` one-liners.
+`jq` is not installed on the Product Lead's machine. The check had therefore never been run.
+
+**Why it got through.** The commands were written to read correctly rather than to be
+executed, and nothing ever executed them.
+
+**The rule this produces.** R-11 below.
+
+**How to detect it next time.** Run it. A command published in a skill is not documentation,
+it is a promise.
+
+---
+
+### BUG-0022 · The check could not tell "not yet due" from "never ran"
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | orchestrator, 2026-09-22 god-mode run |
+| Surface | orchestration |
+| Component | `actio-orchestration`, `.actio/bin/utilisation-check.mjs` |
+| Class | process |
+| Severity | major |
+| Fixed in | this run |
+| Repeat of | BUG-0021 |
+
+**What happened.** The algorithm had no notion of a stage that has not come round yet. Run at
+run open it raised `NEVER_RAN` against every planned agent, which made it useless anywhere
+except closure, which is the one moment it is too late to act on.
+
+**Why it got through.** It was only ever reasoned about at closure. A second defect of the
+same family: `blocked_by` names gates only, so it cannot express "wait for the spec", and an
+agent with no blocking gate looked due the moment the run opened.
+
+**The rule this produces.** Covered by R-11. The script reports `PENDING` when an agent's
+gates have not passed or its inputs are not on disk, and when an artefact's planned consumer
+has not been dispatched.
+
+---
+
+### BUG-0023 · Heredocs do not terminate through the Bash tool
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | bug-historian, 2026-09-22 god-mode run |
+| Surface | tooling |
+| Component | `actio-agent-protocol` |
+| Class | process |
+| Severity | major |
+| Fixed in | this run |
+| Repeat of | none |
+
+**What happened.** `cat > file <<EOF ... EOF` hangs in this environment and is killed at the
+timeout with no file written. Agents told to write artefacts this way lose their whole turn.
+It cost the bug-historian one turn in this run and the authoring pass two more.
+
+**Why it got through.** The environment was never characterised. Skills were written against
+a generic POSIX assumption.
+
+**The rule this produces.** Covered by R-11. `actio-agent-protocol` now carries a table of
+what is actually installed, and says to use the file-writing tool or a script file.
+
+---
+
+### BUG-0024 · Two ledger formats for one file
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | orchestrator, 2026-09-22 god-mode run |
+| Surface | orchestration |
+| Component | `orchestrator.md` against `actio-orchestration` |
+| Class | process |
+| Severity | minor |
+| Fixed in | not fixed |
+| Repeat of | BUG-0003 |
+
+**What happened.** `orchestrator.md` specifies pipe-delimited event lines; `actio-orchestration`
+specifies a markdown table with different columns. One file, two formats. The orchestrator
+followed the skill and recorded the override, which is the right call, but the next one may not.
+
+**Why it is open.** Either format works. Picking one is a five-minute edit and needs only a
+decision about which file is the carrier.
+
+---
+
+### BUG-0025 · Two incompatible utilisation-check vocabularies
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | orchestrator, 2026-09-22 god-mode run |
+| Surface | orchestration |
+| Component | `orchestrator.md` against `actio-orchestration` |
+| Class | process |
+| Severity | major |
+| Fixed in | this run |
+| Repeat of | BUG-0003 |
+
+**What happened.** `orchestrator.md` defined the check a second time as U1 to U9 with
+hyphenated codes; the skill defined eight steps with underscored codes. They were not
+one-to-one. `NO-HANDOFF` and `NEVER_RAN` were one condition under two names, and a finding
+logged in one vocabulary was unsearchable in the other.
+
+**Why it got through.** R-03 was written for schemas and nobody read a finding taxonomy as a
+schema. It is one.
+
+**How it was fixed.** The skill's vocabulary is the only one. `orchestrator.md` points at it
+and at the script. The two checks that existed only in the agent file, `LOOP_SKIPPED` and
+`NO_TIMING`, were real and were moved into the script rather than dropped.
+
+---
+
+### BUG-0026 · The orchestrator claimed two gates that are not in the canonical table
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | orchestrator, 2026-09-22 god-mode run |
+| Surface | orchestration |
+| Component | `orchestrator.md` |
+| Class | process |
+| Severity | major |
+| Fixed in | this run |
+| Repeat of | BUG-0004 |
+
+**What happened.** `orchestrator.md` said "You own the run-open gate and the run-close gate".
+`docs/WORKFLOW.md` carries exactly one orchestrator gate, `run-closure`. So `run-open` does
+not exist and `run-close` is the wrong spelling of the one that does. Writing either into a
+handoff raises `UNKNOWN_GATE` against the orchestrator.
+
+**How it was fixed.** The orchestrator owns `run-closure` and nothing else. Opening a run is
+still work with a standard, recorded as a ledger line rather than a gate.
+
+---
+
+### BUG-0027 · run.json gate results are only written at closure
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | the utilisation check, run against the live 2026-09-22 run |
+| Surface | orchestration |
+| Component | `actio-orchestration`, the dispatch loop |
+| Class | process |
+| Severity | blocker |
+| Fixed in | not fixed, needs shehab |
+| Repeat of | none |
+
+**What happened.** A gate's result lives in `run.json`. Agents record the gates they own in
+their own handoff, and nothing copies that into `run.json` until the orchestrator closes the
+run. So mid-run every gate reads `pending`, every dispatched agent appears to have started
+before its blocking gate passed, and the rule that "a stage does not start until every gate it
+depends on reads pass" cannot actually be enforced by reading `run.json`. Observed live: with
+`tech-architect` passed and `design-authority` recorded `pass` in its handoff, `run.json` still
+read `pending` and `ux-designer` was reported as `GATE_SKIPPED`.
+
+**Why it got through.** The check was only ever reasoned about at closure, by which time the
+orchestrator has written every result. Nothing exercised it mid-run until now.
+
+**The fix, when taken.** The orchestrator writes the gate result into `run.json` the moment it
+reads the owner's handoff, as part of dispatch, not at closure. That is a change to the
+dispatch loop and to who may write `run.json`, so it is Shehab's call.
+
+---
+
+### BUG-0028 · Three gates are certified by the role that produced the work
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | orchestrator, 2026-09-22 god-mode run |
+| Surface | orchestration |
+| Component | `docs/WORKFLOW.md` gate table against `orchestrator.md`'s plan audit |
+| Class | process |
+| Severity | major |
+| Fixed in | not fixed, needs shehab |
+| Repeat of | none |
+
+**What happened.** `design-authority` is certified by `tech-architect` over its own ADR, `copy`
+by `ux-writer` over its own strings, and `release` by `release-engineer` over its own deploy.
+`orchestrator.md`'s plan-audit question calls self-gating a defect and names `run-closure` as
+the only permitted exception. The table and the audit question contradict each other.
+
+**Why it is open.** The orchestrator cannot resolve it in a run, because reassigning a gate is
+BUG-0004. Each of the three is checked downstream, which may be the right answer, but it is a
+design decision and not an agent's to make.
+
+---
+
 ## Repeat offenders
 
 The point of the register. Reviewed by `bug-historian` at the start of every run.
@@ -842,7 +1080,8 @@ The point of the register. Reviewed by `bug-historian` at the start of every run
 |---|---|---|---|
 | A count or an index written in prose rather than derived from the list it describes | BUG-0013, BUG-0015, BUG-0018 | R-09 | **three, escalated to shehab 2026-09-22** |
 | A fix applied where the defect was noticed and missed where the same value also lives | BUG-0009, BUG-0012, BUG-0019 | R-08 | **three, escalated to shehab 2026-09-22** |
-| A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004, BUG-0017 | R-03 | **three, escalated to shehab 2026-09-22** |
+| A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004, BUG-0017, BUG-0024, BUG-0025, BUG-0026 | R-03 | **six, escalated to shehab 2026-09-22** |
+| A rule or command written to read correctly rather than to be run | BUG-0021, BUG-0022, BUG-0023 | R-11 | **three, escalated to shehab 2026-09-22** |
 | A spec value written from memory rather than read from the file | BUG-0002, BUG-0005 | R-02, R-04 | repeat |
 | A reference image treated as a source of values | BUG-0006, BUG-0011 | R-07 | repeat |
 | A spec that contradicts itself and is relied on by both readings | BUG-0008, BUG-0014 | R-05 | repeat |

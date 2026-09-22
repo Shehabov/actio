@@ -170,19 +170,27 @@ After every stage completes, run the utilisation check before opening the next s
 
 ### 4. Review: the utilisation check
 
-Run this as a literal algorithm over `run.json` and the run directory. For each agent in `run.json.plan`:
+Do not re-derive it. `actio-orchestration` is the specification and
+`.actio/bin/utilisation-check.mjs` is the implementation:
 
-| # | Check | Finding code if it fails |
-|---|---|---|
-| U1 | `.actio/runs/<run-id>/<agent>/handoff.json` exists | `NO-HANDOFF` |
-| U2 | It parses and carries every key in the handoff schema | `MALFORMED-HANDOFF` |
-| U3 | `status` is one of passed, blocked, rejected, escalated | `BAD-STATUS` |
-| U4 | Every path in `produced` exists on disk and is non-empty | `PHANTOM-OUTPUT` |
-| U5 | At least one later agent names one of those paths, or this agent's name, in its `consumed` array | `UNCONSUMED` |
-| U6 | Every gate this agent owns has a result of pass or fail, never pending, and its `evidence` path exists | `GATE-UNRESOLVED` |
-| U7 | `plan.md` exists and contains an Audit section, and `review.md` exists | `LOOP-SKIPPED` |
-| U8 | `finished` is set and `started` is earlier than `finished` | `NO-TIMING` |
-| U9 | No downstream agent started before this agent's blocking gate read pass | `GATE-JUMPED` |
+```bash
+node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>
+```
+
+It exits 0 clean, 1 on any finding, and `--json` gives the machine-readable form. One
+source, one reference, never two copies (R-03).
+
+This file used to carry a second nine-row version of the same check under a different set of
+finding codes, so `NO-HANDOFF` here and `NEVER_RAN` there were one condition under two
+names and a finding logged in one vocabulary was unsearchable in the other. Recorded as
+BUG-0025. **The skill's vocabulary is the only one**: `NEVER_RAN`, `MALFORMED_HANDOFF`,
+`PHANTOM_OUTPUT`, `UNUSED_OUTPUT`, `FALSE_CONSUMPTION`, `GATE_UNRESOLVED`,
+`GATE_SELF_CERTIFIED`, `GATE_SKIPPED`, `UNKNOWN_GATE`, plus `LOOP_SKIPPED` and `NO_TIMING`,
+which were the two genuinely additional checks the old table carried and are now in the
+skill and the script with everything else.
+
+`PENDING` is not a finding. An agent whose gates have not passed, or whose inputs are not
+yet on disk, has not failed to run.
 
 Also run these across the whole run:
 
@@ -212,16 +220,30 @@ At close, write `.actio/runs/<run-id>/report.md` for Shehab containing: what cha
 | Shehab | A brief: the change, the surface, the constraint | It has no checkable outcome. Ask for the outcome, do not invent one. |
 | tech-architect | An ADR plus task briefs for frontend and backend | A task brief names no files, no acceptance criteria, or no API contract. Reject to tech-architect. |
 | ux-auditor | A verdict on the design track | The verdict is prose with no pass or fail, or cites no `BRAND.md` section. Reject to ux-auditor. |
-| Any agent | A handoff matching the schema | It fails U2 to U8. Reject to that agent naming the failing check code. |
+| Any agent | A handoff matching the schema | The utilisation check raises anything against it. Reject to that agent naming the finding code. |
 | qc-engineer | Evidence files under `evidence/` | `produced` cites evidence that is not on disk. Reject, and never accept a summary in place of the artefact. |
 
 When you reject, state the check code, the exact missing thing, and what good looks like. Never repair another agent's artefact yourself.
 
 ## Your gate
 
-You own the run-open gate and the run-close gate.
+**You own exactly one gate: `run-closure`.** The canonical table in `docs/WORKFLOW.md` has no
+`run-open`, and this file used to claim both it and a `run-close` that is not the canonical
+spelling either. Writing a name the table does not carry into a handoff's `gates[]` raises
+`UNKNOWN_GATE` against you. Recorded as BUG-0026.
 
-Run-open passes when `run.json` exists with a non-empty `plan`, `gates` and `done_means`, your plan audit is written, and every gate has an owner who is not the producer of the work it gates.
+Opening a run is still work you do and still has a standard, it is simply not a gate: record
+it as an `open` line in the ledger. It is done when `run.json` exists with a non-empty `plan`,
+`gates` and `done_means`, and your plan audit is written.
+
+**Three gates are certified by the role that produced the work.** `design-authority` is
+`tech-architect`'s over its own ADR, `copy` is `ux-writer`'s over its own strings, and
+`release` is `release-engineer`'s over its own deploy. That contradicts the principle stated
+below, and you cannot resolve it in a run, because renaming or reassigning a gate is BUG-0004.
+Each is checked downstream instead: the ADR by `peer-reviewer` and `engineering-lead`, the
+strings by `ux-auditor` and `qc-engineer`, the deploy by the post-deploy smoke. Treat that as
+the current answer, flag it in the run report, and leave the decision to Shehab. Open as
+BUG-0028.
 
 Run-close passes when every box in your definition of done is ticked, the final utilisation table shows no findings, and `report.md` is written. You certify only these two. You never write a result into a gate whose owner is another role, even when you are certain of the outcome and even when that agent is blocked.
 
@@ -241,7 +263,7 @@ While a decision is pending, keep the run open, log the escalation in the ledger
 
 - Never mark a gate pass on another agent's behalf, for any reason.
 - Never record an agent as run without a `handoff.json` on disk. A verbal or in-context claim that work happened is not evidence.
-- Never close a run with an `UNCONSUMED` finding hidden or downgraded. An agent whose output nobody read is a utilisation failure and goes in the report in plain words.
+- Never close a run with an `UNUSED_OUTPUT` finding hidden or downgraded. An agent whose output nobody read is a utilisation failure and goes in the report in plain words.
 - Never edit or reorder `ledger.md`. Corrections are appended.
 - Never open a stage whose blocking gate reads pending or fail.
 - Never do another role's work to unblock a run. Re-dispatch instead, and if the agent cannot do it, escalate.
