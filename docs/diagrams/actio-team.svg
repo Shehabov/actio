@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 660" width="1440" height="660" role="img" aria-label="The Actio delivery swarm: Shehab Beram as Product Lead above fifteen agent roles arranged across plan, design, build, review, guard and ship, with the eleven gate owners marked in the accent colour."><title>The Actio delivery swarm</title>
-<rect width="1440" height="660" fill="#0C0C0C"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 740" width="1440" height="740" role="img" aria-label="The Actio delivery swarm: Shehab Beram as Product Lead above sixteen agent roles arranged across plan, design, build, review, guard and ship, with the twelve gate owners marked in the accent colour."><title>The Actio delivery swarm</title>
+<rect width="1440" height="740" fill="#0C0C0C"/>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#00BFC4"/></marker>
 <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6E6E69"/></marker></defs>
 <g transform="translate(48 36) scale(0.4)"><path d="M 50.0000 21.4000 A 57.1577 57.1577 0 0 1 78.5788 70.9000 A 57.1577 57.1577 0 0 1 21.4212 70.9000 A 57.1577 57.1577 0 0 1 50.0000 21.4000 Z M 35 53.4 a 15 15 0 1 0 30 0 a 15 15 0 1 0 -30 0 Z" fill="#00BFC4" fill-rule="evenodd"/></g>
 <text x="106" y="60" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="30" font-weight="600" fill="#EFEFEF" letter-spacing="-0.6">The team</text>
-<text x="106" y="86" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" fill="#A8A8A4">Fifteen autonomous agents. One human. Every gate has exactly one owner.</text>
+<text x="106" y="86" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" fill="#A8A8A4">Sixteen autonomous agents. One human. Every gate has exactly one owner.</text>
 <text x="1392" y="48" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#6E6E69" letter-spacing="1.6">ACTIO</text>
 <text x="1392" y="70" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#6E6E69" letter-spacing="1.6">A LUMOFY PRODUCT</text>
 <rect x="48" y="108" width="1344" height="1" fill="#33332F"/>
@@ -47,7 +47,7 @@
 <text x="520" y="314" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">React, Next.js</text>
 <rect x="504" y="348" width="204" height="64" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
 <text x="520" y="375" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF">backend-engineer</text>
-<text x="520" y="394" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">Django, DRF</text>
+<text x="520" y="394" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">Supabase, RLS</text>
 <rect x="732" y="268" width="204" height="64" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
 <rect x="733" y="286" width="3" height="28" fill="#00BFC4"/>
 <text x="748" y="295" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF">peer-reviewer</text>
@@ -60,6 +60,10 @@
 <rect x="733" y="446" width="3" height="28" fill="#00BFC4"/>
 <text x="748" y="455" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF">code-steward</text>
 <text x="748" y="474" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">readability</text>
+<rect x="732" y="508" width="204" height="64" rx="12" fill="#1A1A18" stroke="#B4251F" stroke-width="2"/>
+<rect x="733" y="526" width="3" height="28" fill="#B4251F"/>
+<text x="748" y="535" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF">security-analyst</text>
+<text x="748" y="554" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">secrets, exposure</text>
 <rect x="960" y="268" width="204" height="64" rx="12" fill="#022E33" stroke="#03474D" stroke-width="2"/>
 <text x="976" y="295" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#6FE0E5">bug-historian</text>
 <text x="976" y="314" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">no defect repeated</text>
@@ -88,29 +92,33 @@
 <path d="M 446 412 V 428" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 902 332 V 348" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 902 412 V 428" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 902 492 V 508" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 1130 332 V 348" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 1358 332 V 348" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 1358 412 V 428" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 310 348 V 332" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
 <text x="320" y="343" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="10" fill="#6E6E69" letter-spacing="0.8">FINDINGS</text>
 <path d="M 674 332 V 348" stroke="#6E6E69" stroke-width="1" fill="none" stroke-dasharray="4 3"/>
-<path d="M 218 406 V 506 H 994 V 262" stroke="#03474D" stroke-width="1.2" fill="none" stroke-dasharray="3 4" marker-end="url(#a)"/>
+<path d="M 218 406 V 586 H 994 V 262" stroke="#03474D" stroke-width="1.2" fill="none" stroke-dasharray="3 4" marker-end="url(#a)"/>
 <text x="514" y="454" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="10" fill="#03474D" letter-spacing="1">THE GUARD ENFORCES</text>
 <text x="514" y="470" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="10" fill="#03474D" letter-spacing="1">THE OPENING BRIEF</text>
-<path d="M 1290 492 V 536 H 28 V 300 H 41" stroke="#00BFC4" stroke-width="1.5" fill="none" stroke-dasharray="6 4" marker-end="url(#a)"/>
-<text x="659" y="527" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#6FE0E5" letter-spacing="1">UTILISATION CHECK · DID EVERY AGENT RUN, AND WAS EACH ONE USED</text>
-<rect x="48" y="568" width="1344" height="1" fill="#33332F"/>
-<rect x="48" y="590" width="14" height="14" rx="3" fill="#00BFC4" stroke="#00BFC4" stroke-width="1"/>
-<text x="70" y="601" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">human</text>
-<rect x="123" y="590" width="14" height="14" rx="3" fill="#022E33" stroke="#00BFC4" stroke-width="1"/>
-<text x="145" y="601" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">orchestrator</text>
-<rect x="249.8" y="590" width="14" height="14" rx="3" fill="#022E33" stroke="#03474D" stroke-width="1"/>
-<text x="271.8" y="601" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">memory</text>
-<rect x="332.20000000000005" y="590" width="14" height="14" rx="3" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
-<rect x="333.20000000000005" y="593" width="2" height="8" fill="#00BFC4"/>
-<text x="354.20000000000005" y="601" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">gate owner</text>
-<rect x="444.20000000000005" y="590" width="14" height="14" rx="3" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
-<text x="466.20000000000005" y="601" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">maker</text>
-<text x="1392" y="601" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#6E6E69" letter-spacing="1.1">EVERY AGENT: PLAN → AUDIT THE PLAN → EXECUTE → REVIEW → HAND OFF</text>
-<text x="1392" y="624" text-anchor="end" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6E6E69">Nothing closes without evidence. A skipped gate is a defect, not a shortcut. A repeated defect is worse than a new one.</text>
+<path d="M 1290 492 V 616 H 28 V 300 H 41" stroke="#00BFC4" stroke-width="1.5" fill="none" stroke-dasharray="6 4" marker-end="url(#a)"/>
+<text x="659" y="607" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#6FE0E5" letter-spacing="1">UTILISATION CHECK · DID EVERY AGENT RUN, AND WAS EACH ONE USED</text>
+<rect x="48" y="648" width="1344" height="1" fill="#33332F"/>
+<rect x="48" y="670" width="14" height="14" rx="3" fill="#00BFC4" stroke="#00BFC4" stroke-width="1"/>
+<text x="70" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">human</text>
+<rect x="123" y="670" width="14" height="14" rx="3" fill="#022E33" stroke="#00BFC4" stroke-width="1"/>
+<text x="145" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">orchestrator</text>
+<rect x="249.8" y="670" width="14" height="14" rx="3" fill="#022E33" stroke="#03474D" stroke-width="1"/>
+<text x="271.8" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">memory</text>
+<rect x="332.20000000000005" y="670" width="14" height="14" rx="3" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="333.20000000000005" y="673" width="2" height="8" fill="#00BFC4"/>
+<text x="354.20000000000005" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">gate owner</text>
+<rect x="444.20000000000005" y="670" width="14" height="14" rx="3" fill="#1A1A18" stroke="#B4251F" stroke-width="1"/>
+<rect x="445.20000000000005" y="673" width="2" height="8" fill="#B4251F"/>
+<text x="466.20000000000005" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">security</text>
+<rect x="541.4000000000001" y="670" width="14" height="14" rx="3" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="563.4000000000001" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">maker</text>
+<text x="1392" y="681" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#6E6E69" letter-spacing="1.1">EVERY AGENT: PLAN → AUDIT THE PLAN → EXECUTE → REVIEW → HAND OFF</text>
+<text x="1392" y="704" text-anchor="end" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6E6E69">Nothing closes without evidence. A skipped gate is a defect, not a shortcut. A repeated defect is worse than a new one.</text>
 </svg>

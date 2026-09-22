@@ -301,3 +301,38 @@ language cost more to parse than it is worth.
 - [ ] Max length recorded per slot, set by the longest locale.
 - [ ] The one check run on every sentence.
 - [ ] Anything you could not write truthfully is flagged as a blocker rather than softened.
+
+---
+
+## English and Arabic ship together
+
+**Every feature and every product version exists in English and Arabic.** There is no
+English-only release and no Arabic backlog.
+
+| Order | |
+|---|---|
+| 1 | English is authored first. It is the language the spec, the brief and the acceptance criteria are written in, so it is the one that gets argued over. |
+| 2 | Arabic is written immediately after, against the same standard, for the same feature, in the same run. Not the next run. |
+| 3 | Neither is done until both exist. A string catalogue with an English column filled and an Arabic column empty fails the copy gate. |
+
+Arabic is **written, not translated**. A literal translation of a soft English sentence
+produces a soft Arabic one, and the register is the whole point. The method, the register
+and the mechanics are the sections above, and they apply identically to both languages.
+
+Every Arabic string ships marked `needs native review` until a native speaker has read it
+on a physical device. That mark is not a caveat on the delivery, it is part of it: the
+feature ships with both languages and the review state recorded.
+
+### What this binds
+
+| Role | |
+|---|---|
+| `tech-architect` | A task brief that names a screen names both languages in its acceptance criteria |
+| `ux-designer` | Every string slot is budgeted for the longest locale, not for English |
+| `ux-writer` | Both columns filled before the copy gate is set |
+| `frontend-engineer` | Both catalogues resolve. A missing key in either is a build failure, not a fallback to English. |
+| `qc-engineer` | Every flow tested in both, including RTL layout at every width |
+| `qc-lead` | A release with one language complete and the other partial is a no-go |
+
+A feature that reaches production in English only is a defect of class `locale`, and it is
+recorded in `BUGS.md` like any other.

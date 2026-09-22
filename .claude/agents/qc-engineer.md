@@ -255,3 +255,16 @@ Everything else you decide and record. You do not ask permission to run your own
     loudly as what failed.
 11. Never narrow scope quietly. Finish what you can, then list exactly what you left and why.
 12. Never pass work through that arrived without an engineering lead gate. Reject it back.
+
+## Responsive is not optional
+
+**Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
+between them, both orientations, and at 200% browser zoom. Verified at 320, 360, 768, 1024
+and 1440 with a screenshot each, in both themes and in the longest locale.
+
+A surface that works at three widths and breaks at the fourth is not finished. "Tablet
+later" is not a scope decision, it is a defect with a date on it. Nothing is hidden to make
+it fit: if a control does not fit, the layout is wrong.
+
+The full rules, the widths and the evidence requirement are in `actio-design-system`.
+

@@ -11,7 +11,7 @@ Actio routes employee feedback to whoever can actually fix it, and does not let 
 <p>
 <img src="https://img.shields.io/badge/Version-1-017E85?style=for-the-badge&labelColor=0C0C0C" alt="Version 1">
 <img src="https://img.shields.io/badge/Product-coming_soon-0C0C0C?style=for-the-badge&labelColor=0C0C0C" alt="Product coming soon">
-<img src="https://img.shields.io/badge/Team-15_agents-017E85?style=for-the-badge&labelColor=0C0C0C" alt="15 agents">
+<img src="https://img.shields.io/badge/Team-16_agents-017E85?style=for-the-badge&labelColor=0C0C0C" alt="16 agents">
 <img src="https://img.shields.io/badge/A_Lumofy-product-017E85?style=for-the-badge&labelColor=0C0C0C" alt="A Lumofy product">
 </p>
 
@@ -33,10 +33,10 @@ Version 1 also ships the team that builds it. See [the team](#the-team).
 
 ## The team
 
-Actio is built by a swarm of fifteen autonomous agents under one human Product Lead.
+Actio is built by a swarm of sixteen autonomous agents under one human Product Lead.
 
 <div align="center">
-<img src="./docs/diagrams/actio-team.svg" alt="The Actio delivery swarm: Shehab Beram as Product Lead above fifteen agent roles arranged across plan, design, build, review, guard and ship, with the eleven gate owners marked in the accent colour." width="900">
+<img src="./docs/diagrams/actio-team.svg" alt="The Actio delivery swarm: Shehab Beram as Product Lead above the orchestrator, which routes fifteen further agent roles arranged across plan, design, build, review, guard and ship, with the twelve gate owners marked in the accent colour." width="900">
 </div>
 
 **Shehab Beram is the Product Lead.** He sets the brief and he is the only role that can
@@ -59,6 +59,7 @@ question.
 | | [`peer-reviewer`](./.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review, 1 of 3 |
 | | [`code-analyst`](./.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review, 2 of 3 |
 | | [`code-steward`](./.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review, 3 of 3 |
+| | [`security-analyst`](./.claude/agents/security-analyst.md) | Secrets, exposure, authorisation, injection, dependencies, robustness | Security |
 | | [`qc-engineer`](./.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – |
 | | [`release-engineer`](./.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release |
 
@@ -89,7 +90,7 @@ Step 2 is the one that pays for itself. An agent that audits its own plan before
 catches the missing state, the unchecked assumption and the brand rule it was about to
 break, at the point where fixing it costs nothing.
 
-### Six roles exist only to disagree
+### Seven roles exist only to disagree
 
 | Checker | Checks | Why it is separate |
 |---|---|---|
@@ -97,6 +98,7 @@ break, at the point where fixing it costs nothing.
 | `peer-reviewer` | The diff, for judgement | Is this the right solution, simply built. No linter answers that. |
 | `code-analyst` | The diff, for facts | Line by line, so a plausible design does not carry a real bug past the others. |
 | `code-steward` | The diff, for the next reader | Naming, shape, module headers, comments that say why. Correct code nobody can safely change is a cost that arrives later. |
+| `security-analyst` | The diff, for what can be broken into | Exposure, authorisation and supply chain. A leak here costs the product its claim, not a password reset. |
 | `bug-historian` | The diff, against history | Has a defect already recorded on this surface been committed again. The other three read the change on its own terms and cannot see a repeat. |
 | `qc-lead` | `qc-engineer` | Audits whether the evidence exists and what was **not** tested. Untested surface is the finding this role exists to catch. |
 
@@ -107,22 +109,24 @@ reported rather than hidden.
 
 ### Skills
 
-Each agent is coupled with the skills it needs. Fourteen house skills carry Actio's own
-rules, and twenty-two vendored skills carry craft.
+Each agent is coupled with the skills it needs. Fifteen house skills carry Actio's own
+rules, and twenty-four vendored skills carry craft.
 
 | Pack | Source | Used by |
 |---|---|---|
-| **House** (14) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-supabase`, `actio-test-protocol`, `actio-release` | All |
+| **House** (15) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-security`, `actio-supabase`, `actio-test-protocol`, `actio-release` | All |
 | **Taste** (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
+| **Supabase** (2) | [supabase/agent-skills](https://github.com/supabase/agent-skills) | `backend-engineer`, `security-analyst` |
 | **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
 
 ### The platform
 
 [`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md) is built on seven
 approved references in [`docs/design-reference/`](./docs/design-reference/).
-`ref-02-ops-dashboard.png` is primary for **anatomy**, what an operations product is made
-of. `ref-06-insights-panel.webp` is primary for **feel**, and where the two disagree on
-surface treatment, `ref-06` wins. `ref-04-category-dashboard.png` is a **counter-example**,
+`ref-06-insights-panel.webp` is **the primary reference**, for anatomy as well as feel.
+`ref-02-ops-dashboard.png` is supporting, and its six-tile metric row and filled sidebar are
+explicitly not adopted. **Where the two disagree on anything, `ref-06` wins**, with one
+written exception: the issue queue is deliberately denser. `ref-04-category-dashboard.png` is a **counter-example**,
 kept in the set to be recognised and refused: a sentiment heatmap of tinted cells on a red
 to green ramp, and a score per cohort presented as a thing to defend.
 
@@ -145,7 +149,7 @@ decorative vocabulary. The per-skill verdicts are in
 [`actio-brand-guard`](./.claude/skills/actio-brand-guard/SKILL.md).
 
 **Full detail:** [`docs/TEAM.md`](./docs/TEAM.md) for the org, the RACI and the escalation
-ladder. [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) for the delivery flow, the eleven gates and
+ladder. [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) for the delivery flow, the twelve gates and
 the handoff schema. [`CLAUDE.md`](./CLAUDE.md) is the operating manual the agents load.
 
 ---
@@ -203,8 +207,8 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 | [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning and the measured numbers behind each one. |
 | [`CLAUDE.md`](./CLAUDE.md) | The operating manual every agent loads. What Actio is, the org, the flow, the hard rules. |
 | [`BUGS.md`](./BUGS.md) | The defect register. Every bug found and every mistake an agent made, with the standing rule it produced. Owned by `bug-historian`. |
-| [`.claude/agents/`](./.claude/agents/) | The fifteen agent definitions |
-| [`.claude/skills/`](./.claude/skills/) | Fourteen house skills and twenty-two vendored ones |
+| [`.claude/agents/`](./.claude/agents/) | The sixteen agent definitions |
+| [`.claude/skills/`](./.claude/skills/) | Fifteen house skills and twenty-four vendored ones |
 | [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
 | [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run. |
 | [`logo/`](./logo/) | The seal and the lockups, in every colourway. See [`logo/README.md`](./logo/README.md) for which file to use where. |
@@ -219,9 +223,9 @@ actio/
 ├── LICENSE
 ├── .claude/
 │   ├── settings.json
-│   ├── agents/                            15 agent definitions
+│   ├── agents/                            16 agent definitions
 │   └── skills/
-│       ├── actio-*/                       14 house skills
+│       ├── actio-*/                       15 house skills
 │       └── <vendored>/                    22 from taste-skill and vercel-labs
 ├── .actio/
 │   ├── TEMPLATE/                          plan.md · review.md · handoff.json
@@ -251,7 +255,7 @@ Vertical, Arabic, parent and descriptor lockups, the raster and app-icon exports
 | # | Step | State |
 |---|---|---|
 | 1 | Specification: `BRAND.md`, the guidelines, the marks | Done |
-| 2 | The team: 15 agents, 14 house skills, the run ledger, the defect register | Done |
+| 2 | The team: 16 agents, 15 house skills, the run ledger, the defect register | Done |
 | 3 | Tokens as CSS custom properties, Tailwind config and native resources | Next |
 | 4 | Source Sans 3, IBM Plex Sans, Mono and Sans Arabic self-hosted as WOFF2 | Next |
 | 5 | Contrast check running in continuous integration | Next |

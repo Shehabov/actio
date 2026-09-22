@@ -30,6 +30,7 @@ flowchart TD
   PR["peer-reviewer"]:::eng
   CA["code-analyst"]:::eng
   CS["code-steward"]:::eng
+  SEC["security-analyst"]:::sec
 
   QCE["qc-engineer"]:::qc
   REL["release-engineer"]:::rel
@@ -49,11 +50,13 @@ flowchart TD
   ENGL --> PR
   ENGL --> CA
   ENGL --> CS
+  ENGL --> SEC
   QCL --> QCE
 
   classDef human fill:#00BFC4,stroke:#0C0C0C,stroke-width:2px,color:#0C0C0C
   classDef lead fill:#0C0C0C,stroke:#00BFC4,stroke-width:2px,color:#EFEFEF
   classDef mem fill:#022E33,stroke:#00BFC4,stroke-width:2px,color:#EFEFEF
+  classDef sec fill:#B4251F,stroke:#B4251F,color:#EFEFEF
   classDef l2 fill:#02646B,stroke:#02646B,color:#EFEFEF
   classDef design fill:#F6F6F4,stroke:#D8D8D4,color:#0C0C0C
   classDef eng fill:#F6F6F4,stroke:#D8D8D4,color:#0C0C0C
@@ -115,6 +118,7 @@ utilisation failure and gets reported, not hidden. Does not design, code, review
 | [`peer-reviewer`](../.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review gate, 1 of 3 | `actio-code-review` |
 | [`code-analyst`](../.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review gate, 2 of 3 | `actio-code-analysis` |
 | [`code-steward`](../.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review gate, 3 of 3 | `actio-clean-code`, `actio-architecture`, `actio-supabase` |
+| [`security-analyst`](../.claude/agents/security-analyst.md) | Secrets, exposure, authorisation, injection, dependencies, robustness | Security | `actio-security`, `actio-supabase`, `supabase-postgres-best-practices`, `actio-architecture` |
 
 **Memory**
 
@@ -138,7 +142,7 @@ enforced rather than merely published. It is the only agent that writes to `BUGS
 
 ## Why the checkers are separate from the makers
 
-Six roles exist only to disagree with another role, and each is deliberately independent
+Seven roles exist only to disagree with another role, and each is deliberately independent
 of the one it checks.
 
 | Checker | Checks | Why it is separate |
@@ -147,10 +151,11 @@ of the one it checks.
 | `peer-reviewer` | The diff, for judgement | Reads for whether this is the right solution, simply built. Answers a question no linter can. |
 | `code-analyst` | The diff, for facts | Reads line by line for defects and rot. Runs independently of `peer-reviewer` so that a plausible design does not carry a real bug past both. |
 | `code-steward` | The diff, for the next reader | Reads for naming, shape, module headers and comments that say why. Correct code nobody can safely change is a cost that arrives later, and no other role is looking for it. |
+| `security-analyst` | The diff, for what can be broken into | Reads for exposure, authorisation and supply chain. The other reviewers read for whether the code is right; this one reads for whether it can be taken. A leak here costs the product its claim, not a password reset. |
 | `bug-historian` | The diff, against history | Reads for whether a defect already recorded on this surface has been committed again. The other three read the change on its own terms and cannot see a repeat. |
 | `qc-lead` | `qc-engineer` | Audits whether the evidence exists and what was **not** tested. Untested surface is the finding this role exists to catch. |
 
-All three review gates must pass, and so must the regression guard. `engineering-lead`
+All three review gates must pass, and so must the security gate and the regression guard. `engineering-lead`
 refuses to proceed if any did not run, and treats that as a utilisation failure rather than
 an oversight.
 
@@ -163,21 +168,21 @@ anchors on another's conclusion.
 
 **R** responsible · **A** accountable · **C** consulted · **I** informed
 
-| Stage | Shehab | orc | bh | arch | uxd | uxa | uxw | fe | be | pr | ca | cs | engl | qce | qcl | rel |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Brief | **A/R** | C | C | C | I | I | I | I | I | I | I | I | I | I | I | I |
-| Run plan | A | **R** | C | C | I | I | I | I | I | I | I | I | C | I | C | I |
-| Architecture | I | A | C | **R** | C | I | I | C | C | I | I | I | C | I | I | I |
-| Design | I | A | C | C | **R** | **R** | C | C | I | I | I | I | I | I | I | I |
-| Copy | I | A | C | I | C | C | **R** | C | C | I | I | I | I | I | I | I |
-| Build | I | A | C | C | C | I | C | **R** | **R** | I | I | I | C | I | I | I |
-| Review | I | A | **R** | C | I | I | I | C | C | **R** | **R** | **R** | C | I | I | I |
-| Integration | I | A | C | C | I | I | I | C | C | C | C | C | **R** | I | C | I |
-| Test | I | A | C | I | I | C | I | C | C | I | I | I | C | **R** | C | I |
-| Release readiness | **A** | C | C | I | I | I | I | I | I | I | I | I | C | C | **R** | C |
-| Release | A | C | I | I | I | I | I | I | I | I | I | I | I | I | C | **R** |
-| Run closure | I | **R/A** | C | I | I | I | I | I | I | I | I | I | I | I | I | I |
-| Acceptance | **A/R** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I |
+| Stage | Shehab | orc | bh | arch | uxd | uxa | uxw | fe | be | pr | ca | cs | sec | engl | qce | qcl | rel |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Brief | **A/R** | C | C | C | I | I | I | I | I | I | I | I | I | I | I | I | I 
+| Run plan | A | **R** | C | C | I | I | I | I | I | I | I | I | I | C | I | C | I 
+| Architecture | I | A | C | **R** | C | I | I | C | C | I | I | I | I | C | I | I | I 
+| Design | I | A | C | C | **R** | **R** | C | C | I | I | I | I | I | I | I | I | I 
+| Copy | I | A | C | I | C | C | **R** | C | C | I | I | I | I | I | I | I | I 
+| Build | I | A | C | C | C | I | C | **R** | **R** | I | I | I | I | C | I | I | I 
+| Review | I | A | **R** | C | I | I | I | C | C | **R** | **R** | **R** | **R** | C | I | I | I 
+| Integration | I | A | C | C | I | I | I | C | C | C | C | C | C | **R** | I | C | I 
+| Test | I | A | C | I | I | C | I | C | C | I | I | I | I | C | **R** | C | I 
+| Release readiness | **A** | C | C | I | I | I | I | I | I | I | I | C | I | C | C | **R** | C 
+| Release | A | C | I | I | I | I | I | I | I | I | I | I | I | I | I | C | **R** 
+| Run closure | I | **R/A** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I 
+| Acceptance | **A/R** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I | I 
 
 ---
 
@@ -189,6 +194,7 @@ anchors on another's conclusion.
 | `peer-reviewer` | Review gate 1 of 3 | The author fixing it, or Shehab |
 | `code-analyst` | Review gate 2 of 3 | The author fixing it, or Shehab |
 | `code-steward` | Review gate 3 of 3 | The author fixing it, or Shehab |
+| `security-analyst` | The security gate. A critical or high blocks outright. | Shehab only, in writing, recorded in BUGS.md |
 | `bug-historian` | The regression guard, when a known defect has been repeated | The author fixing it, or Shehab |
 | `engineering-lead` | Anything reaching QC | Shehab |
 | `qc-lead` | The release outright | Shehab only, and the override is recorded in the ledger |

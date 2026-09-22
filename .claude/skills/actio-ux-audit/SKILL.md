@@ -348,3 +348,31 @@ running.
 **Three rounds is the limit.** On the third loop with the same designer on the same
 surface, escalate to Shehab with the disagreement stated plainly, rather than filing a
 fourth round.
+
+---
+
+## Responsive, audited at every width
+
+Not a section of the accessibility pass. Its own pass, run on every surface.
+
+- [ ] 320px works. Not degrades, works. It is the smallest phone still on a frontline.
+- [ ] 360px is the width the surface was designed at, and larger layouts inherit from it
+- [ ] 768px is a real tablet layout, not a stretched phone
+- [ ] 1024px collapses the sidebar to an icon rail
+- [ ] 1440px and above caps content at the data width, never full-bleed text
+- [ ] **Tested between the breakpoints**, not only at them. Layouts break at 1023 and 769
+      far more often than at the round numbers.
+- [ ] No horizontal scroll on the page body at any width. A table, diagram or code block
+      may scroll inside its own container. Nothing else may.
+- [ ] Touch targets 48 by 48 at every width, including desktop with a touchscreen
+- [ ] Both orientations on phone and tablet. A landscape phone is a 360px-tall viewport.
+- [ ] 200% zoom treated as a width: at 200% a 1280px window is a 640px layout
+- [ ] Nothing hidden to make it fit. Moved, stacked or sent to a detail view is a decision;
+      deleted at a breakpoint is data loss.
+- [ ] The longest locale at the narrowest width: Tagalog at 320px, not English at 360px
+- [ ] RTL at every width, not only at desktop
+- [ ] No device sniffing. Respond to viewport and capability, never to a user agent string.
+
+**Evidence.** A screenshot at 320, 360, 768, 1024 and 1440, in both themes, in the longest
+locale, plus one landscape and one at 200% zoom. A spec with three screenshots has covered
+three widths, and the finding is the missing evidence rather than the missing layout.

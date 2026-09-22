@@ -139,7 +139,7 @@ judgement call.
 | Failure | Rule it breaks | How you prove it |
 |---|---|---|
 | More than one inverted surface in a view, or an inverted surface with a second accent element beside it | The inversion rule. One surface per view inverts to Cosmos, and the inverted tile and the primary button are the same accent budget | Count the inverted surfaces and the emphatic elements in one frame of the view. Two of either is a finding |
-| A metric tile carrying a border, a card wrapper, a fill or a shadow | Metric tile. These are readings, not objects, and they separate by space alone | Read the markup or the layer list. Any border, background, radius or shadow on the tile is a finding |
+| A metric tile carrying a border or a shadow, or four or more tiles in a row | Metric tile. It is a panel one lightness step up from the page, never an outlined box, and `ref-06` puts two on a screen, not six | Read the markup or the layer list. A border or a shadow is a finding. So is a fourth tile in the row, which is the generic-dashboard pattern from `ref-02` |
 | An alert drawn as a tinted callout box instead of a left accent rule 3px at radius 0 on the panel surface, with an Ink 150 hairline between stacked rows | Card taxonomy, and the rejected list. Tinted callouts are off-brand, and Ink 50 is the page itself rather than a ground for the row | Read the fill on the alert container. A tint is a finding even when the tint is Vega, and so is an Ink 50 ground |
 | Lane and status merged into a single colour signal | The queue. Lane is who owns it, status is where it has reached, and one colour cannot carry both | Compare the two on one row. Sharing a hue is a finding, and so is a pill doing duty as the lane indicator |
 | A card inside a card | Card taxonomy. Group inside a card with a hairline and space | Read the DOM or the layer tree, not the screenshot. Nesting is a finding even when the inner card has no border |
@@ -325,7 +325,8 @@ covered, 48x48 targets throughout, focus visible and ordered, colour never the s
 zoom clean at 360px, reduced motion honoured, Arabic mirrored, longest locale fitted, nothing from
 the `BRAND.md` section 6 list present, one primary action per view, every number in Plex Mono with
 its sample size, every status with its written label. Add to that, from the design system: at most
-one inverted surface per view, metric tiles with no chrome, alerts as a left accent rule rather
+one inverted surface per view, metric tiles that lift by lightness and never by a border,
+at most three of them in a row, alerts as a left accent rule rather
 than a tinted box, lane and status kept as separate signals, no card inside a card, a desktop
 layout traceable to the 360px view, and no chart series outside Vega 400, Ink 500 and Vega 200.
 Add to that, from the smoothness doctrine: panels separated by a tint step with hairlines kept
@@ -366,3 +367,16 @@ Take to Shehab Beram, with the decision needed, the options and your recommendat
 9. Never let a skill's aesthetic preference override `BRAND.md`. Log the conflict instead.
 10. Never mark a prior finding resolved without seeing the changed artefact and re-running the
     check that failed.
+
+## Responsive is not optional
+
+**Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
+between them, both orientations, and at 200% browser zoom. Verified at 320, 360, 768, 1024
+and 1440 with a screenshot each, in both themes and in the longest locale.
+
+A surface that works at three widths and breaks at the fourth is not finished. "Tablet
+later" is not a scope decision, it is a defect with a date on it. Nothing is hidden to make
+it fit: if a control does not fit, the layout is wrong.
+
+The full rules, the widths and the evidence requirement are in `actio-design-system`.
+

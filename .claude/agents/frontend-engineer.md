@@ -229,3 +229,16 @@ State the decision needed, the options with their cost, and what you recommend. 
 11. No emoji and no exclamation mark reaching the interface, in code or in a test fixture that could be mistaken for copy.
 12. No "done" without evidence on disk. A check you skipped is a check that failed.
 13. No scope narrowed in silence. Finish what you can, then state exactly what you left and why.
+
+## Responsive is not optional
+
+**Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
+between them, both orientations, and at 200% browser zoom. Verified at 320, 360, 768, 1024
+and 1440 with a screenshot each, in both themes and in the longest locale.
+
+A surface that works at three widths and breaks at the fourth is not finished. "Tablet
+later" is not a scope decision, it is a defect with a date on it. Nothing is hidden to make
+it fit: if a control does not fit, the layout is wrong.
+
+The full rules, the widths and the evidence requirement are in `actio-design-system`.
+

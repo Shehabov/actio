@@ -21,15 +21,21 @@ the full adopt, adapt and reject table.
 | File | What it contributes | Weight |
 |---|---|---|
 | `ref-01-assistant-shell.png` | Sidebar grouping with small-caps section labels, search with a keyboard shortcut chip, centred empty state, suggestion cards | Supporting |
-| `ref-02-ops-dashboard.png` | Metric tile row, the inversion rule, count badges on navigation, card taxonomy, right-aligned figures, alert rows | **Primary for anatomy** |
+| `ref-02-ops-dashboard.png` | The inversion rule, count badges on navigation, card taxonomy, right-aligned figures, alert rows. Its six-tile metric row is **not** adopted. | Supporting |
 | `ref-03-minimal-canvas.png` | Icon rail, restraint at rest, how little a screen can carry and still feel finished | Supporting |
 | `ref-04-category-dashboard.png` | A sentiment heatmap of tinted cells on a red to green ramp, a score per cohort presented as a thing to defend | **Counter-example** |
 | `ref-05-command-palette.webp` | Dark surfaces separating by lightness rather than by border, a grouped command menu, colour used only as small identity dots | Supporting |
-| `ref-06-insights-panel.webp` | Pill tab group, collapsible section headers with a count, borderless metric panels, bare sparklines, a quote-led list separated by hairlines alone | **Primary for feel** |
+| `ref-06-insights-panel.webp` | The whole shell: an unfilled sidebar with the icon after the label, two large metric panels rather than a tile row, pill tab groups, collapsible section headers with a count, bare sparklines, a quote-led list separated by hairlines alone, and the restraint that keeps a screen near twelve elements | **Primary** |
 | `ref-07-home-and-mobile.jpg` | The same system at desktop and phone width, a suggestion rail, a pill composer | Supporting |
 
-`ref-02` teaches the anatomy of an operations product. `ref-06` teaches how it should feel.
-Where they disagree on surface treatment, `ref-06` wins.
+`ref-02` teaches the parts an operations product needs. `ref-06` teaches how they are
+assembled and how the result should feel. **Where they disagree on anything, `ref-06` wins**,
+with one stated exception: the issue queue is deliberately denser than `ref-06`, because a
+team lead scanning forty issues between shifts cannot use 170px rows. That exception is
+written down in `actio-design-system` and nowhere else it may be invoked.
+
+The failure this ordering exists to prevent is a competent, generic SaaS dashboard. The
+measured comparison and the anti-generic checklist are in `actio-design-system`.
 
 ---
 

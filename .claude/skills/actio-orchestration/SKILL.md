@@ -45,8 +45,9 @@ Written once at the start of a run, amended only by appending to `amendments`.
     { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>"], "produces": ["peer-reviewer/review.md"], "blocked_by": [] },
     { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
     { "stage": 6, "agent": "code-steward", "task": "Clean code: naming, shape, module headers, comments, maintainability", "consumes": ["<source paths>"], "produces": ["code-steward/findings.md"], "blocked_by": [] },
-    { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3"] },
-    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md", "code-steward/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "regression-guard"] },
+    { "stage": 6, "agent": "security-analyst", "task": "Security sweep: secrets, exposure, authorisation, injection, dependencies, robustness", "consumes": ["<source paths>"], "produces": ["security-analyst/findings.md", "evidence/security/"], "blocked_by": [] },
+    { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security"] },
+    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md", "code-steward/findings.md", "security-analyst/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"] },
     { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md"], "produces": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
     { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "produces": ["qc-lead/verdict.md"], "blocked_by": [] },
     { "stage": 11, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/verdict.md"], "produces": ["release-engineer/release-notes.md", "evidence/post-deploy-smoke.log"], "blocked_by": ["quality"] }
@@ -58,6 +59,7 @@ Written once at the start of a run, amended only by appending to `amendments`.
     { "name": "review-1of3", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "review-2of3", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "review-3of3", "owner": "code-steward", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "security", "owner": "security-analyst", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "regression-guard", "owner": "bug-historian", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "engineering", "owner": "engineering-lead", "blocks": ["qc-engineer"], "result": "pending" },
     { "name": "quality", "owner": "qc-lead", "blocks": ["release-engineer"], "result": "pending" },
@@ -77,7 +79,7 @@ Rules for the plan:
   even where the paths are placeholders.
 - `blocked_by` names gates, never agents. A stage starts when every gate it names reads
   `pass`.
-- The eleven gate names are canonical and come from the gate table in `docs/WORKFLOW.md`.
+- The twelve gate names are canonical and come from the gate table in `docs/WORKFLOW.md`.
   **Never rename one for a run**, because the owner writes the same name back in its
   handoff and the check matches on it literally.
 - Skipping an agent is a plan decision, made at planning time and written in
@@ -114,7 +116,7 @@ editing history.
 
 ## Gate table
 
-Eleven gates. These literal names go into `run.json` and come back in each owner's handoff.
+Twelve gates. These literal names go into `run.json` and come back in each owner's handoff.
 
 | Gate | Owner | Passes when |
 |---|---|---|
@@ -124,15 +126,16 @@ Eleven gates. These literal names go into `run.json` and come back in each owner
 | `review-1of3` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, failure modes handled |
 | `review-2of3` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
 | `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
+| `security` | `security-analyst` | Every applicable pass in `actio-security` ran with evidence, no critical or high open, audits clean or accepted in writing, no secret in tree or history, every client-reachable table has RLS with a policy, no `service_role` outside Edge Function secrets |
 | `regression-guard` | `bug-historian` | No known defect on these surfaces repeated, each checked by running its detection command, and every binding standing rule checked with its result recorded |
-| `engineering` | `engineering-lead` | All three reviews and the regression guard ran and passed, it builds, it migrates, suite green, works end to end with evidence |
+| `engineering` | `engineering-lead` | All three reviews, the security gate and the regression guard ran and passed, it builds, it migrates, suite green, works end to end with evidence |
 | `quality` | `qc-lead` | Evidence exists and shows what the log claims, untested surface named, product claims still hold |
 | `release` | `release-engineer` | Pre-flight clean, go from qc-lead, rollback plan written before deploy, post-deploy smoke passed |
 | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
 
-The three review gates are separate names rather than one gate with three owners, so the
-check can tell which reviewer is outstanding instead of reporting a single ambiguous
-failure. `regression-guard` is the only gate whose owner also runs at the start of the run:
+The three review gates and the security gate are separate names rather than one gate with
+four owners, so the check can tell which reviewer is outstanding instead of reporting a
+single ambiguous failure. `regression-guard` is the only gate whose owner also runs at the start of the run:
 `bug-historian` publishes the brief in stage 1, and the guard checks it was honoured.
 
 A stage does not start until every gate it depends on reads pass. Enforce this before
@@ -325,6 +328,7 @@ Written at closure, for Shehab. Plain, specific, no summary language.
 | peer-reviewer | 4 comments, 4 resolved | review-1of3: pass |
 | code-analyst | 7 findings, 6 fixed, 1 accepted | review-2of3: pass |
 | code-steward | 5 findings, 5 fixed | review-3of3: pass |
+| security-analyst | 2 findings, 2 fixed, audits clean | security: pass |
 | bug-historian | brief, guard, 1 new entry | regression-guard: pass |
 | engineering-lead | integration evidence | engineering: pass |
 | qc-engineer | 38 cases, 3 defects filed and fixed | – |

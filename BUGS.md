@@ -105,6 +105,9 @@ instinct.
 | R-04 | A value that is not on the spacing scale or the type scale is not written, even when it looks right. If the value you want is absent, the design is wrong. | BUG-0005 | ux-designer, frontend-engineer |
 | R-05 | A rule read from `BRAND.md` is checked against every other section that governs the same token or concept before it is relied on. The spec has contradicted itself before. | BUG-0008 | every agent |
 | R-06 | A surface, its border and its hover state are three different values. A surface at the same lightness as its own border has no edge, and in dark mode there is no shadow to rescue it. | BUG-0009 | ux-designer, ux-auditor, frontend-engineer |
+| R-07 | A reference image is never cited beside a value. References define anatomy, density, hierarchy and interaction. Every colour, size, weight and radius comes from `BRAND.md`. A hex and a `ref-0` citation in the same sentence is always a defect. | BUG-0006, BUG-0011 | every agent |
+| R-08 | A defect is not closed until the file has been searched for every other instance of the same value or pattern. A fix applied where the defect was noticed and missed where it also lives is the same defect, still open. | BUG-0012 | bug-historian, every agent |
+| R-09 | When a gate, an agent, a skill or any other member of an enumerated set is added, every enumeration of that set and every count of it is updated in the same change. A count in prose is derived from the list, never remembered. | BUG-0013 | orchestrator, every agent |
 
 ---
 
@@ -406,6 +409,184 @@ non-text contrast.
 
 ---
 
+### BUG-0010 · The design system specified a generic dashboard
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | shehab |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-sana-audit |
+| Surface | design system |
+| Component | `actio-design-system`, whole file |
+| Agent at fault | authoring pass |
+| Class | design-system |
+| Severity | blocker |
+| Evidence | the six-lens audit, two lenses agreeing independently |
+| Fixed in | this run |
+| Repeat of | none |
+
+**What happened.** The system took its anatomy from `ref-02`, an operations dashboard, and
+bolted `ref-06` on as a note about feel. A designer following it literally produced a row of
+six small metric tiles, a tinted sidebar panel with the icon before the label, decorative
+corner icons on every card, and a screen filled to the fold. Every brand rule passed. The
+result was indistinguishable from any other product in the category, which is the one
+outcome `BRAND.md` §6 exists to prevent.
+
+**Why it got through.** No rule was broken. The system was assembled from correct parts and
+never asked whether the assembly looked like anything. "Primary for feel" is not a rule an
+auditor can fail a screen on.
+
+**The rule this produces.** The measured comparison, the five signatures and the
+anti-generic checklist in `actio-design-system`. The last item on that checklist is the
+whole test: could this screenshot be dropped into any other SaaS product unnoticed.
+
+**Who must be briefed.** ux-designer, ux-auditor, frontend-engineer.
+
+**How to detect it next time.** Run the anti-generic checklist. Each yes is a finding. A
+surface that passes every brand rule and still fails the last question has failed.
+
+---
+
+### BUG-0011 · A reference image cited as the source of a colour
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | audit lens `brand-conformance`, confirmed by `generic-adversary` |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-sana-audit |
+| Surface | design system |
+| Component | `actio-design-system`, metric tile |
+| Agent at fault | authoring pass |
+| Class | design-system |
+| Severity | major |
+| Evidence | the metric tile ground row, carrying a hex and a reference citation together |
+| Fixed in | this run |
+| Repeat of | BUG-0006 |
+
+**What happened.** The metric tile's dark ground was written as `#1C1C1C`, a value that
+exists in neither `BRAND.md` nor this system's own dark token list, with `ref-06` cited
+beside it as the source. The value was read off the reference image by eye. Every other dark
+panel in the same file is `#1A1A18`.
+
+**Why it got through.** The reference was open while the section was written, and a
+measurement taken from an image feels like evidence. BUG-0006 settled that references never
+define colour, but produced no standing rule, so nothing bound the next author.
+
+**The rule this produces.** R-07 below.
+
+**Who must be briefed.** every agent.
+
+**How to detect it next time.** Grep the file for a hex value and a `ref-0` citation in the
+same sentence. That pairing is always a finding.
+
+---
+
+### BUG-0012 · R-06 was fixed in one place and missed in another
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | audit lens `brand-conformance` |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-sana-audit |
+| Surface | design system |
+| Component | `actio-design-system`, command palette states table |
+| Agent at fault | the BUG-0009 fix |
+| Class | design-system |
+| Severity | major |
+| Evidence | palette states table against the palette dark-mode paragraph below it |
+| Fixed in | this run |
+| Repeat of | BUG-0009 |
+
+**What happened.** BUG-0009 was closed by correcting the palette's dark-mode paragraph to
+`#232320`, and the states table thirty-seven lines above it was left at `#1A1A18`, the same
+value as the popover surface. The invisible selection R-06 exists to prevent was still
+specified, in the same file, and the bug was marked closed.
+
+**Why it got through.** The fix was applied where the defect was noticed rather than
+everywhere the value appeared, and closing the entry was not conditioned on a search.
+
+**The rule this produces.** R-08 below.
+
+**Who must be briefed.** every agent, and bug-historian in particular.
+
+**How to detect it next time.** Before closing any entry, grep the file for the defective
+value and for the component's name. Closing requires zero remaining hits.
+
+---
+
+### BUG-0013 · The security gate was missing from the orchestrator's own gate table
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | orchestration read-through |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-sana-audit |
+| Surface | orchestration |
+| Component | `actio-orchestration`, `orchestrator`, `README` |
+| Agent at fault | the pass that added security-analyst |
+| Class | process |
+| Severity | blocker |
+| Evidence | `docs/WORKFLOW.md` numbers twelve gates; the skill's table listed eleven |
+| Fixed in | this run |
+| Repeat of | none |
+
+**What happened.** `security-analyst` and its gate were added to `docs/WORKFLOW.md`, to the
+`run.json` block and to the plan, but not to the gate table in `actio-orchestration`, not to
+the gate ownership list in `orchestrator.md`, and not to the example run report. Five prose
+sites still read "eleven gates" against twelve, and the `engineering` gate's pass condition
+still named only the three reviews and the regression guard. A run planned from that table
+would have skipped the security gate entirely.
+
+**Why it got through.** The gate was added where it was being used and not where it was
+being counted. Nothing derives the count from the list, so "eleven" survived as prose.
+
+**The rule this produces.** R-09 below.
+
+**Who must be briefed.** orchestrator, tech-architect, every agent that owns a gate.
+
+**How to detect it next time.** Count the rows of the canonical gate table in
+`docs/WORKFLOW.md` and grep the repo for any prose number of gates that disagrees. The same
+check applies to the agent count and the skill count.
+
+---
+
+### BUG-0014 · BRAND.md defines a body weight its own hard rule forbids
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | audit lens `brand-conformance` |
+| Raised on | 2026-09-21 |
+| Run | 2026-09-21-sana-audit |
+| Surface | brand spec |
+| Component | `BRAND.md` §3 |
+| Agent at fault | none, this is a spec defect |
+| Class | spec |
+| Severity | minor |
+| Evidence | the `caption` token against §3's hard rules, three lines apart |
+| Fixed in | not fixed, needs Shehab |
+| Repeat of | BUG-0008 |
+
+**What happened.** §3 defines `caption` in IBM Plex Sans at weight 500, and three lines below
+states that there are two body weights only, 400 and 600. The token and the rule contradict
+each other in the same section.
+
+**Why it is open.** `BRAND.md` is the Product Lead's document. An agent does not amend the
+spec to resolve a spec defect, it reports it. Either `caption` moves to 400 or 600, or the
+hard rule gains the caption token as its single stated exception.
+
+**Who must be briefed.** every agent. Until it is settled, no agent may cite the `caption`
+token as precedent for any other sans weight outside 400 and 600.
+
+**How to detect it next time.** R-05 already covers it: a rule read from `BRAND.md` is
+checked against every other section governing the same token before it is relied on.
+
+---
+
 ## Repeat offenders
 
 The point of the register. Reviewed by `bug-historian` at the start of every run.
@@ -414,6 +595,8 @@ The point of the register. Reviewed by `bug-historian` at the start of every run
 |---|---|---|
 | A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004 | R-03 |
 | A spec value written from memory rather than read from the file | BUG-0002, BUG-0005 | R-02, R-04 |
+| A reference image treated as a source of values | BUG-0006, BUG-0011 | R-07 |
+| A fix applied in one place and missed in another in the same file | BUG-0009, BUG-0012 | R-08 |
 
 Two occurrences of a pattern makes it a repeat. A third escalates to Shehab as a process
 failure rather than a defect, because the register was written and not read.

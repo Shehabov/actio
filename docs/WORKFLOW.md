@@ -49,17 +49,21 @@ flowchart TD
   FE --> PR
   FE --> CA
   FE --> CS
+  FE --> SEC
   BE --> PR
   BE --> CA
   BE --> CS
+  BE --> SEC
 
   PR{"<b>peer-reviewer</b><br/>1 of 3 · judgement<br/>boundaries · failure modes"}:::gate
   CA{"<b>code-analyst</b><br/>2 of 3 · defects<br/>security · structural rot"}:::gate
   CS{"<b>code-steward</b><br/>3 of 3 · readability<br/>comments · maintainability"}:::gate
+  SEC{"<b>security-analyst</b><br/>secrets · exposure · authz<br/>injection · dependencies"}:::sec
 
   PR --> RG
   CA --> RG
   CS --> RG
+  SEC --> RG
 
   RG{"<b>bug-historian</b><br/>regression guard<br/>was a known defect repeated"}:::mem2
   RG -- "repeated" --> FE
@@ -93,6 +97,7 @@ flowchart TD
   classDef gate fill:#E6FAFB,stroke:#02646B,stroke-width:2px,color:#0C0C0C
   classDef mem fill:#022E33,stroke:#00BFC4,stroke-width:2px,color:#EFEFEF
   classDef mem2 fill:#E6FAFB,stroke:#022E33,stroke-width:2px,color:#0C0C0C
+  classDef sec fill:#E6FAFB,stroke:#B4251F,stroke-width:2px,color:#0C0C0C
 ```
 
 The design track and the build track run in parallel. They converge at the front end,
@@ -164,13 +169,14 @@ it exactly, so a gate is never renamed for a run.
 | 4 | Review, 1 of 3 | `review-1of3` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, and its failure modes are handled |
 | 5 | Review, 2 of 3 | `review-2of3` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
 | 6 | Review, 3 of 3 | `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
-| 7 | Regression guard | `regression-guard` | `bug-historian` | No known defect on these surfaces has been repeated, each checked by running its detection command, and every standing rule binding this run has been checked with its result recorded |
-| 8 | Engineering | `engineering` | `engineering-lead` | All three reviews ran and passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
-| 9 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
-| 10 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
-| 11 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
+| 7 | Security | `security` | `security-analyst` | Every applicable pass in `actio-security` ran with evidence, no critical or high open, audits clean or accepted in writing, no secret in tree or history, every client-reachable table has RLS with a policy, no `service_role` outside Edge Function secrets |
+| 8 | Regression guard | `regression-guard` | `bug-historian` | No known defect on these surfaces has been repeated, each checked by running its detection command, and every standing rule binding this run has been checked with its result recorded |
+| 9 | Engineering | `engineering` | `engineering-lead` | All three reviews and the security gate passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
+| 10 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
+| 11 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
+| 12 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
 
-The three review gates are separate names rather than one gate with three owners, so the
+The three review gates and the security gate are separate names rather than one gate with four owners, so the
 utilisation check can say which reviewer is outstanding instead of reporting a single
 ambiguous failure. They run in parallel and none sees another's verdict first.
 

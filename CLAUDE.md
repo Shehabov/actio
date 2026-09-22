@@ -36,7 +36,7 @@ sentiment score.
 | File | Authority |
 |---|---|
 | [`BRAND.md`](./BRAND.md) | The machine-readable brand spec. Tokens, contrast, type, components, copy rules. **Binding on every role.** Where it conflicts with a design instinct or a vendored skill, it wins. |
-| [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning. Versioned with `BRAND.md`. A change to one without the other is a defect. |
+| [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning. Versioned with `BRAND.md`. The four v1.5 amendments are in `BRAND.md` and not yet in this document. |
 | [`BUGS.md`](./BUGS.md) | The defect register. Every bug found, and every mistake an agent has made, with the standing rule it produced. **Read the entries for the surface you are about to change, before you plan.** Owned by `bug-historian`, which is the only agent that writes to it. |
 
 Never invent a colour, spacing value, radius, duration or type size. Every value is in
@@ -54,7 +54,8 @@ L0  Shehab Beram · Product Lead (human)
 L1  orchestrator
 L2  tech-architect · engineering-lead · qc-lead
 L3  ux-designer · ux-auditor · ux-writer · frontend-engineer · backend-engineer
-    peer-reviewer · code-analyst · code-steward · qc-engineer · release-engineer
+    peer-reviewer · code-analyst · code-steward · security-analyst · qc-engineer
+    release-engineer
 Mem bug-historian, bookending every run
 ```
 
@@ -73,6 +74,7 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 | `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 3) |
 | `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 3) |
 | `code-steward` | Readability, naming, comments, maintainability | Review gate (3 of 3) |
+| `security-analyst` | Secrets, exposure, authorisation, injection, dependencies, robustness | Security gate |
 | `bug-historian` | BUGS.md, the standing rules, the regression brief | Regression guard |
 | `engineering-lead` | Integration. Does it actually work end to end. | Engineering gate |
 | `qc-engineer` | Testing APIs, code and product, with evidence | – |
@@ -91,7 +93,8 @@ brief (Shehab)
   → ux-designer ⇄ ux-auditor        (loop until clean)   ┐ parallel with
     ux-writer             EN + AR strings                ┘ the engineering track
   → frontend-engineer / backend-engineer
-  → peer-reviewer AND code-analyst AND code-steward   (independent, all must pass)
+  → peer-reviewer AND code-analyst AND code-steward AND security-analyst
+                          (independent, all four must pass)
   → bug-historian        regression guard: was a known defect repeated
   → engineering-lead      integration gate
   → qc-engineer           test + evidence
@@ -159,10 +162,19 @@ These apply to every agent and to any session in this repository.
    removed. Protected cases leave the engagement queue entirely.
 8. **Nothing closes without evidence.** That is the product's entire claim. Enforce it as a
    guarded state transition, not as a convention.
-9. **Read `BUGS.md` before you plan.** A repeated defect is worse than a new one, because it
+9. **Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
+   between them, both orientations, and at 200% zoom. Verified at 320, 360, 768, 1024 and
+   1440 with a screenshot each. A surface that works at three widths and breaks at the
+   fourth is not finished. See `actio-design-system`.
+10. **Every feature ships in English and Arabic.** Not English now and Arabic later.
+    English is authored first, Arabic is written against the same standard immediately
+    after, and the feature is not done until both exist. Arabic is written, never
+    translated, and is marked `needs native review` until a native speaker has read it on a
+    physical device. QC tests both.
+11. **Read `BUGS.md` before you plan.** A repeated defect is worse than a new one, because it
    means the register was written and nobody read it. Standing rules in that file outrank
    your instinct.
-10. **Escalate to Shehab** when scope would change, a brand rule must be broken, two gates
+12. **Escalate to Shehab** when scope would change, a brand rule must be broken, two gates
     disagree, the same rejection loop runs three times, or a defect pattern reaches its
     third occurrence.
 
@@ -170,7 +182,7 @@ These apply to every agent and to any session in this repository.
 
 ## Skills
 
-`.claude/skills/` holds fourteen house skills prefixed `actio-` and twenty-two vendored
+`.claude/skills/` holds fifteen house skills prefixed `actio-` and twenty-four vendored
 skills. Each agent declares the skills it is coupled with in its own file.
 
 | House skill | For |
@@ -188,6 +200,7 @@ skills. Each agent declares the skills it is coupled with in its own file.
 | `actio-code-review` | Senior review rubric |
 | `actio-code-analysis` | Line-by-line defect and complexity rubric |
 | `actio-test-protocol` | Test planning, evidence, release readiness |
+| `actio-security` | The security catalogue: secrets, exposure, authz, injection, dependencies, robustness |
 | `actio-release` | Pre-flight, deploy, verify, roll back |
 
 Vendored packs, unmodified from source:
@@ -200,9 +213,10 @@ Vendored packs, unmodified from source:
 ### Design references
 
 Seven approved references in [`docs/design-reference/`](./docs/design-reference/) set the
-platform shape. `ref-02-ops-dashboard.png` is primary for **anatomy**, what an operations
-product is made of. `ref-06-insights-panel.webp` is primary for **feel**, and where the two
-disagree on surface treatment, `ref-06` wins. `ref-04-category-dashboard.png` is a
+platform shape. `ref-06-insights-panel.webp` is **the primary reference**, for anatomy as
+well as feel. `ref-02-ops-dashboard.png` is supporting, and its six-tile metric row and
+filled sidebar are explicitly not adopted. **Where the two disagree on anything, `ref-06`
+wins**, with one written exception: the issue queue is deliberately denser. `ref-04-category-dashboard.png` is a
 **counter-example**, kept in the set to be recognised and refused: a sentiment heatmap of
 tinted cells on a red to green ramp, and a score per cohort presented as a thing to defend.
 

@@ -21,7 +21,7 @@ Your authority:
 What you are not responsible for and must never do:
 
 - You do not design, write code, write copy, review code, or test. If you find yourself editing a component or a serializer, you have left your role.
-- You do not certify another agent's gate. The eleven gates and their owners are fixed in `docs/WORKFLOW.md`: design authority is `tech-architect`'s, design is `ux-auditor`'s, copy is `ux-writer`'s, the three review gates are `peer-reviewer`'s, `code-analyst`'s and `code-steward`'s, the regression guard is `bug-historian`'s, engineering is `engineering-lead`'s, quality is `qc-lead`'s, release is `release-engineer`'s. Run closure is the only one you own.
+- You do not certify another agent's gate. The twelve gates and their owners are fixed in `docs/WORKFLOW.md`: design authority is `tech-architect`'s, design is `ux-auditor`'s, copy is `ux-writer`'s, the three review gates are `peer-reviewer`'s, `code-analyst`'s and `code-steward`'s, security is `security-analyst`'s, the regression guard is `bug-historian`'s, engineering is `engineering-lead`'s, quality is `qc-lead`'s, release is `release-engineer`'s. Run closure is the only one you own.
 - You do not judge whether work is good. You judge whether it happened, whether it is evidenced, and whether it was consumed.
 
 The org you route across:
@@ -97,8 +97,9 @@ Run id format: `YYYY-MM-DD-<short-slug>`, for example `2026-09-20-overdue-lane-c
     { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>"], "produces": ["peer-reviewer/review.md"], "blocked_by": [] },
     { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
     { "stage": 6, "agent": "code-steward", "task": "Clean code: naming, shape, module headers, comments, maintainability", "consumes": ["<source paths>"], "produces": ["code-steward/findings.md"], "blocked_by": [] },
-    { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3"] },
-    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md", "code-steward/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "regression-guard"] },
+    { "stage": 6, "agent": "security-analyst", "task": "Security sweep: secrets, exposure, authorisation, injection, dependencies, robustness", "consumes": ["<source paths>"], "produces": ["security-analyst/findings.md", "evidence/security/"], "blocked_by": [] },
+    { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security"] },
+    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/review.md", "code-analyst/findings.md", "code-steward/findings.md", "security-analyst/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"] },
     { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md"], "produces": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
     { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "evidence/<test artefacts>"], "produces": ["qc-lead/verdict.md"], "blocked_by": [] },
     { "stage": 11, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/verdict.md"], "produces": ["release-engineer/release-notes.md", "evidence/post-deploy-smoke.log"], "blocked_by": ["quality"] }
@@ -110,6 +111,7 @@ Run id format: `YYYY-MM-DD-<short-slug>`, for example `2026-09-20-overdue-lane-c
     { "name": "review-1of3", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "review-2of3", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "review-3of3", "owner": "code-steward", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "security", "owner": "security-analyst", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "regression-guard", "owner": "bug-historian", "blocks": ["engineering-lead"], "result": "pending" },
     { "name": "engineering", "owner": "engineering-lead", "blocks": ["qc-engineer"], "result": "pending" },
     { "name": "quality", "owner": "qc-lead", "blocks": ["release-engineer"], "result": "pending" },

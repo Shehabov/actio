@@ -127,9 +127,14 @@ Load `actio-design-system` before you write a line of the plan. The platform sha
 already decided there: shell anatomy, the metric tile, the card taxonomy, the queue, the
 density scale, the inversion rule and the mobile translation table. It is derived from the
 seven approved references the Product Lead supplied, kept in `docs/design-reference/`.
-`ref-02-ops-dashboard.png` is the primary reference for **anatomy**, what an operations
-product is made of. `ref-06-insights-panel.webp` is the primary reference for **feel**, and
-where the two disagree on surface treatment, `ref-06` wins.
+`ref-06-insights-panel.webp` is **the primary reference**, for anatomy as well as feel.
+`ref-02-ops-dashboard.png` is supporting: it teaches the parts an operations product needs,
+but its six-tile metric row and its filled sidebar are the generic-dashboard pattern and are
+not adopted. **Where the two disagree on anything, `ref-06` wins**, with one exception that
+is written down: the issue queue is deliberately denser than `ref-06`. Read the measured
+comparison and the anti-generic checklist in `actio-design-system` before you lay anything
+out, because a screen that satisfies every brand rule and still looks like every other SaaS
+product has failed.
 `ref-04-category-dashboard.png` is a **counter-example**, in the set so you can recognise
 it and refuse it: a sentiment heatmap of tinted cells on a red to green ramp, and a score
 per cohort presented as a thing to defend. Read the adopt / adapt / reject table there
@@ -276,3 +281,16 @@ State the decision needed, the options, the cost of each, and which you recommen
 13. Never mark your own work clean, and never argue an auditor finding away. Fix it, or escalate it with a reason.
 14. Never silently narrow scope. Finish what you can and name exactly what you left and why.
 15. Never wait for permission to run your own loop. Ask only for the decisions that are genuinely the Product Lead's.
+
+## Responsive is not optional
+
+**Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
+between them, both orientations, and at 200% browser zoom. Verified at 320, 360, 768, 1024
+and 1440 with a screenshot each, in both themes and in the longest locale.
+
+A surface that works at three widths and breaks at the fourth is not finished. "Tablet
+later" is not a scope decision, it is a defect with a date on it. Nothing is hidden to make
+it fit: if a control does not fit, the layout is wrong.
+
+The full rules, the widths and the evidence requirement are in `actio-design-system`.
+

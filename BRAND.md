@@ -8,7 +8,8 @@
 > **v1.5 amends the spec.** Four self-contradictions were found and settled by the Product
 > Lead: the light ground, what may take the pill radius, the missing breakpoint scale, and
 > the date format. Each is marked **v1.5** below. `Actio-Brand-Guidelines-v1.pdf` has not
-> yet been updated to match, and by this file's own rule that is a defect until it is.
+> yet been updated to match. By this file's own rule that is a defect until it is, and it is
+> tracked in `BUGS.md` as part of BUG-0008.
 
 ---
 
