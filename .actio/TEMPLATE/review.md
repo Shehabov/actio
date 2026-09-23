@@ -54,7 +54,8 @@ unfixed problem that is quiet is a defect.
 
 ## What I did not check
 
-State the gaps. An unstated gap reads as coverage.
+State the gaps. An unstated gap reads as coverage. Database proof run only offline on PGlite,
+and not on the Supabase project, is a gap and is named here.
 
 -
 

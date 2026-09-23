@@ -114,14 +114,14 @@ Anchored to file and line. Severity, the problem, and a concrete suggested chang
 comment that describes a feeling is not actionable.
 
 ```markdown
-### issues/services/close.py:42 · Blocker
+### web/src/lib/issues/close.ts:42 · Blocker
 
-Closure writes the `Closure` record outside the transaction that saves the status. If the
-insert fails, the issue reads closed with no audit record, which is the one state I7 says
-cannot exist.
+Closure writes the `Closure` record in a separate PostgREST call from the one that saves the
+status, so the two share no transaction. If the insert fails, the issue reads closed with no
+audit record, which is the one state I7 says cannot exist.
 
-Suggested: wrap both in `transaction.atomic()`, and add a test that forces the insert to
-fail and asserts the status did not move.
+Suggested: move both writes into one database function, called once through `rpc`, and add
+a pgTAP test that forces the insert to fail and asserts the status did not move.
 ```
 
 ```markdown

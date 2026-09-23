@@ -42,7 +42,7 @@ four that carry the weight:
 | `Agent at fault` | The role whose output carried the defect. Where the brief or the spec was wrong rather than the implementer, name that role instead. This is routing, not blame, and it must be accurate or the brief goes to the wrong agent. |
 | `Class` | From the taxonomy in `BUGS.md`. It is what makes the register searchable. |
 | `The rule this produces` | The generalised lesson, written so it applies beyond this one case. "Do not pass the field name into `BelowThreshold`" is an incident note. "An error raised by a privacy invariant states the invariant, never the input that tripped it" is a rule. |
-| `How to detect it next time` | A concrete check, ideally a runnable command. Without this the entry teaches nothing an agent can act on. |
+| `How to detect it next time` | A concrete check, ideally a runnable command. Without this the entry teaches nothing an agent can act on. It runs with git, node 24, npm and npx: `git grep`, `grep`, a node script or `npm run db:test` (PGlite, no Docker). A command that needs Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python is not runnable here and is not published. It targets the stack the surface is written in: SQL under `supabase/`, TypeScript under `web/`, Markdown under `.claude/` and `docs/`. |
 
 ### 3. Write "why it got through"
 
@@ -100,14 +100,14 @@ Written at the start of every run, before any agent plans. This is the coaching 
 
 | Id | What | Agent at fault | Detect with |
 |---|---|---|---|
-| BUG-0007 | Below-threshold error named the filter that caused it | backend-engineer | grep for `raise BelowThreshold`, confirm no call site passes a field name |
+| BUG-0007 | Below-threshold error named the filter that caused it | backend-engineer | `git grep -n "below_threshold" supabase/migrations/`, confirm no `raise exception` passes a field name |
 
 ## Repeat patterns live in this run
 
 Two entries share the pattern "a shared vocabulary defined in two files and allowed to
 drift". This run changes the issue state machine, which is defined in `actio-architecture`
-and implemented in `issues/models.py`. **One of those is the source. Say which in the ADR
-before either is edited.**
+and implemented in a migration under `supabase/migrations/`. **One of those is the source.
+Say which in the ADR before either is edited.**
 
 ## Per agent
 

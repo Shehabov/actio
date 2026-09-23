@@ -48,7 +48,7 @@ Catalogue row schema, every field required:
 | `longest_locale` | Which locale set that budget, and its character count. |
 | `plural_forms` | `n/a`, or the full variant set. Never a suffix rule. |
 | `ltr_runs` | `none`, or the substrings that are numerals, case IDs, phone numbers, or code, so frontend isolates them. |
-| `screenshot` | Path under the run's `evidence/` directory showing the string in place, both locales, or `pending build` while no built surface exists. The copy stage runs before the frontend is built, so `pending build` does not fail the copy gate; qc-engineer captures the screenshot once the surface is built. |
+| `screenshot` | Path under the run's `evidence/` directory showing the string in place, both locales, or `pending build` while no built surface exists. The copy stage runs before the frontend is built, so `pending build` does not fail the copy gate; qc-engineer captures the screenshot with Playwright via `npx playwright` once the surface is built. |
 | `ar_review` | `needs native review` until a named native speaker has read it on a physical device. |
 
 Done means all of the following, with no exceptions carried forward:
@@ -151,7 +151,7 @@ Run these as a checklist against the catalogue, not from memory:
 
 - [ ] Every key has `en` and `ar`, populated, final.
 - [ ] `grep` the catalogue for `%` and for digits. Each has its sample size or a documented reason it does not need one.
-- [ ] Every count key has a full variant set, and no template in the codebase concatenates one. Grep the frontend for string addition around count keys.
+- [ ] Every count key has a full variant set, and no template in the codebase concatenates one. Grep `web/` for string addition around count keys.
 - [ ] Every date matches `DD MMM YYYY`.
 - [ ] Banned vocabulary scan across both locales. Exclamation mark scan. Emoji scan.
 - [ ] Competitor test, sentence by sentence. Mark each row checked.
@@ -186,14 +186,14 @@ A rejection names the artefact, the specific defect, and what would make it acce
 .actio/runs/<run-id>/ux-writer/strings.md             the catalogue, the source of truth, full row schema
 .actio/runs/<run-id>/ux-writer/strings-en.json         English, machine-readable, the path the run plan tracks
 .actio/runs/<run-id>/ux-writer/strings-ar.json         Arabic, machine-readable, the path the run plan tracks
-content/strings/en.json                                shipped English resource, same rows, once the app tree exists
-content/strings/ar.json                                shipped Arabic resource, same rows, once the app tree exists
+content/strings/en.json                                shipped English resource, same rows, once the web/ app exists
+content/strings/ar.json                                shipped Arabic resource, same rows, once the web/ app exists
 .actio/runs/<run-id>/ux-writer/plan.md                 steps 1 and 2
 .actio/runs/<run-id>/ux-writer/length-budget.md        longest-locale widths, per slot, for ux-designer
 .actio/runs/<run-id>/ux-writer/unwritable.md           strings you refused to write, and what is missing
 .actio/runs/<run-id>/ux-writer/review.md               step 4 checklist, completed, with failures named
 .actio/runs/<run-id>/ux-writer/handoff.json            step 5
-.actio/runs/<run-id>/evidence/strings/                 screenshots, both locales, per surface
+.actio/runs/<run-id>/evidence/strings/                 Playwright screenshots, both locales, per surface
 ```
 
 ## Your gate
@@ -202,7 +202,7 @@ You certify the **copy gate** (`copy` in the run plan). engineering-lead and qc-
 
 | Fail condition | Evidence that clears it |
 |---|---|
-| A visible string is not in the catalogue | Grep of the frontend and backend for literal user-facing strings, clean |
+| A visible string is not in the catalogue | Grep of `web/` and `supabase/` for literal user-facing strings, clean |
 | A key has English but no Arabic | Catalogue diff, both columns populated |
 | A count string is assembled at runtime | Grep for concatenation around count keys, clean |
 | A percentage or count ships without its base | Catalogue scan, each numeric row resolved |

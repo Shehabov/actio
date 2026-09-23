@@ -24,7 +24,7 @@ sentiment score.
 |---|---|
 | Users | Frontline employee, team lead, operations, site director or COO |
 | Buyer | Operations. The buyer is not the user. |
-| Stack | React and Next.js on the front end, Supabase on the back end: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and Storage |
+| Stack | React and Next.js (App Router, TypeScript, npm) in `web/`. Supabase on the back end: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and Storage, worked through the Supabase MCP from migration files in `supabase/` |
 | Channels | WhatsApp, SMS, web |
 | Locales | Bahasa Indonesia, English, Tagalog, Arabic (RTL) |
 | Target device | A low-cost Android handset, mid-shift, on a constrained connection |
@@ -79,7 +79,7 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 | `engineering-lead` | Integration. Does it actually work end to end. | Engineering gate |
 | `qc-engineer` | Testing APIs, code and product, with evidence | – |
 | `qc-lead` | Evidence audit, independent final pass, go or no-go | Quality gate |
-| `release-engineer` | Deploy, commit, tag, verify, roll back | Release gate |
+| `release-engineer` | Release to the Supabase project, commit, tag, push, verify, roll back | Release gate |
 
 ---
 
@@ -99,7 +99,7 @@ brief (Shehab)
   → engineering-lead      integration gate
   → qc-engineer           test + evidence
   → qc-lead               evidence audit + independent pass + go/no-go
-  → release-engineer      deploy, commit, tag, verify
+  → release-engineer      migrations, build, tag, push, verify
   → orchestrator          utilisation check, run report
   → Shehab                accept
 ```
@@ -137,6 +137,49 @@ The filesystem is the swarm's shared memory. Everything is inspectable after the
 ```
 
 Run id is `<yyyy-mm-dd>-<short-slug>`. Timestamps come from the shell, never invented.
+
+---
+
+## Toolchain
+
+Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project). Nothing else may be assumed.
+
+The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
+or python. None of them is a required step, a gate criterion, an evidence source or an
+allowed permission. A tool that is missing is reported as blocked, never faked.
+
+| Work | How |
+|---|---|
+| Database | Through the Supabase MCP, from migration files in the repo, never from SQL that is not in one. Iterate offline with `npm run db:test` (PGlite, no Docker). The full workflow is in [`actio-supabase`](./.claude/skills/actio-supabase/SKILL.md). |
+| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`. Screenshots with `npx playwright` (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic. Contrast is computed as WCAG ratios from the `BRAND.md` hex values in a node script, never estimated. |
+| Release | Pre-flight; migrations applied to the Supabase project through the MCP and verified with `list_migrations`; `get_advisors` clean; `npm run build` green; tag; `git push` to origin main, by `release-engineer` only. |
+| Hosting | Out of scope until Shehab chooses a target. Recorded as `deferred: no target chosen`, which is not a release-gate failure. |
+
+If the Supabase MCP does not answer (its tools are missing, or a call returns an auth
+error), the agent runs the offline PGlite proof, hands off `blocked` with the reason
+`supabase MCP not authorised`, and the orchestrator escalates to Shehab, who authorises it
+with `/mcp`.
+
+```
+web/                                    Next.js App Router app, TypeScript, npm
+                                        scripts: dev, build, lint, typecheck, test, e2e
+supabase/migrations/<yyyymmddhhmmss>_<slug>.sql
+                                        the database source of record: hand-authored,
+                                        forward-only, one concern per file, each with a
+                                        written reverse in the run's rollback notes
+supabase/tests/*.test.sql               pgTAP
+supabase/seed.sql                       seed
+supabase/functions/<name>/index.ts      Edge Functions
+content/strings/{en,ar}.json            the shipped string catalogue, written by ux-writer
+design/surfaces/<surface>.md            canonical design specs, written by ux-designer
+package.json                            private, npm workspaces ["web"], dev tooling,
+                                        db:test runs node .actio/bin/db-test.mjs
+```
+
+There is no declarative `supabase/schemas/` workflow, because it needs a schema diff from
+the Supabase CLI and Docker, and the swarm uses neither. Schema files, if any exist, are not
+a source of record.
 
 ---
 
@@ -202,14 +245,14 @@ frontmatter, which is what preloads them. A skill named only in the body is not 
 | `actio-code-analysis` | Line-by-line defect and complexity rubric |
 | `actio-test-protocol` | Test planning, evidence, release readiness |
 | `actio-security` | The security catalogue: secrets, exposure, authz, injection, dependencies, robustness |
-| `actio-release` | Pre-flight, deploy, verify, roll back |
+| `actio-release` | Pre-flight, migrations through the MCP, verify, roll back |
 
 Vendored packs, unmodified from source:
 
 | Pack | Source | Used by |
 |---|---|---|
 | taste skills (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
-| Vercel agent skills (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
+| Vercel agent skills (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`. `deploy-to-vercel`, `vercel-cli-with-tokens` and `vercel-optimize` are coupled to no agent: reference only, for when a deploy target is chosen. |
 
 ### Design references
 
@@ -255,4 +298,6 @@ vocabulary. The per-skill verdicts are in
   orchestrator still records the run and runs the utilisation check at the end.
 - Brand assets live in `logo/`. Never redraw the seal. The arcs are mathematically defined
   and an eyeballed version reads as wrong beside a correct one.
-- Product code has not started. The specification, the brand and the team are what exist.
+- Product code starts in `web/` and `supabase/` as runs land. The specification, the brand
+  and the team are the ground it is built on, and the layout it lands in is under
+  [Toolchain](#toolchain).

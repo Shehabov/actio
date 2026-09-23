@@ -48,7 +48,9 @@ once writes handoff-stage<N>.json on later passes. The utilisation check at
 .actio/bin/utilisation-check.mjs verifies every path, so a phantom path is a finding
 against you. Your plan.md must contain an "## Audit" section, or the check raises LOOP_SKIPPED.
 
-TOOLING ON THIS MACHINE: node, perl, git, grep, sed, awk. **jq is NOT installed.**
+TOOLING ON THIS MACHINE: git, node 24, npm, npx and the Supabase MCP (Git Bash also carries
+grep, sed and awk for reading files). **Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm,
+psql, jq and python are NOT used.**
 **Do not write files with a Bash heredoc, it hangs and you will lose your turn.** Use the
 file-writing tool or write a script file and run it. Bash calls here are slow; prefer the
 dedicated read and search tools.
@@ -175,7 +177,7 @@ const SLICES = {
   ],
   ship: () => [
     go('release-engineer', `Stage 11. Run the release pre-flight ONLY. This run produced artefacts under
-       ${DIR}, not a deployable application: no Supabase project is linked and there is no Vercel target.
+       ${DIR}, not a deployable application: nothing has been applied to the Supabase project and front-end hosting is deferred: no target chosen.
        Decide honestly whether this is releasable and REFUSE if it is not. A pre-flight refusal is the
        correct outcome here and is what is being tested. Write ${DIR}/release-engineer/preflight.md.
        Do NOT push, deploy, tag or commit anything. You own the release gate.`),

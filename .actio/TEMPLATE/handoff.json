@@ -20,7 +20,7 @@
   ],
   "blockers": [
     {
-      "what": "<what is wrong or missing>",
+      "what": "<what is wrong or missing. A missing tool is a blocker, never faked: if the Supabase MCP does not answer, the reason is 'supabase MCP not authorised'>",
       "why": "<specifically why it blocks you>",
       "needs": "<agent-name or 'shehab'>"
     }

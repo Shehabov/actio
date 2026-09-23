@@ -14,6 +14,28 @@ path from the handoff.
 
 ---
 
+## Toolchain
+
+The toolchain is git, node 24, npm, npx and the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project). Nothing else may be assumed. No step, check or piece of
+evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python.
+
+| Surface | How it is reached |
+|---|---|
+| API | The real PostgREST URL, `<project url>/rest/v1/`, with the base from `get_project_url` and the key from `get_publishable_keys` (or `get_anon_key` if that is the tool the server exposes) as the `apikey` header, plus a signed-in test user's token as the bearer. curl or a node fetch script. |
+| Database, on the project | pgTAP: each `supabase/tests/*.test.sql` through `execute_sql`, wrapped as `begin; ... rollback;`. Role and RLS checks use `set local role anon` or `set local role authenticated` and `set local request.jwt.claims` inside that transaction. |
+| Database, offline | `npm run db:test`, which runs `node .actio/bin/db-test.mjs`: PGlite, real Postgres compiled to WebAssembly, no Docker. It applies `supabase/migrations/*.sql` in order plus `seed.sql` onto a Supabase-shaped bootstrap with `anon`, `authenticated`, `service_role`, `auth.uid()` and `auth.jwt()`, runs the test files under a pgTAP-compatible shim and prints TAP. Evidence, labelled as PGlite, and never a substitute for the run on the project. |
+| Edge Functions | Called at the function URL, base from `get_project_url`, with curl or a node fetch script. `get_logs` for what happened. No local Deno. |
+| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`. Screenshots and flows with Playwright through `npx playwright` (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic. |
+| Contrast | WCAG ratios computed from the `BRAND.md` hex values in a node script, once the computed style confirms the rendered element uses those values. Never estimated. |
+
+If the Supabase MCP is not connected (its tools are missing, or a call returns an auth
+error), nothing is faked. Run the offline PGlite proof with `npm run db:test`, set `status`
+to `blocked` with the reason `supabase MCP not authorised`, and the orchestrator escalates
+to Shehab, who authorises it with `/mcp`.
+
+---
+
 ## Test plan template
 
 Written before testing starts, at `.actio/runs/<run-id>/qc-engineer/plan.md`, the same file
@@ -29,10 +51,10 @@ that carries the step 2 audit.
 
 | # | Surface | Case | Expected | Evidence |
 |---|---|---|---|---|
-| 1 | API | GET preview, cohort 23 | 200, live figures, below_threshold false | `evidence/api-preview-200.json` |
-| 2 | API | GET preview, cohort 4 | 200, below_threshold true, no error | `evidence/api-preview-below.json` |
-| 3 | API | GET preview with a manager token | 403 | `evidence/api-preview-403.txt` |
-| 4 | Privacy | Cohort of 4 never appears in a report | absent | `evidence/inv-i1.log` |
+| 1 | API | POST `rpc/privacy_preview`, cohort 23 | 200, live figures, below_threshold false | `evidence/api-preview-200.json` |
+| 2 | API | POST `rpc/privacy_preview`, cohort 4 | 200, below_threshold true, no error | `evidence/api-preview-below.json` |
+| 3 | API | POST `rpc/privacy_preview` with a manager token | 403 | `evidence/api-preview-403.txt` |
+| 4 | Privacy | Cohort of 4 never appears in a report, pgTAP on the project | absent | `evidence/inv-i1.log` |
 ...
 ```
 
@@ -72,10 +94,15 @@ For every endpoint the change touches:
 
 ```bash
 # capture the body, not a summary
-curl -sS -X GET "$API/cycles/$CYCLE/privacy-preview/" \
+# SUPABASE_URL from get_project_url, PUBLISHABLE_KEY from get_publishable_keys
+curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/privacy_preview" \
+  -H "apikey: $PUBLISHABLE_KEY" \
   -H "Authorization: Bearer $EMPLOYEE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"p_cycle\": \"$CYCLE\"}" \
   -D "$EV/api-preview-200.headers" \
-  | tee "$EV/api-preview-200.json" \n  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.stringify(JSON.parse(s),null,2)))"
+  | tee "$EV/api-preview-200.json" \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.stringify(JSON.parse(s),null,2)))"
 ```
 
 ## 2. Privacy invariants
@@ -97,13 +124,16 @@ running system, not only against a unit test.
 
 ### Where they live
 
-`supabase/tests/invariants.test.sql`, pgTAP, run by `supabase test db` in continuous
-integration on every change. The file reads as a specification rather than as plumbing,
-because it is the product's claim made executable.
+`supabase/tests/invariants.test.sql`, pgTAP, run on every change two ways: on the Supabase
+project through `execute_sql`, wrapped as `begin; ... rollback;`, with pgTAP enabled by a
+migration (`create extension if not exists pgtap with schema extensions`), and offline with
+`npm run db:test` in PGlite. Both outputs are saved under `evidence/`, each labelled with
+where it ran. The file reads as a specification rather than as plumbing, because it is the
+product's claim made executable.
 
 ```sql
 begin;
-select plan(9);
+select plan(6);
 
 -- I1
 select is_empty(
@@ -135,12 +165,15 @@ select is_empty(
   'a protected case never appears in the engagement queue'
 );
 
--- the revoke itself
+-- the revoke itself, under the caller's role and claims, inside this transaction
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "<respondent id>", "role": "authenticated"}';
 select throws_ok(
-  $$ set local role authenticated; select * from public.responses limit 1 $$,
+  $$ select * from public.responses limit 1 $$,
   '42501',
   'authenticated has no direct grant on responses'
 );
+reset role;
 
 select * from finish();
 rollback;
@@ -164,7 +197,9 @@ every role, every command, positive and negative.
 
 A cell reading `deny` is tested by asserting `42501` or an empty set, not by assuming.
 A cell reading a scope is tested twice: once inside the scope expecting rows, once outside
-expecting none.
+expecting none. Each cell runs on the project through `execute_sql`, inside
+`begin; ... rollback;`, as `set local role anon` or `set local role authenticated` with
+`set local request.jwt.claims` naming a user who holds that row's role.
 
 ## 3. State machine
 
@@ -221,8 +256,9 @@ covered, and the change has just made that visible.
 |---|---|
 | The response body, saved | "The shape is right" |
 | Command output, saved with the command | "Tests pass" |
-| A screenshot at the real width, in the real locale | "It looks fine on mobile" |
-| A measured contrast ratio with both hex values | "Contrast is fine" |
+| A Playwright screenshot at the real width, in the real locale | "It looks fine on mobile" |
+| A contrast ratio computed by the node script, with both hex values | "Contrast is fine" |
+| A pgTAP run labelled with where it ran, PGlite or the project | "The database tests pass" |
 | A trace or a HAR for a network case | "It was slow" |
 | Both runs: the failing one and the passing one | "I fixed it" |
 
@@ -236,17 +272,19 @@ Naming: `<surface>-<case>.<ext>`, for example `queue-360-ar.png`, `inv-i2-filter
 ```markdown
 ### D-02 · Critical · Below-threshold error names the filter that caused it
 
-**Surface.** API, `POST /api/reports/`
+**Surface.** API, `POST /rest/v1/rpc/cohort_report`
 **Owner.** backend-engineer
 **Evidence.** `evidence/inv-i2-filter.log`
 
 **Reproduce**
 1. Sign in as a manager on Warehouse B.
-2. POST `/api/reports/` with `{"tenure_band": "0_30", "shift": "night"}`.
-3. Read the 409 body.
+2. POST `/rest/v1/rpc/cohort_report` on the project URL from `get_project_url`, with the
+   publishable key as `apikey`, the manager's token as the bearer, and
+   `{"p_cycle": "<cycle>", "p_filters": {"tenure_band": "0_30", "shift": "night"}}`.
+3. Read the 400 body.
 
-**Expected.** `{"detail": "below_threshold"}`
-**Actual.** `{"detail": "below_threshold", "field": "shift"}`
+**Expected.** `{"code": "P0001", "message": "below_threshold", "details": null, "hint": null}`
+**Actual.** `{"code": "P0001", "message": "below_threshold", "details": "shift", "hint": null}`
 
 **Why it is critical.** Naming the field lets a manager binary-search filters to isolate
 an individual, which is exactly what I2 exists to prevent. The invariant holds on the data
@@ -362,9 +400,9 @@ orientations on phone and tablet. 200% zoom counts as a width: at 200% a 1280px 
 | Longest locale at the narrowest width | Tagalog at 320px, not English at 360px |
 | RTL at every width | Mirrors at desktop, breaks at 360 |
 
-Evidence is a screenshot per width, per theme, in the longest locale, plus landscape and
-200% zoom. A test log claiming "responsive verified" with three screenshots has verified
-three widths.
+Evidence is a screenshot per width, per theme, in English and Arabic and in the longest
+locale, plus landscape and 200% zoom. A test log claiming "responsive verified" with three
+screenshots has verified three widths.
 
 ### Both languages
 

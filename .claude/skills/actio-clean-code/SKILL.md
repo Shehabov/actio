@@ -58,35 +58,37 @@ Two patterns that do most of the work:
 **Guard clauses over nesting.** Handle the exceptional cases first and return, so the
 happy path is flat and reads last.
 
-```python
-# Nested: the reader carries three conditions to reach the point
-def close(issue, by, at):
-    if issue.status != Status.CLOSED:
-        if issue.evidence.exists():
-            if issue.owner is not None:
-                ...
+```ts
+// Nested: the reader carries three conditions to reach the point
+function close(issue: Issue, by: UserId, at: Date) {
+  if (issue.status !== 'closed') {
+    if (issue.evidence.length > 0) {
+      if (issue.owner !== null) {
+        // ...
+      }
+    }
+  }
+}
 
-# Guarded: each rule is stated once and the point is at the left margin
-def close(issue, by, at):
-    if issue.status == Status.CLOSED:
-        raise AlreadyClosed()
-    if not issue.evidence.exists():
-        raise EvidenceRequired()
-    if issue.owner is None:
-        raise OwnerRequired()
-    ...
+// Guarded: each rule is stated once and the point is at the left margin
+function close(issue: Issue, by: UserId, at: Date) {
+  if (issue.status === 'closed') throw new AlreadyClosed()
+  if (issue.evidence.length === 0) throw new EvidenceRequired()
+  if (issue.owner === null) throw new OwnerRequired()
+  // ...
+}
 ```
 
 **No flag arguments.** A boolean that forks the whole body is two functions wearing a
 coat.
 
-```python
-# The call site reads close(issue, True) and tells the reader nothing
-def close(issue, force=False): ...
+```ts
+// The call site reads close(issue, true) and tells the reader nothing
+function close(issue: Issue, force = false) { /* ... */ }
 
-# Two honest names
-def close(issue): ...
-def force_close(issue, override_reason): ...
+// Two honest names
+function close(issue: Issue) { /* ... */ }
+function forceClose(issue: Issue, overrideReason: string) { /* ... */ }
 ```
 
 ---
@@ -116,16 +118,16 @@ code, and none where the reasoning lived only in someone's head.
 **Code says what. Comments say why.** A comment that says what the code says is noise that
 will go stale and then lie.
 
-```python
-# Noise. Delete it.
-# increment the counter
+```ts
+// Noise. Delete it.
+// increment the counter
 counter += 1
 
-# Worth its space. Nothing in the code can carry this.
-# Cohort size is recomputed here rather than cached, because the privacy preview
-# promises the reader a live figure. A stale number would be a claim rather than
-# a disclosure, which is the thing this screen exists to avoid.
-size = cohort.responses.count()
+// Worth its space. Nothing in the code can carry this.
+// Cohort size is recomputed here rather than cached, because the privacy preview
+// promises the reader a live figure. A stale number would be a claim rather than
+// a disclosure, which is the thing this screen exists to avoid.
+const size = await countResponses(cohortId)
 ```
 
 ### Always comment these
@@ -134,11 +136,11 @@ size = cohort.responses.count()
 |---|---|
 | A non-obvious decision | The next reader will otherwise "fix" it back |
 | A workaround | Name what it works around and the condition for removing it |
-| A regulatory, privacy or safety constraint | Cite the invariant: `# I1: enforced here so no caller can bypass it` |
+| A regulatory, privacy or safety constraint | Cite the invariant: `-- I1: enforced here so no caller can bypass it` |
 | A performance choice that costs readability | State the measurement that justified it |
 | A deliberate departure from this standard | Say why, so it reads as a decision rather than as rot |
 | Anything surprising | If it surprised you writing it, it will surprise the next reader |
-| A unit, a range, or a boundary that is not in the type | `# seconds, not milliseconds` |
+| A unit, a range, or a boundary that is not in the type | `// seconds, not milliseconds` |
 
 ### Never comment these
 
@@ -219,7 +221,7 @@ to `peer-reviewer`.
 | Module header states the invariants the module upholds | A model handed one file has no repository context. The header supplies it. |
 | Domain terms used exactly as the architecture defines them | `issue`, `lane`, `owner`, `evidence`, `cohort`, `closure`. Consistent vocabulary lets a reader match code to the ADR without a translation step. |
 | The dangerous path is loud, not documented | A default manager returning `none()` beats a comment saying "remember to filter". Make the wrong thing fail rather than warning against it. |
-| Invariants cited by number in the code | `# I5` next to the evidence check ties the line to `actio-architecture` |
+| Invariants cited by number in the code | `-- I5` next to the evidence check ties the line to `actio-architecture` |
 | One way to do each thing | Two patterns for one job forces every reader to work out which is current |
 | Tests read as specifications | `test_cohort_of_four_never_reports` tells a reader the rule. `test_reporting_1` tells them nothing. |
 | No cleverness without a comment earning it | A clever line that saves four lines and costs ten minutes of reading is a bad trade |

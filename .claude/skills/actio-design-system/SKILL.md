@@ -459,8 +459,9 @@ a spec that leaves one for them to guess.
 
 Two rules hold across all five. Colours come from `BRAND.md` and the dark values from
 `Actio-Brand-Guidelines-v1.pdf`, never from a reference image (BUG-0006). Every pair a
-component introduces that is not already in the `BRAND.md` §2 table is measured and
-recorded before the surface leaves the designer.
+component introduces that is not already in the `BRAND.md` §2 table is measured, as a WCAG
+ratio computed from the two hex values in a node script, and recorded before the surface
+leaves the designer.
 
 ### Pill tab group
 
@@ -928,9 +929,10 @@ Breakpoints are `BRAND.md` §1.5: 480, 768, 1024, 1440. Reading width 720px, dat
 ### Evidence
 
 A surface is not done until a screenshot exists at 320, 360, 768, 1024 and 1440, in both
-themes and in the longest locale, plus one at 200% zoom and one in landscape. That is the
-evidence `ux-auditor` checks and `qc-engineer` reproduces. A spec with three screenshots
-covering three widths has covered three widths.
+themes, in English and Arabic, and in the longest locale, plus one at 200% zoom and one in
+landscape. Screenshots are taken with Playwright via `npx playwright` (`npx playwright
+install chromium` once). That is the evidence `ux-auditor` checks and `qc-engineer`
+reproduces. A spec with three screenshots covering three widths has covered three widths.
 
 ---
 
@@ -1026,7 +1028,8 @@ Before any surface leaves the designer:
 - [ ] All eight states covered
 - [ ] Both themes
 - [ ] Mirrors for Arabic, holds at the longest locale
-- [ ] Contrast measured against `BRAND.md` §2, with both hex values recorded
+- [ ] Contrast measured against `BRAND.md` §2 by computing WCAG ratios from `BRAND.md` hex
+      values in a node script, not estimated, with both hex values recorded
 - [ ] No gradient, no shadow in flow, no tinted callout, no second accent, no sparkle
 - [ ] Sentence case everywhere including buttons
 
@@ -1054,7 +1057,8 @@ For every one of the five components this system adds, the spec states all seven
       sits, or one line saying it is not interactive and how its meaning is written out
       instead
 - [ ] Behaviour at 360px, including what is dropped and what is never dropped
-- [ ] Dark mode, by token, with any pair outside the `BRAND.md` §2 table measured
+- [ ] Dark mode, by token, with any pair outside the `BRAND.md` §2 table measured as a WCAG
+      ratio computed from its hex values in a node script, not estimated
 - [ ] RTL, naming what mirrors, what does not, and which runs stay LTR
 
 Component by component:

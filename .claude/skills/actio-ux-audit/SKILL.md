@@ -110,7 +110,10 @@ Cite the heuristic by name when you file against it.
 
 ## 3. Accessibility, WCAG 2.2 AA
 
-Measured, never estimated. Record both hex values and the computed ratio as evidence.
+Contrast measured by computing WCAG ratios from `BRAND.md` hex values in a node script, not
+estimated. Dark mode pairs take their hex values from `Actio-Brand-Guidelines-v1.pdf`, as
+`actio-design-system` directs. Record both hex values, the computed ratio and the script as
+evidence.
 
 - [ ] Body text 4.5:1. Large text and interface components 3:1.
 - [ ] Focus rings, chart series, status indicators and input borders each 3:1 against what
@@ -331,10 +334,11 @@ reference for feel. Work these in order and quote the rule you file against.
    implement, and the relevant ADR.
 2. Work the seven checklists in order. Colour and bans first, because they are objective
    and fast, and a blocker there ends the audit early.
-3. Capture evidence as you go, into `.actio/runs/<run-id>/evidence/`. Screenshot at 360px,
-   at 360px under 200% zoom, and at the widest breakpoint the surface claims to support.
-   Compute every contrast ratio from the two hex values and record both values with the
-   result, rather than reading the pair by eye.
+3. Capture evidence as you go, into `.actio/runs/<run-id>/evidence/`. Screenshot with
+   Playwright via `npx playwright` (`npx playwright install chromium` once) at 320, 360,
+   768, 1024 and 1440, both themes, English and Arabic, plus 360px under 200% zoom.
+   Compute every contrast ratio from the two hex values in a node script and record both
+   values with the result, rather than reading the pair by eye.
 4. Write findings into `.actio/runs/<run-id>/ux-auditor/findings.md`, numbered, ordered by
    severity.
 5. Set the gate. Any open blocker or major means `design: fail`.
@@ -374,6 +378,7 @@ Not a section of the accessibility pass. Its own pass, run on every surface.
 - [ ] RTL at every width, not only at desktop
 - [ ] No device sniffing. Respond to viewport and capability, never to a user agent string.
 
-**Evidence.** A screenshot at 320, 360, 768, 1024 and 1440, in both themes, in the longest
-locale, plus one landscape and one at 200% zoom. A spec with three screenshots has covered
-three widths, and the finding is the missing evidence rather than the missing layout.
+**Evidence.** A Playwright screenshot, taken through `npx playwright`, at 320, 360, 768,
+1024 and 1440, in both themes, in English and Arabic, in the longest locale, plus one
+landscape and one at 200% zoom. A spec with three screenshots has covered three widths, and
+the finding is the missing evidence rather than the missing layout.

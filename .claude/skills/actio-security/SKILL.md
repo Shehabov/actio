@@ -28,15 +28,32 @@ whole sweep runs on the resubmission.
 | # | Pass | Tooling |
 |---|---|---|
 | 1 | Secrets and keys | `git diff` scan, plus history |
-| 2 | Exposure and configuration | Supabase advisors, RLS state, bucket policies |
-| 3 | Authentication and authorisation | policy review, role matrix |
+| 2 | Exposure and configuration | `get_advisors` for type `security` and type `performance`, `list_tables`, RLS state and bucket policies queried through `execute_sql` |
+| 3 | Authentication and authorisation | policy review, role matrix, role-switched `execute_sql` probes, the same requests against the project's PostgREST URL |
 | 4 | Injection | read every string that reaches SQL, a shell or the DOM |
-| 5 | Dependencies | `npm audit`, `pip audit`, lockfile diff, package existence |
-| 6 | Data handling | storage, logs, URLs, headers, CSRF, rate limits |
+| 5 | Dependencies | `npm audit`, lockfile diff, package existence |
+| 6 | Data handling | storage, logs (`get_logs` for Edge Functions), URLs, headers, CSRF, rate limits |
 | 7 | Robustness | error paths, logging, dangerous functions |
 
-Every pass records the command and its output as evidence, including the passes that found
-nothing. A clean pass is evidence; an unrun pass is a gap.
+Every pass records the command or the Supabase MCP call and its output as evidence,
+including the passes that found nothing. A clean pass is evidence; an unrun pass is a gap.
+
+The toolchain is git, node 24, npm, npx and the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project). Nothing else may be assumed. No step, check or piece of
+evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python.
+Actio has no Python code, so there is no `pip audit`.
+
+Database passes run on the project through the MCP and only read or probe: `get_advisors`,
+`list_tables`, and `execute_sql` wrapped as `begin; ... rollback;`, with `set local role anon`
+or `set local role authenticated` and `set local request.jwt.claims` inside that transaction
+for every role check. One probe per call, because the first error aborts the transaction.
+The offline `npm run db:test` run (`node .actio/bin/db-test.mjs`, PGlite, no Docker) is
+evidence too, labelled as PGlite, and never stands in for a probe on the project.
+
+If the Supabase MCP is not connected (its tools are missing, or a call returns an auth
+error), nothing is faked. Run the offline PGlite proof with `npm run db:test`, set `status`
+to `blocked` with the reason `supabase MCP not authorised`, and the orchestrator escalates
+to Shehab, who authorises it with `/mcp`.
 
 ---
 
@@ -76,7 +93,7 @@ nothing checking the caller owns it.
   blocker regardless of its message.
 - A new table with no `enable row level security` is open the moment anything is granted.
 - `service_role` anywhere the browser can reach it bypasses every policy in the database.
-- Check the Supabase advisors, which name unprotected tables directly.
+- Check `get_advisors` with type `security`, which names unprotected tables directly.
 
 ### A4. Weak session handling · High
 
@@ -253,9 +270,10 @@ git diff origin/main... -- package.json | grep '^+' | grep -oE '"[^"]+":\s*"[^"]
 
 ```bash
 npm audit --audit-level=moderate
-npm audit fix            # then re-run and read what it could not fix
-pip audit                # where any Python exists
+npm audit fix --dry-run  # read what a fix would change and what it cannot; the author applies it
 ```
+
+Actio has no Python code, so there is no `pip audit`.
 
 **Every critical and high finding is fixed or explicitly accepted in writing with a reason
 and a date.** "It is only a dev dependency" is an acceptance, and it gets written down like
@@ -279,6 +297,8 @@ The class that produces the headline breaches, and the one most specific to this
 granted table and the anon key is in the browser by design. This is the single most common
 way a product of this shape leaks everything.
 
+Run each query on the project through `execute_sql`, and save the call and its returned rows.
+
 ```sql
 -- every table in a client-reachable schema must have RLS on
 select schemaname, tablename, rowsecurity
@@ -293,7 +313,24 @@ select c.relname
    and not exists (select 1 from pg_policy p where p.polrelid = c.oid);
 ```
 
-Run the Supabase security advisors on every build and treat every finding as a defect.
+Then prove it from the caller's side. A query that reads the catalogue shows the setting; a
+probe under the caller's role shows the effect. One probe per `execute_sql` call:
+
+```sql
+begin;
+set local role anon;
+select count(*) from public.responses;   -- expected: 42501, insufficient privilege
+rollback;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "<team lead on site A>", "role": "authenticated"}';
+select count(*) from public.issues where site_id = '<site B>';   -- expected: 0
+rollback;
+```
+
+Run `get_advisors` for type `security` and type `performance` on every build and treat
+every finding as a defect.
 
 ### F2. Misconfigured storage buckets · Critical
 
@@ -301,7 +338,9 @@ The Firebase-bucket failure mode, in Supabase Storage form.
 
 - No bucket is public unless the content is genuinely public. Evidence attached to an issue
   is never public.
-- Every bucket has storage policies, and they are tested the same way table policies are.
+- Every bucket has storage policies, and they are tested the same way table policies are:
+  `select id, public from storage.buckets;` through `execute_sql`, then role-switched probes
+  on `storage.objects`.
 - Signed URLs are short-lived and scoped to one object.
 - A file name is not a secret. Never rely on an unguessable path.
 
@@ -382,7 +421,7 @@ Checked on every diff, in addition to everything above.
 ```markdown
 ### S-03 · Critical · F1 · RLS disabled on public.responses
 
-**Where.** `supabase/migrations/20260921_add_export.sql:14`
+**Where.** `supabase/migrations/20260921093000_add_export.sql:14`
 **Class.** Exposure and configuration, F1. Open database endpoint.
 
 **What.** The migration adds an export view and disables RLS on `public.responses` to make
@@ -430,7 +469,8 @@ git diff origin/main... -- package.json package-lock.json | grep '^+' | grep -E 
 git grep -nE '\beval\(|new Function\(|dangerouslySetInnerHTML|innerHTML\s*=|child_process\.exec\('
 
 # F3. client-exposed configuration
-git grep -nE 'NEXT_PUBLIC_[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD)'
+git grep -nE 'NEXT_PUBLIC_[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD)' | grep -vE 'NEXT_PUBLIC_SUPABASE_(PUBLISHABLE|ANON)_KEY'   # the publishable key is public by design, see B2
+git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '\.env\.example$'   # must print nothing: web/.env.local is gitignored
 
 # D3. personal data in logs
 git grep -nE 'console\.(log|error)\(.*(phone|free_text|full_name|email)'
@@ -439,8 +479,10 @@ git grep -nE 'console\.(log|error)\(.*(phone|free_text|full_name|email)'
 git grep -nE 'catch\s*\([^)]*\)\s*\{\s*\}|exception when others then null'
 ```
 
-Then the database passes from F1, the Supabase advisors, and the role matrix in
-`actio-test-protocol`.
+Then the database passes, through the Supabase MCP: the F1 queries and probes through
+`execute_sql`, `get_advisors` for type `security` and type `performance`, `list_tables`, the
+F2 bucket check, and the role matrix in `actio-test-protocol`, each cell a role-switched
+probe inside `begin; ... rollback;`. Save every call and its output to `evidence/security/`.
 
 **A sweep with no findings is reported as a sweep with no findings, with the output
 attached.** Silence is not the same as a clean result, and the difference is the whole

@@ -21,7 +21,7 @@ Actio routes employee feedback to whoever can actually fix it, and does not let 
 
 ## Version 1
 
-This is the specification. The product is being built against it and is not here yet.
+This is the specification. The product is being built against it, and it lands in `web/` and `supabase/` run by run.
 
 Version 1 fixes the decisions that are expensive to change later: what the product does, who it is for, what it measures, and every rule the interface is built to. Nothing in here is provisional, so the first screen can be written against a decision rather than a preference.
 
@@ -61,7 +61,7 @@ question.
 | | [`code-steward`](./.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review, 3 of 3 |
 | | [`security-analyst`](./.claude/agents/security-analyst.md) | Secrets, exposure, authorisation, injection, dependencies, robustness | Security |
 | | [`qc-engineer`](./.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – |
-| | [`release-engineer`](./.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release |
+| | [`release-engineer`](./.claude/agents/release-engineer.md) | Release to the Supabase project, commit, tag, push, verify, roll back | Release |
 
 ### Every agent runs the same loop
 
@@ -117,7 +117,7 @@ rules, and twenty-four vendored skills carry craft.
 | **House** (15) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-security`, `actio-supabase`, `actio-test-protocol`, `actio-release` | All |
 | **Taste** (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
 | **Supabase** (2) | [supabase/agent-skills](https://github.com/supabase/agent-skills) | `backend-engineer`, `security-analyst` |
-| **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`, `release-engineer` |
+| **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`. `deploy-to-vercel`, `vercel-cli-with-tokens` and `vercel-optimize` are coupled to no agent: reference only, for when a deploy target is chosen. |
 
 ### The platform
 
@@ -155,6 +155,25 @@ the handoff schema. [`CLAUDE.md`](./CLAUDE.md) is the operating manual the agent
 **Running the swarm:** start the orchestrator as the main thread with
 `claude --agent orchestrator` and give it the brief. It is the only role that dispatches,
 so every stage lands in the ledger and the utilisation check can see it.
+
+### Toolchain
+
+Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project). Nothing else may be assumed.
+
+The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
+or python. None of them is a required step, a gate criterion, an evidence source or an
+allowed permission. A tool that is missing is reported as blocked, never faked.
+
+Database work goes through the Supabase MCP, from migration files in the repo, and is
+iterated offline with `npm run db:test`, which runs the migrations, the seed and the pgTAP
+tests on PGlite with no Docker. The workflow is in
+[`actio-supabase`](./.claude/skills/actio-supabase/SKILL.md). Hosting deployment is out of
+scope until Shehab chooses a target, and is recorded as `deferred: no target chosen`.
+
+At run open the orchestrator checks that node, npm and the Supabase MCP answer. If the MCP
+does not, it escalates to Shehab before any database stage runs, and he authorises it with
+`/mcp`. The stages that do not need it still run.
 
 ---
 
@@ -214,7 +233,11 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 | [`.claude/agents/`](./.claude/agents/) | The sixteen agent definitions |
 | [`.claude/skills/`](./.claude/skills/) | Fifteen house skills and twenty-two vendored ones |
 | [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
-| [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run. |
+| [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run, and the node scripts that check them. |
+| `web/` | The Next.js App Router app, TypeScript, npm. Lands as runs land. |
+| `supabase/` | The database source of record: migrations, pgTAP tests, seed and Edge Functions. Lands as runs land. |
+| `package.json` | Private, npm workspaces `["web"]`, dev tooling. `npm run db:test` runs the offline database proof. |
+| `.mcp.json` | The Supabase MCP server, scoped to one project |
 | [`logo/`](./logo/) | The seal and the lockups, in every colourway. See [`logo/README.md`](./logo/README.md) for which file to use where. |
 
 ```
@@ -225,6 +248,8 @@ actio/
 ├── BRAND.md
 ├── Actio-Brand-Guidelines-v1.pdf
 ├── LICENSE
+├── package.json                           npm workspaces ["web"], db:test
+├── .mcp.json                              the Supabase MCP server
 ├── .claude/
 │   ├── settings.json
 │   ├── agents/                            16 agent definitions
@@ -232,8 +257,17 @@ actio/
 │       ├── actio-*/                       15 house skills
 │       └── <vendored>/                    22 from taste-skill and vercel-labs
 ├── .actio/
+│   ├── bin/                               sync-gates · utilisation-check · db-test
 │   ├── TEMPLATE/                          plan.md · review.md · handoff.json
 │   └── runs/                              one directory per run
+├── web/                                   Next.js App Router app, TypeScript, npm
+├── supabase/
+│   ├── migrations/                        <yyyymmddhhmmss>_<slug>.sql, the source of record
+│   ├── tests/                             *.test.sql, pgTAP
+│   ├── functions/                         <name>/index.ts, Edge Functions
+│   └── seed.sql
+├── content/strings/                       en.json · ar.json, the shipped string catalogue
+├── design/surfaces/                       canonical design specs, one per surface
 ├── docs/
 │   ├── TEAM.md                            org chart, RACI, escalation
 │   ├── WORKFLOW.md                        delivery flow, gates, handoff schema

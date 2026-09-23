@@ -110,9 +110,19 @@ maintained.
 Checked on the Product Lead's machine, Windows 11 with Git Bash. Assuming otherwise wastes
 a dispatch.
 
+Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project). Nothing else may be assumed. The swarm does not depend
+on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python, and none of them
+is a required step, a gate criterion, an evidence source or an allowed permission. The full
+statement is under Toolchain in `CLAUDE.md`, and database work follows `actio-supabase`. **A
+missing tool is reported as blocked, never faked:** set `status` to `blocked`, name the tool
+and the error in `blockers`, and run whatever proof you still can. For the Supabase MCP the
+reason is `supabase MCP not authorised`, the offline PGlite proof (`npm run db:test`) still
+runs, and the orchestrator escalates to Shehab, who authorises it with `/mcp`.
+
 | Available | Not available |
 |---|---|
-| `node`, `perl`, `git`, `grep`, `sed`, `awk`, `find` | **`jq`.** Parse JSON with `node -e` instead. |
+| `git`, `node`, `npm`, `npx`, the Supabase MCP. Git Bash also carries `grep`, `sed`, `awk` and `find` for reading files. | Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, **`jq`** and python. Parse JSON with `node -e` instead of `jq`. |
 
 **Do not write a multi-line artefact through a Bash heredoc.** `cat > file <<EOF` does not
 reliably terminate in this environment: it hangs and is killed at the timeout with no file
@@ -191,7 +201,7 @@ date -u +%Y-%m-%dT%H:%M:%SZ
 | `started`, `finished` | ISO 8601 UTC, from the shell |
 | `consumed` | Every path you actually read. This is how the orchestrator proves an upstream agent was used. Listing something you did not read is falsifying the record. |
 | `produced` | Every path you wrote. Each one must exist on disk. |
-| `gates` | Only gates **you** own. Certifying another agent's gate is a defect. |
+| `gates` | Only gates **you** own, by the names in `run.json` `gates[]`. Certifying another agent's gate is a defect. A self-check or sub-gate is not a gate: it goes in your `review.md` or your verdict file, because any name not in `run.json` raises `UNKNOWN_GATE`. |
 | `blockers` | `{ "what": "", "why": "", "needs": "<agent-name or 'shehab'>" }` |
 | `missing_inputs` | Promised inputs that never arrived and that you worked around |
 | `machinery_findings` | Defects in an agent file, a skill or this protocol, with the file named |
@@ -315,7 +325,7 @@ desk without moving it forward.
 
 | Assumption | Checked | How |
 |---|---|---|
-| Group membership is already computed for the cycle | yes | read `surveys/services/cohort.py` |
+| Group membership is already computed for the cycle | yes | read the cohort function in `supabase/migrations/` |
 | Threshold is 5 everywhere | yes | ADR-004, and grep for the constant |
 
 **Acceptance criteria**

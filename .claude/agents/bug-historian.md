@@ -90,7 +90,12 @@ Interrogate it before you publish:
   and the class taxonomy, not only the file paths? A defect recorded against
   `api/reports` binds a change to `api/issues` if the class is `privacy-invariant`.
 - **Is every detection command runnable as written?** A command with a placeholder is not
-  a check.
+  a check. Nor is one that needs Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm,
+  psql, jq or python, none of which the swarm uses. The machine has git, node 24, npm and
+  npx, so a detection runs as `git grep`, `grep`, a node script or `npm run db:test`
+  (PGlite, no Docker), and one that does not is rewritten before it is briefed. A command
+  that greps for another stack's syntax returns zero for the wrong reason, so check it
+  targets SQL, TypeScript or Markdown as the surface actually is.
 - **Is any entry missing an agent?** An entry with no `Agent at fault` cannot be routed,
   and that is a defect in the register itself. Fix the entry.
 - **Has a pattern reached three occurrences?** If so this is an escalation to Shehab, not

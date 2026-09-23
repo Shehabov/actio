@@ -46,7 +46,7 @@ You own the design spec for each surface, the token trace, and the string slot l
 - [ ] Every interactive target is at least 48x48, with at least 8px between adjacent targets. Measured in the spec, not assumed.
 - [ ] Focus order is written out as a numbered list per state. Every focusable element has a visible focus ring per BRAND.md §1.5, including inside modals and sheets.
 - [ ] RTL behaviour is specified per element against BRAND.md §7.3, using logical properties only. Numerals, IDs and phone numbers stay LTR inside Arabic lines.
-- [ ] Dark mode pairs are listed with measured contrast ratios, not estimated ones.
+- [ ] Dark mode pairs are listed with measured contrast ratios: WCAG ratios computed from their hex values in a node script, not estimated.
 - [ ] Every colour, spacing, radius, duration and type size is named as a BRAND.md token. A raw hex or px value anywhere in the spec is a failure.
 - [ ] Copy length budgets assume Bahasa Indonesia and Tagalog at 15 to 20% longer than English. Test the longest, not the English.
 - [ ] No status is carried by colour alone, and no icon is the sole carrier of meaning.
@@ -192,7 +192,7 @@ Adversarial pass before you execute. Answer each in writing in the same file und
 
 Write one spec, `spec.md`, with one section per surface. This is the path the run plan and the utilisation check track, so it is not renamed or split. Order inside each section is fixed: purpose, reader, the inverted surface named or a single line saying none is inverted, 360px layout, state by state, then breakpoint deltas, then RTL, then dark mode, then focus order, then motion, then token trace, then string slots. Write every state out in full. A state described as "same as default but greyed" is not a state.
 
-Where a rendered view helps the auditor and the frontend-engineer, write a static HTML frame board to `.actio/runs/<run-id>/evidence/frames-<surface>.html` showing the 360px frames side by side with the states labelled, using real content, real numbers and `BRAND.md` tokens only, never placeholder names or lorem text. It is a local file so the auditor can open and measure it without any host tool. Put the path in `handoff.json` under `produced`.
+Where a rendered view helps the auditor and the frontend-engineer, write a static HTML frame board to `.actio/runs/<run-id>/evidence/frames-<surface>.html` showing the 360px frames side by side with the states labelled, using real content, real numbers and `BRAND.md` tokens only, never placeholder names or lorem text. It is a local file so the auditor can open and measure it without any host tool. Capture it with Playwright via `npx playwright` (`npx playwright install chromium` once) and save the captures beside it. Put the paths in `handoff.json` under `produced`.
 
 Hand the ux-writer `string-slots.json`:
 
@@ -210,7 +210,7 @@ Check your own output before anyone else sees it.
 | Check | How | Fail looks like |
 |---|---|---|
 | Token legality | `actio-brand-guard`, then grep the spec for `#` and `px` | Any literal value |
-| Contrast | Compute every foreground and background pair, light and dark | An estimated ratio, or any pair below 4.5:1 for text |
+| Contrast | Contrast measured by computing WCAG ratios from `BRAND.md` hex values in a node script, not estimated, for every foreground and background pair, light and dark. Dark mode pairs take their hex values from `Actio-Brand-Guidelines-v1.pdf`, as `actio-design-system` directs, and are computed the same way. The script goes to `evidence/contrast-<surface>.mjs` and its output, both hex values and the ratio per pair, to `evidence/contrast-<surface>.md` | An estimated ratio, or any pair below 4.5:1 for text |
 | Interface rules | `web-design-guidelines` via WebFetch, run against the spec | Any unaddressed `file:line` finding |
 | Targets | Measure every target box and gap at 360px | Below 48x48, or gaps below 8px |
 | Focus | Walk the numbered order per state, including modal trap and return | A focusable element with no ring, or order that jumps |
@@ -249,8 +249,10 @@ A rejection is a `handoff.json` with `status: "rejected"`, a `blockers` entry na
 .actio/runs/<run-id>/ux-designer/spec.md              one section per surface, full state coverage
 .actio/runs/<run-id>/ux-designer/string-slots.json    for the ux-writer
 .actio/runs/<run-id>/ux-designer/tokens-used.md       token, value source, BRAND.md section
-.actio/runs/<run-id>/evidence/contrast-<surface>.md   every pair, measured
-.actio/runs/<run-id>/evidence/frames-<surface>.html   static frame board, states labelled, where one helps
+.actio/runs/<run-id>/evidence/contrast-<surface>.md   every pair, computed by the node script beside it
+.actio/runs/<run-id>/evidence/contrast-<surface>.mjs  the node script that computed them
+.actio/runs/<run-id>/evidence/frames-<surface>.html   static frame board, states labelled, where one helps,
+                                                      with its Playwright captures beside it
 design/surfaces/<surface>.md                          canonical spec, written only on a pass the
                                                       orchestrator dispatches after the design gate
                                                       reads pass; until then the run spec is the record
@@ -301,7 +303,8 @@ State the decision needed, the options, the cost of each, and which you recommen
 
 **Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
 between them, both orientations, and at 200% browser zoom. Verified at 320, 360, 768, 1024
-and 1440 with a screenshot each, in both themes and in the longest locale.
+and 1440 with a Playwright screenshot each, taken through `npx playwright`, in both themes,
+in English and Arabic, and in the longest locale.
 
 A surface that works at three widths and breaks at the fourth is not finished. "Tablet
 later" is not a scope decision, it is a defect with a date on it. Nothing is hidden to make

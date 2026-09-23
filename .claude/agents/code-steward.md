@@ -121,7 +121,7 @@ Run what can be run rather than eyeballing it:
 
 ```bash
 # file lengths in the diff
-git diff --name-only origin/main... | grep -E '\.(py|ts|tsx)$' | xargs wc -l | sort -rn
+git diff --name-only origin/main... | grep -E '\.(ts|tsx|sql)$' | xargs wc -l | sort -rn
 
 # commented-out code and ownerless TODOs
 git diff origin/main... | grep -nE '^\+\s*(#|//)\s*(def |class |function |const |return |if )'

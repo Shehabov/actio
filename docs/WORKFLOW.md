@@ -83,7 +83,7 @@ flowchart TD
   QCL -- "no-go" --> ORC
   QCL -- "go" --> REL
 
-  REL["<b>release-engineer</b><br/>deploy · commit · tag · verify"]:::make
+  REL["<b>release-engineer</b><br/>migrations · build · tag · push · verify"]:::make
   REL --> CLOSE
 
   CLOSE{"<b>orchestrator</b><br/>utilisation check<br/>run report"}:::orc
@@ -171,9 +171,9 @@ it exactly, so a gate is never renamed for a run.
 | 6 | Review, 3 of 3 | `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
 | 7 | Security | `security` | `security-analyst` | Every applicable pass in `actio-security` ran with evidence, no critical or high open, audits clean or accepted in writing, no secret in tree or history, every client-reachable table has RLS with a policy, no `service_role` outside Edge Function secrets |
 | 8 | Regression guard | `regression-guard` | `bug-historian` | No known defect on these surfaces has been repeated, each checked by running its detection command, and every standing rule binding this run has been checked with its result recorded |
-| 9 | Engineering | `engineering` | `engineering-lead` | All three reviews, the security gate **and the regression guard** passed, it builds, it migrates, the suite is green, and the feature works end to end with evidence attached |
+| 9 | Engineering | `engineering` | `engineering-lead` | All three reviews, the security gate **and the regression guard** passed, it builds, it migrates, the suite is green, `get_advisors` is clean for security and performance or every finding is accepted in writing, and the feature works end to end with evidence attached |
 | 10 | Quality | `quality` | `qc-lead` | The evidence exists and shows what the log claims, the untested surface is named, and the product's own claims still hold |
-| 11 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before deploy, post-deploy smoke passed |
+| 11 | Release | `release` | `release-engineer` | Pre-flight clean, go from `qc-lead`, rollback plan written before the first migration is applied, migrations applied to the Supabase project through the MCP and verified with `list_migrations`, `get_advisors` clean, `npm run build` green, tagged and pushed to origin main, post-release smoke passed. Front-end hosting is recorded as `deferred: no target chosen`, which is not a failure |
 | 12 | Run closure | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
 
 The three review gates and the security gate are separate names rather than one gate with four owners, so the
@@ -255,10 +255,13 @@ without reading a transcript.
 ├── ...
 └── evidence/
     ├── regression/                api-issues-r01.log · bug-0007-detect.log
+    ├── toolchain-preflight.log    node, npm and the Supabase MCP, checked at run open
+    ├── backend/                   db-test-pglite.tap · pgtap-project-<test file>.tap
+    │                              list-migrations.json · list-tables.json
+    │                              advisors-security.json · advisors-performance.json
     ├── api-contract.log
     ├── privacy-invariants.log
-    ├── queue-360px-ar.png
-    └── lighthouse.json
+    └── queue-360px-ar.png
 ```
 
 Run id is `<yyyy-mm-dd>-<short-slug>`. Timestamps come from the shell, never invented.
@@ -323,6 +326,14 @@ run `claude --agent orchestrator`. Every other agent runs as its subagent, hands
 Give the orchestrator the brief. It writes the run plan, dispatches, and reports back. After
 every stage it runs `node .actio/bin/sync-gates.mjs .actio/runs/<run-id>` and then
 `node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>`.
+
+At run open, before it dispatches anyone, the orchestrator runs the toolchain pre-flight:
+`node --version` and `npm --version` answer, and the Supabase MCP answers a cheap read,
+`list_tables`. The result goes to `evidence/toolchain-preflight.log`. The toolchain itself is
+in [`CLAUDE.md`](../CLAUDE.md#toolchain): git, node 24, npm, npx and the Supabase MCP, and
+nothing else. If the MCP does not answer, the orchestrator records it, escalates to Shehab,
+who authorises it with `/mcp`, and dispatches no database stage until it answers. The stages
+that do not need it still run. A missing tool is reported as blocked, never faked.
 
 ```
 Use the orchestrator agent. Brief: add the privacy preview screen ahead of the

@@ -20,6 +20,42 @@ Every other agent is a subagent of the orchestrator: it hands off with `next` an
 
 ---
 
+## Toolchain pre-flight, at run open
+
+Run it before the first dispatch, after the `run opened` ledger line. The toolchain is git,
+node 24, npm, npx and the Supabase MCP server (`supabase` in `.mcp.json`, scoped to one
+project). Nothing else may be assumed, and the swarm does not depend on Docker, the Supabase
+CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. The full statement is in `CLAUDE.md`,
+and the database workflow is in `actio-supabase`.
+
+| Check | How | Answered means |
+|---|---|---|
+| node | `node --version` | A version string, 24 or later |
+| npm | `npm --version` | A version string |
+| Supabase MCP | One `list_tables` call, the cheapest read the server has | A table list, even an empty one. A missing tool or an auth error is a no. |
+
+The orchestrator carries `mcp__supabase__list_tables` in its tools line for this check only.
+It never applies, queries or changes the database.
+
+Write the three results with the shell timestamp to `evidence/toolchain-preflight.log`, cite
+it in the orchestrator's handoff, and log a `toolchain pre-flight` ledger line.
+
+| Result | Do this |
+|---|---|
+| All three answer | Dispatch as planned. |
+| node or npm missing | Stop and escalate to Shehab. No stage can run. |
+| The MCP does not answer | Record `supabase MCP not authorised` in the ledger and in the orchestrator's `blockers`, escalate to Shehab, who authorises it with `/mcp`, and dispatch no database stage until a re-run of the check answers. Still dispatch every stage that does not need it. |
+
+A database stage is any plan entry whose task needs the Supabase MCP to apply, prove, type or
+inspect something on the project. `backend-engineer` and `release-engineer` always are. Any
+other agent that carries `mcp__supabase` in its tools line is one when its task needs the
+project rather than the offline proof; decide which at planning time and write it in the
+orchestrator's `plan.md`. An agent that finds the MCP missing mid-run runs
+the offline PGlite proof (`npm run db:test`) and hands off `blocked` with the same reason,
+and that routes to Shehab the same way. A missing tool is reported as blocked, never faked.
+
+---
+
 ## run.json
 
 Written once at the start of a run, amended only by appending to `amendments`. The one
@@ -45,7 +81,7 @@ writes, copying each owner's own record out of its handoff (BUG-0027).
   ],
   "plan": [
     { "stage": 1, "agent": "bug-historian", "task": "Regression brief: what has already broken on these surfaces", "consumes": ["run.json"], "produces": ["bug-historian/brief.md"], "blocked_by": [] },
-    { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs", "consumes": ["run.json", "bug-historian/brief.md"], "produces": ["tech-architect/adr-0004-reporting-threshold.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
+    { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs for this change", "consumes": ["run.json", "bug-historian/brief.md"], "produces": ["tech-architect/adr-NNNN-<slug>.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
     { "stage": 2, "agent": "ux-designer", "task": "Design spec, every surface and every state", "consumes": ["tech-architect/brief-frontend.md", "bug-historian/brief.md"], "produces": ["ux-designer/spec.md", "ux-designer/string-slots.json"], "blocked_by": ["design-authority"] },
     { "stage": 2, "agent": "backend-engineer", "task": "Supabase: schema, RLS policies, functions, Edge Functions", "consumes": ["tech-architect/brief-backend.md", "bug-historian/brief.md"], "produces": ["<source paths>"], "blocked_by": ["design-authority"] },
     { "stage": 3, "agent": "ux-auditor", "task": "Independent audit of the design spec", "consumes": ["ux-designer/spec.md", "bug-historian/brief.md"], "produces": ["ux-auditor/findings.md"], "blocked_by": [] },
@@ -59,7 +95,7 @@ writes, copying each owner's own record out of its handoff (BUG-0027).
     { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/verdict.json", "peer-reviewer/comments.md", "code-analyst/findings.md", "code-steward/findings.md", "security-analyst/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"] },
     { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md", "bug-historian/brief.md"], "produces": ["qc-engineer/test-log.md", "qc-engineer/defects.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
     { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "qc-engineer/defects.md", "evidence/<test artefacts>"], "produces": ["qc-lead/readiness.md"], "blocked_by": [] },
-    { "stage": 11, "agent": "release-engineer", "task": "Deploy, commit, tag, verify", "consumes": ["qc-lead/readiness.md"], "produces": ["release-engineer/preflight.md", "release-engineer/deploy-log.md", "release-engineer/release-note.md", "release-engineer/rollback.md", "evidence/release/"], "blocked_by": ["quality"] },
+    { "stage": 11, "agent": "release-engineer", "task": "Release: pre-flight, migrations through the Supabase MCP, build, tag, push, verify", "consumes": ["qc-lead/readiness.md"], "produces": ["release-engineer/preflight.md", "release-engineer/deploy-log.md", "release-engineer/release-note.md", "release-engineer/rollback.md", "evidence/release/"], "blocked_by": ["quality"] },
     { "stage": 12, "agent": "bug-historian", "task": "Record: every defect and agent mistake raised in this run, into BUGS.md", "consumes": ["qc-engineer/defects.md", "qc-lead/readiness.md", "bug-historian/guard.md"], "produces": ["bug-historian/record.md"], "blocked_by": ["release"] }
   ],
   "gates": [
@@ -114,6 +150,7 @@ editing history.
 | Time (UTC) | Event | Agent | Detail |
 |---|---|---|---|
 | 08:02:11 | run opened | orchestrator | brief from shehab |
+| 08:03:05 | toolchain pre-flight | orchestrator | node, npm and the Supabase MCP answered · evidence/toolchain-preflight.log |
 | 08:04:40 | dispatched | tech-architect | stage: architecture |
 | 08:39:02 | handoff | tech-architect | passed · gate design-authority pass · next ux-designer |
 | 08:39:30 | dispatched | ux-designer | stage: design |
@@ -145,9 +182,9 @@ Twelve gates. These literal names go into `run.json` and come back in each owner
 | `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
 | `security` | `security-analyst` | Every applicable pass in `actio-security` ran with evidence, no critical or high open, audits clean or accepted in writing, no secret in tree or history, every client-reachable table has RLS with a policy, no `service_role` outside Edge Function secrets |
 | `regression-guard` | `bug-historian` | No known defect on these surfaces repeated, each checked by running its detection command, and every binding standing rule checked with its result recorded |
-| `engineering` | `engineering-lead` | All three reviews, the security gate and the regression guard ran and passed, it builds, it migrates, suite green, works end to end with evidence |
+| `engineering` | `engineering-lead` | All three reviews, the security gate and the regression guard ran and passed, it builds, it migrates, suite green, `get_advisors` clean for security and performance or every finding accepted in writing, works end to end with evidence |
 | `quality` | `qc-lead` | Evidence exists and shows what the log claims, untested surface named, product claims still hold |
-| `release` | `release-engineer` | Pre-flight clean, go from qc-lead, rollback plan written before deploy, post-deploy smoke passed |
+| `release` | `release-engineer` | Pre-flight clean, go from qc-lead, rollback plan written before the first migration is applied, migrations applied through the Supabase MCP and verified with `list_migrations`, `get_advisors` clean, `npm run build` green, tagged and pushed to origin main, post-release smoke passed. Front-end hosting recorded as `deferred: no target chosen`, which is not a failure |
 | `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
 
 The three review gates and the security gate are separate names rather than one gate with
@@ -245,68 +282,15 @@ which is what made it unusable anywhere but closure.
 
 ### Supporting commands, for reference
 
-**These are illustrative, not runnable as written: `jq` is not installed on the Product
-Lead's machine.** They document what each step does. Run the script above instead.
+This section used to carry a shell version of each step, written in `jq`. The swarm does not
+use `jq`, so a line copied from it failed, and a second copy of the check broke R-03 in any
+case. It is gone. To read one field by hand, parse the JSON with node:
 
 ```bash
-RUN=.actio/runs/2026-09-20-privacy-preview
-
-# 1. which agents in the plan have no handoff
-for a in $(jq -r '.plan[].agent' $RUN/run.json | sort -u); do
-  [ -f "$RUN/$a/handoff.json" ] || echo "NEVER_RAN: $a"
-done
-
-# 2. malformed handoffs
-for f in $RUN/*/handoff.json; do
-  jq -e '.status | test("^(passed|blocked|rejected|escalated)$")' "$f" >/dev/null \
-    || echo "MALFORMED_HANDOFF: $f"
-done
-
-# 3. produced paths that are not on disk or are empty
-jq -r '.agent as $a | .produced[] | "\($a)\t\(.)"' $RUN/*/handoff.json |
-while IFS=$'\t' read -r a p; do
-  [ -s "$p" ] || echo "PHANTOM_OUTPUT: $a -> $p"
-done
-
-# 4. produced paths that nobody later consumed
-ALL_CONSUMED=$(jq -r '.consumed[]' $RUN/*/handoff.json | sort -u)
-jq -r '.agent as $a | .produced[] | "\($a)\t\(.)"' $RUN/*/handoff.json |
-while IFS=$'\t' read -r a p; do
-  case "$p" in */evidence/*) continue;; esac
-  echo "$ALL_CONSUMED" | grep -qxF "$p" || echo "UNUSED_OUTPUT: $a -> $p"
-done
-
-# 5. consumed paths that do not exist
-jq -r '.agent as $a | .consumed[] | "\($a)\t\(.)"' $RUN/*/handoff.json |
-while IFS=$'\t' read -r a p; do
-  [ -e "$p" ] || echo "FALSE_CONSUMPTION: $a -> $p"
-done
-
-# 6. gates in the plan with no result, or whose evidence path is missing
-jq -r '.gates[] | select(.result=="pending") | "GATE_UNRESOLVED: \(.name) (owner \(.owner))"' $RUN/run.json
-jq -r '.agent as $a | .gates[]? | "\($a)\t\(.name)\t\(.evidence // "")"' $RUN/*/handoff.json |
-while IFS=$'\t' read -r a g e; do
-  [ -n "$e" ] && [ -e "$e" ] || echo "GATE_UNRESOLVED: $a certified $g with missing evidence '$e'"
-done
-
-# 7. gates certified by an agent the plan does not name as owner
-jq -r '.agent as $a | .gates[]? | "\($a)\t\(.name)"' $RUN/*/handoff.json |
-while IFS=$'\t' read -r a g; do
-  owner=$(jq -r --arg g "$g" '.gates[] | select(.name==$g) | .owner' $RUN/run.json)
-  [ -n "$owner" ] || { echo "UNKNOWN_GATE: $a claimed '$g', not in the plan"; continue; }
-  [ "$owner" = "$a" ] || echo "GATE_SELF_CERTIFIED: $a claimed $g, owner is $owner"
-done
-
-# 8. a stage that started before every gate in its blocked_by read pass
-jq -r '.plan[] | select((.blocked_by|length)>0) | "\(.agent)\t\(.blocked_by|join(","))"' $RUN/run.json |
-while IFS=$'\t' read -r a gates; do
-  [ -f "$RUN/$a/handoff.json" ] || continue
-  for g in $(echo "$gates" | tr ',' ' '); do
-    r=$(jq -r --arg g "$g" '.gates[] | select(.name==$g) | .result' $RUN/run.json)
-    [ "$r" = "pass" ] || echo "GATE_SKIPPED: $a ran while gate $g was '$r'"
-  done
-done
+node -e "const r = require('./.actio/runs/<run-id>/run.json'); for (const g of r.gates) console.log(g.name, g.owner, g.result)"
 ```
+
+Anything more than one field is the script's job.
 
 ### The failure taxonomy
 
@@ -394,7 +378,7 @@ Written at closure, for Shehab. Plain, specific, no summary language.
 | engineering-lead | integration evidence | engineering: pass |
 | qc-engineer | 38 cases, 3 defects filed and fixed | – |
 | qc-lead | readiness report | quality: go |
-| release-engineer | deployed, tagged v0.4.0 | release: pass |
+| release-engineer | migrations applied through the MCP, tagged v0.4.0, pushed, hosting deferred: no target chosen | release: pass |
 
 ## Utilisation
 

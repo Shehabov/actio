@@ -98,8 +98,13 @@ Write `plan.md` before opening a single screen. It states:
 - **Rule set in force.** Which `BRAND.md` sections apply, which heuristics you expect to matter
   here, which WCAG 2.2 AA criteria are in scope.
 - **Evidence plan.** For each check, the method and the tool, and the command you will run.
-  Contrast: computed from the actual token values. Targets: measured in CSS pixels. Zoom:
-  screenshot at 200%. Locale: pseudo-locale expansion at plus 20%.
+  Contrast: measured by computing WCAG ratios from `BRAND.md` hex values in a node script,
+  not estimated. Screenshots: Playwright via `npx playwright` (`npx playwright install
+  chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic.
+  Targets: measured in CSS pixels, read from the rendered page with Playwright. Zoom:
+  Playwright screenshot at 200%. Locale: pseudo-locale expansion at plus 20%. Nothing in
+  the plan depends on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or
+  python.
 - **Acceptance criteria.** What a pass looks like for this surface, written before you can be
   influenced by what you see.
 - **Out of scope.** Say it explicitly, so nobody reads your silence as a pass.
@@ -204,7 +209,8 @@ to the task, because the reader then cannot complete it at all.
 **The `ref-04` test, run once per view.** Open
 `docs/design-reference/ref-04-category-dashboard.png`, put the surface under audit beside it in
 one frame, and ask whether a stranger could tell which product routes work to a named owner and
-which one reports a mood. Save the paired frame to the evidence directory with your answer. If
+which one reports a mood. Build the frame as a local HTML page holding both images and capture
+it with Playwright, then save the paired frame to the evidence directory with your answer. If
 the answer is no, name what carried it: a matrix of dimensions against cohorts with tinted
 cells, a score per cohort presented as a thing to defend, sentiment led as a percentage, a count
 with no owner and no date, or colour carrying the whole meaning of a cell. The palette being
@@ -229,14 +235,14 @@ correct is not a defence, and neither is the screen being only one view of sever
 
 | Check | Method | Fail condition |
 |---|---|---|
-| Contrast | Compute the ratio from the two real token values | Below 4.5:1 body, 3:1 large text or non-text, or any pair not in the `BRAND.md` table and not measured |
+| Contrast | Compute the WCAG ratio from the two `BRAND.md` hex values in a node script, and save the script and its output to the evidence directory. Dark mode pairs take their hex values from `Actio-Brand-Guidelines-v1.pdf`, as `actio-design-system` directs | Below 4.5:1 body, 3:1 large text or non-text, or any pair not in the `BRAND.md` table and not measured |
 | Focus | Keyboard through every interactive element | Invisible ring, ring clipped by overflow, order that jumps, a trap, a skipped control |
 | Targets | Measure the hit area in CSS pixels | Below 48x48, or adjacent targets closer than the spacing scale allows |
 | Labels | Read the DOM, not the screenshot | Placeholder used as the label, label that disappears on input, icon-only control with no accessible name |
-| Colour alone | Desaturate the screenshot | A state, error or lane distinguishable only by hue |
-| Zoom | 200% at 360px width | Clipping, overlap, horizontal scroll on body, a control pushed off screen |
-| Reduced motion | Emulate the preference | Any animation still running |
-| Low-cost Android | Throttled CPU and a slow connection | Layout shift after load, a blocked font request that leaves text unreadable, a tap that gives no feedback inside 120ms |
+| Colour alone | Desaturate the screenshot: `filter: grayscale(1)` on the root before the Playwright capture | A state, error or lane distinguishable only by hue |
+| Zoom | 200% at 360px width, captured with Playwright | Clipping, overlap, horizontal scroll on body, a control pushed off screen |
+| Reduced motion | Emulate the preference in Playwright with `reducedMotion: 'reduce'` | Any animation still running |
+| Low-cost Android | Throttled CPU and a slow connection, set in Playwright on Chromium through a DevTools protocol session | Layout shift after load, a blocked font request that leaves text unreadable, a tap that gives no feedback inside 120ms |
 | Glare and one hand | Measure the distance from the 360px one-handed thumb arc to every primary control, and list every element whose only signal is a hairline, a 12px size or a weight difference | Primary action outside thumb reach at 360px, hairline-only affordance as the sole signal, 12px text carrying required meaning |
 | Localisation | Pseudo-locale at plus 20%, and Arabic mirrored | Truncation, wrap into an unreadable shape, a button that only fits English, a concatenated count string, a physical-direction layout that does not mirror |
 
@@ -326,7 +332,8 @@ same cycle.
 .actio/runs/<run-id>/ux-auditor/findings.md      the same set, grouped by severity, for humans
 .actio/runs/<run-id>/ux-auditor/review.md        step 4, plus any skill-versus-BRAND.md conflict
 .actio/runs/<run-id>/ux-auditor/handoff.json     step 5
-.actio/runs/<run-id>/evidence/ux-audit/          contrast computations, 360px and 200% screenshots,
+.actio/runs/<run-id>/evidence/ux-audit/          contrast computations and the node script that ran
+                                                 them, Playwright screenshots at every width and at 200%,
                                                  desaturated frames, keyboard traces, on-load motion
                                                  recordings, gap measurements, per-component 360px
                                                  captures and RTL renders, the ref-04 paired
@@ -390,7 +397,8 @@ Take to Shehab Beram, with the decision needed, the options and your recommendat
 
 **Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
 between them, both orientations, and at 200% browser zoom. Verified at 320, 360, 768, 1024
-and 1440 with a screenshot each, in both themes and in the longest locale.
+and 1440 with a Playwright screenshot each, taken through `npx playwright`, in both themes,
+in English and Arabic, and in the longest locale.
 
 A surface that works at three widths and breaks at the fourth is not finished. "Tablet
 later" is not a scope decision, it is a defect with a date on it. Nothing is hidden to make

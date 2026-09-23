@@ -91,7 +91,8 @@ Work through this. Every line is a yes or a finding. Do not ship on a maybe.
       longer, Tagalog further.
 - [ ] Mirrors for Arabic using logical properties, without a second stylesheet.
 - [ ] No clipping or overlap at 200% browser zoom.
-- [ ] Contrast measured, not estimated, with both hex values recorded as evidence.
+- [ ] Contrast measured by computing WCAG ratios from `BRAND.md` hex values in a node
+      script, not estimated, with both hex values recorded as evidence.
 
 ---
 
@@ -145,7 +146,6 @@ Skill tool, use the `name:` inside its `SKILL.md`, which differs for most of the
 | `react-view-transitions` | Route and state transitions, within Actio's motion budget | One curve `cubic-bezier(.2, 0, .2, 1)`; a view transition is a panel transition, so 200ms, and 300ms is the ceiling nothing exceeds. Transform and opacity only, reader-triggered, nothing animating on load, reduced motion honoured. |
 | `writing-guidelines` | Prose and docs review | Actio's register is narrower. `BRAND.md` §5 wins on voice. |
 | `output-skill` | Preventing truncated or placeholder output on long generation tasks | Nothing. |
-| `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Front-end deploy and cost work | Back end is Supabase and deploys through the Supabase CLI. |
 
 ### Conditional
 
@@ -166,6 +166,7 @@ Skill tool, use the `name:` inside its `SKILL.md`, which differs for most of the
 | `image-to-code-skill` | Depends on generated design images. See above. |
 | `taste-skill-v1` | Superseded by `taste-skill`. Kept for provenance only. |
 | `react-native-skills` | No native mobile app in scope. Actio is WhatsApp, SMS and web. |
+| `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Hosting deployment is out of scope until Shehab chooses a target. They stay in the repository as reference only, coupled to no agent, for when a deploy target is chosen. The back end reaches Supabase through the Supabase MCP, never the Supabase CLI. |
 
 If you believe a reference-only skill is right for a task, that is an escalation to Shehab,
 not a judgement call. State which rule it would break and why the task needs it.

@@ -6,6 +6,7 @@ a run can be inspected after the fact without reading a transcript.
 ```
 .actio/
 ├── README.md                  this file
+├── bin/                       the scripts in the table below, node only
 ├── TEMPLATE/                  the artefacts every agent writes, as blank templates
 │   ├── plan.md
 │   ├── review.md
@@ -43,6 +44,7 @@ Timestamps come from the shell, never invented.
 |---|---|---|
 | `bin/sync-gates.mjs <run-dir>` | orchestrator, after every handoff | Copies each gate result from its owner's handoff into `run.json`. Never decides a gate. |
 | `bin/utilisation-check.mjs <run-dir> [--json]` | orchestrator, after every stage and at closure | The utilisation check. Exits 1 on any finding. Run the sync first. |
+| `bin/db-test.mjs`, or `npm run db:test` at the root, with its pgTAP shim in `bin/db-test-shim.sql` | backend-engineer while it iterates, and every agent that proves the database offline | Offline Postgres through PGlite: real Postgres compiled to WebAssembly, no Docker. Applies `supabase/migrations/*.sql` in filename order, then `supabase/seed.sql`, onto a Supabase-shaped bootstrap with the `anon`, `authenticated` and `service_role` roles and `auth.uid()` and `auth.jwt()`, then runs `supabase/tests/*.test.sql` under a pgTAP-compatible shim and prints TAP. Exits 0 when every test passes, 1 on any failing assertion or SQL error, 2 when there are no migrations. `--only <file>` runs one test file, `--reverse <file>` proves a reverse script against the newest migration, `--json` prints one object, `--help` prints usage. Its output is evidence, labelled as PGlite on its first line, so save it by calling the script directly rather than through `npm run`, whose banner comes first; it does not replace pgTAP on the Supabase project. |
 | `bin/god-mode-slice.js` | the Workflow tool, not `node` | One-off end-to-end test harness from the 2026-09-22 run. Hard-codes its repo path and run id. |
 
 The loop these artefacts record is defined in

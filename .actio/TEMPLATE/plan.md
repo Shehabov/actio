@@ -15,6 +15,13 @@ plan rather than editing the plan in place, so the revision is visible.
 |---|---|
 | | |
 
+**Tools this needs**: from the toolchain in `CLAUDE.md` only, and whether each answered
+when you checked. A tool that is missing is a blocker, never faked.
+
+| Tool | Answered? | How checked |
+|---|---|---|
+| | | |
+
 **Assumptions**
 
 | Assumption | Checked? | How |

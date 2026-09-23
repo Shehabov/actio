@@ -86,8 +86,9 @@ agent stops and states the decision needed, the options, and its recommendation.
 | **Gate** | Run closure |
 | **Skills** | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard` |
 
-Decomposes a brief into a run plan, dispatches agents, enforces gates, maintains the
-ledger, and runs the **utilisation check**: did every agent that should have run actually
+Opens every run with the toolchain pre-flight (node, npm and the Supabase MCP answer, or
+Shehab is told before any database stage runs), decomposes a brief into a run plan,
+dispatches agents, enforces gates, maintains the ledger, and runs the **utilisation check**: did every agent that should have run actually
 run, and was every agent that ran actually used. An agent whose output nobody consumed is a
 utilisation failure and gets reported, not hidden. Does not design, code, review or test.
 
@@ -136,7 +137,25 @@ enforced rather than merely published. It is the only agent that writes to `BUGS
 | Agent | Owns | Gate | Skills beyond the protocol |
 |---|---|---|---|
 | [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – | `actio-test-protocol`, `actio-brand-guard`, `actio-design-system` |
-| [`release-engineer`](../.claude/agents/release-engineer.md) | Deploy, commit, tag, verify, roll back | Release gate | `actio-release`, `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` |
+| [`release-engineer`](../.claude/agents/release-engineer.md) | Release to the Supabase project, commit, tag, push, verify, roll back | Release gate | `actio-release` |
+
+`deploy-to-vercel`, `vercel-cli-with-tokens` and `vercel-optimize` stay in the repository but
+are coupled to no agent: reference only, for when a deploy target is chosen. Until then
+`release-engineer` releases the back end to the Supabase project through the MCP, tags and
+pushes, and records front-end hosting as `deferred: no target chosen`.
+
+### Tools
+
+Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project). Nothing else may be assumed. The swarm does not depend
+on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. The full
+statement is in [`CLAUDE.md`](../CLAUDE.md#toolchain).
+
+An agent that touches the database carries `mcp__supabase` in the `tools` line of its
+frontmatter and works through [`actio-supabase`](../.claude/skills/actio-supabase/SKILL.md).
+`orchestrator` carries `mcp__supabase__list_tables` alone, for the toolchain pre-flight at run
+open, and never applies, queries or changes the database. An agent whose tool does not answer
+hands off `blocked` and says why. It never fakes the result.
 
 ---
 
