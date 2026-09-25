@@ -120,6 +120,7 @@ running system, not only against a unit test.
 | Protected case in the engagement queue | Absent. The count reconciles; no title, no detail, no assignee. |
 | Protected case through search, export, or any list endpoint | Absent |
 | Employee requests their own cohort size | Returned. Disclosure to the reader about themselves is not a report about others. |
+| `authenticated` holds a privilege on the reworded view or the raw free-text column | No. Asserted with `has_table_privilege` and `has_column_privilege`, never by a refused select alone: a `security_invoker` view refuses a select whether a grant exists or not, so only the privilege check catches an inert grant (BUG-0029). |
 | `authenticated` selects a base table directly | `42501`, insufficient privilege. **This is the case that proves the revoke actually happened**, and the one most likely to be missing. Without it every other case above can pass while the data is reachable by another path. |
 
 ### Where they live
@@ -133,7 +134,7 @@ product's claim made executable.
 
 ```sql
 begin;
-select plan(6);
+select plan(7);
 
 -- I1
 select is_empty(
@@ -152,11 +153,16 @@ select throws_ok(
   'narrowing below the floor is refused, and the error names only the invariant'
 );
 
--- I3
+-- I3: the rewording, read as the owner (the only reader is the security-definer function)
 select is(
   (select free_text from public.response_feedback where id = '<response with a name>'),
   'the roster is late',
   'free text is returned reworded with names removed'
+);
+-- I3: the refusal, checked for the client role, never assumed (BUG-0029)
+select ok(
+  not has_table_privilege('authenticated', 'public.response_feedback', 'select'),
+  'authenticated holds no privilege on the reworded view'
 );
 
 -- I4
@@ -189,13 +195,13 @@ every role, every command, positive and negative.
 
 | | `anon` | `respondent` | `team_lead` | `operations` | `leadership` | `protected_handler` |
 |---|---|---|---|---|---|---|
-| `responses` | deny | own only | deny | deny | deny | deny |
+| `responses` | deny | deny (own answers only through a security-definer function) | deny | deny | deny | deny |
 | `cohorts` | deny | deny | deny | deny | deny | deny |
 | `issues` | deny | deny | own lane | own site | all | deny |
 | `evidence` | deny | deny | own lane | own site | all | deny |
 | `protected.cases` | deny | deny | deny | deny | deny | allow |
 
-A cell reading `deny` is tested by asserting `42501` or an empty set, not by assuming.
+A cell reading `deny` is tested twice, never assumed: the grant question with `has_table_privilege` returning false, and the data question with a select that returns `42501` or an empty set. A refused select alone passes an inert grant (BUG-0029).
 A cell reading a scope is tested twice: once inside the scope expecting rows, once outside
 expecting none. Each cell runs on the project through `execute_sql`, inside
 `begin; ... rollback;`, as `set local role anon` or `set local role authenticated` with

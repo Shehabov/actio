@@ -210,18 +210,52 @@ for (const entry of plan) {
   planByAgent.get(entry.agent).push(entry)
 }
 
+/**
+ * The script never reads the ledger, so it cannot see a dispatch. A due entry with no handoff
+ * is therefore waiting for its dispatch or still running: finishing stage N always makes stage
+ * N+1 due, so raising NEVER_RAN at once left every stage boundary of a healthy run unclean.
+ * An entry never ran once the run has moved past it: a later plan entry that is planned to
+ * consume what it produces has handed off, or the orchestrator has recorded run-closure. The
+ * test reads the plan's declared consumes, never a handoff's ad hoc citations, so an evidence
+ * file another role happened to write early cannot mark a stage as skipped.
+ */
+const closing = (handoffsByAgent.get('orchestrator') || []).some((h) =>
+  (h.handoff?.gates || []).some((g) => g && g.name === 'run-closure'))
+const norm = (p) => String(p).replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '')
+const sameArtefact = (a, b) => {
+  const x = norm(a)
+  const y = norm(b)
+  return x === y || x.endsWith('/' + y) || y.endsWith('/' + x)
+}
+// Which plan entries have a handoff, by the same stage pairing the checks below use. Counting
+// files would be wrong: bug-historian can write two files for its stage-1 brief, and a count
+// would then mark its stage-7 guard as handed off too.
+const handedOff = new Set()
+for (const [agent, entries] of planByAgent) {
+  for (const { entry } of pairWithPlan(agent, entries, handoffsByAgent.get(agent) || [])) handedOff.add(entry)
+}
+const readersOf = (entry) => [...new Set(plan
+  .filter((e) => e !== entry && handedOff.has(e) && (e.consumes || []).some((c) =>
+    (entry.produces || []).some((p) => !p.startsWith('<') && sameArtefact(c, p))))
+  .map((e) => e.agent))]
+
 for (const [agent, entries] of planByAgent) {
   const records = handoffsByAgent.get(agent) || []
 
-  // 1. HANDOFF EXISTS, once per planned pass
-  if (records.length < entries.length) {
-    const missing = entries.slice(records.length)
+  // 1. HANDOFF EXISTS, once per planned pass. The missing passes are the entries the stage
+  //    pairing left without a handoff, never a count of files: bug-historian can write two
+  //    files for its stage-1 brief, and a count then hides its stage-7 guard (BUG-0030).
+  const missing = entries.filter((e) => !handedOff.has(e))
+  if (missing.length) {
     for (const entry of missing) {
       const waiting = [
         ...(entry.blocked_by || []).filter((g) => !gatePassed(g)),
         ...(entry.consumes || []).filter((p) => !p.startsWith('<') && !locate(p)),
       ]
-      if (isDue(entry)) raise(F.NEVER_RAN, agent, `stage ${entry.stage}: ${entry.task || ''}`)
+      const readers = readersOf(entry)
+      if (closing) raise(F.NEVER_RAN, agent, `stage ${entry.stage} has no handoff, and the run is closing: ${entry.task || ''}`)
+      else if (readers.length) raise(F.NEVER_RAN, agent, `stage ${entry.stage} has no handoff, and ${readers.join(', ')} already handed off on its output: ${entry.task || ''}`)
+      else if (isDue(entry)) findings.push({ code: 'PENDING', subject: agent, detail: `stage ${entry.stage} is due now (its gates pass and its inputs are on disk): dispatch it` })
       else findings.push({ code: 'PENDING', subject: agent, detail: `stage ${entry.stage}, waiting on ${waiting.join(', ') || 'nothing'}` })
     }
     if (records.length === 0) continue
@@ -291,7 +325,9 @@ for (const [agent, entries] of planByAgent) {
     const planMd = join(agentDir, 'plan.md')
     const reviewMd = join(agentDir, 'review.md')
     if (!existsSync(planMd) || !nonEmpty(planMd)) raise(F.LOOP_SKIPPED, label, 'no plan.md: steps 1 and 2 of the loop left no trace')
-    else if (!/##\s*audit/i.test(readFileSync(planMd, 'utf8'))) raise(F.LOOP_SKIPPED, label, 'plan.md has no Audit section, so step 2 was skipped')
+    // Accepts every heading form in use: "## Audit", "## 2. Audit" and the template's own
+    // "## 2. Audit of the plan", which the earlier pattern could not match (T-16).
+    else if (!/^#{2,}\s*(\d+\.?\s*)?audit\b/im.test(readFileSync(planMd, 'utf8'))) raise(F.LOOP_SKIPPED, label, 'plan.md has no Audit section, so step 2 was skipped')
     if (!existsSync(reviewMd) || !nonEmpty(reviewMd)) raise(F.LOOP_SKIPPED, label, 'no review.md: step 4 left no trace')
 
     // 10. TIMING IS COHERENT
@@ -336,7 +372,7 @@ if (asJson) {
   if (real.length === 0) console.log('  No findings.')
   for (const f of real) console.log(`  ${f.code}: ${f.subject}: ${f.detail}`)
   if (pending.length) {
-    console.log(`\n  Not yet due (${pending.length}):`)
+    console.log(`\n  Pending, not findings (${pending.length}):`)
     for (const f of pending) console.log(`    ${f.subject}: ${f.detail}`)
   }
 }

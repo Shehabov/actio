@@ -147,7 +147,7 @@ that touches UI, reporting, or the issue lifecycle.
 | White text on a Vega fill | 2.27:1. Measured. Fails. |
 | A grant on a base table holding response or cohort data | I1. RLS is row-level; the threshold is an aggregate property. The only safe path is revoked tables plus a threshold-applying security-definer function. |
 | A filter validated client side only, or a below-threshold error naming the filter | I2, and standing rule R-01. The error names the invariant, never the input. |
-| A view over free text without `security_invoker = on`, or a grant on the raw column | I3 |
+| A view over free text without `security_invoker = on`, a grant on the raw column, or a client grant on the reworded view (inert under `security_invoker`, BUG-0029) | I3 |
 | A protected case reachable from an engagement query, or protected data as a flag on `issues` rather than a separate schema | I4 |
 | A close path with no evidence check, or the guard written as a policy rather than a before-update trigger | I5. The product's entire claim. |
 | An assignment with no lane-authority check | I6 |

@@ -244,7 +244,9 @@ Three things that are not negotiable:
 
 ### I3: free text is returned reworded, with names removed
 
-The raw column never crosses the boundary. The view is the only granted path.
+The raw column never crosses the boundary. The only client path to free text is the
+security-definer read function, which applies the reporting floor first. The view shapes
+the text for that function and is granted to no client role.
 
 ```sql
 -- supabase/migrations/<yyyymmddhhmmss>_response_feedback_view.sql
@@ -257,11 +259,41 @@ with (security_invoker = on) as
     from public.responses r;
 
 revoke all on public.responses from anon, authenticated;
-grant select on public.response_feedback to authenticated;
+revoke all on public.response_feedback from anon, authenticated;
+-- No client grant on the view. public.site_insights (security definer, floor applied
+-- before any measure) selects from it and is the path clients call.
 ```
 
-`security_invoker = on` so the view runs with the caller's own RLS rather than the
-creator's. A view created without it is a privilege escalation waiting to be found.
+How `security_invoker` behaves decides the shape, so be exact about it. A
+`security_invoker` view resolves privileges as whoever runs it, and the caller needs a
+grant on every column the view reads. Inside the security-definer function that caller is
+the function owner, who can read `public.responses`, so the excerpts are produced. A client
+selecting the view directly holds no grant on `public.responses`, so the select fails with
+`42501`. A client grant on this view is therefore inert, and it invites a later reader to
+"fix" the refusal by turning `security_invoker` off, which would expose every response at
+every size through a view whose name says it is the safe one. So the view carries no client
+grant, and `security_invoker = on` stays as the second lock for the day someone adds one.
+
+This is BUG-0029. The pattern this section used to show, a client grant on a
+`security_invoker` view over a revoked base table, refuses every caller.
+
+When a view only needs to hide columns, never to transform one, there is a second shape
+that does let clients read it directly: grant `select` on the permitted columns of the base
+table (column-level grants), keep RLS on the table for rows, and put a `security_invoker`
+view over exactly those columns to shape the read. It works because the view reads nothing
+the caller cannot. It does not work for I3, because rewording needs the raw column, and a
+grant on the raw column would let the caller read it from the table directly.
+
+```sql
+-- Hiding columns, not transforming one: the columns a client may read are granted, the
+-- rest are not, and the view reads only what the caller can read.
+revoke all on public.members from anon, authenticated;
+grant select (id, site_id, display_name) on public.members to authenticated;
+create view public.member_directory
+with (security_invoker = on) as
+  select id, site_id, display_name from public.members;
+grant select on public.member_directory to authenticated;
+```
 
 ### I4: protected cases leave the engagement workflow entirely
 
@@ -435,7 +467,7 @@ reset role;
 ```sql
 -- tests/invariants.test.sql
 begin;
-select plan(8);
+select plan(7);
 
 -- I1
 select is_empty(
@@ -454,11 +486,16 @@ select throws_ok(
   'narrowing below the floor is refused, and the error names only the invariant'
 );
 
--- I3
+-- I3: the rewording, read as the owner (the only reader is the security-definer function)
 select is(
   (select free_text from public.response_feedback where id = '<response with a name>'),
   'the roster is late',
   'free text is returned reworded with names removed'
+);
+-- I3: the refusal, checked for the client role, never assumed (BUG-0029)
+select ok(
+  not has_table_privilege('authenticated', 'public.response_feedback', 'select'),
+  'authenticated holds no privilege on the reworded view'
 );
 
 -- I4
@@ -497,6 +534,7 @@ These are the ones that actually bite, and `code-analyst` checks every one.
 | A policy with a subquery on an unindexed column | Full scan per row | Index the column the policy filters on, always |
 | `security definer` without `set search_path = ''` | A caller can shadow an object and run code as the definer | Pin it on every definer function, with every reference schema-qualified |
 | A view without `security_invoker = on` | Runs as its creator, silently bypassing the caller's policies | Set it on every view over a protected table |
+| A client grant on a `security_invoker` view whose base table is revoked | The caller needs a grant on every column the view reads, so the select fails with `42501` for every caller. The grant is inert, and it tempts someone to turn `security_invoker` off to "fix" it (BUG-0029) | Give no client grant; route clients through the security-definer function. To hide columns only, use column-level grants on the base table and a view over exactly those columns |
 | RLS enabled but no policy | Denies everything, which looks like a bug and gets "fixed" by disabling RLS | Write the policy in the same migration that enables RLS |
 | `service_role` in a client bundle | Bypasses every policy. A full breach. | It lives in Edge Function secrets and nowhere else. |
 | A new table with no `enable row level security` | Open by default once granted | Every table, in the same file that creates it. No exceptions. |
@@ -533,6 +571,8 @@ replace the table: a clean advisor run with a bare `auth.uid()` in a policy is s
       and `authenticated`
 - [ ] Every security-definer function pins `search_path` and schema-qualifies every reference
 - [ ] Every view over protected data sets `security_invoker = on`
+- [ ] No client role holds a grant on a `security_invoker` view over a revoked base table;
+      where clients read a view directly, every column it reads is granted to them
 - [ ] Every policy wraps `auth.uid()` in a scalar subquery
 - [ ] Every column a policy filters on is indexed
 - [ ] All four command policies written, even where one is `false`

@@ -93,9 +93,10 @@ passes a field name, a filter key or a count into the exception.
 
 ## Standing rules
 
-Rules produced by closed defects. **These are binding, and `bug-historian` briefs them at
-the start of every run that touches the named surface.** A rule here outranks an agent's
-instinct.
+Rules produced by defects in this register. A rule binds from the day it is written, whether
+or not the entry it came from has closed. **These are binding, and `bug-historian` briefs
+them at the start of every run that touches the named surface.** A rule here outranks an
+agent's instinct.
 
 | # | Rule | From | Binds |
 |---|---|---|---|
@@ -110,6 +111,8 @@ instinct.
 | R-09 | When a gate, an agent, a skill or any other member of an enumerated set is added, every enumeration of that set and every count of it is updated in the same change. A count in prose is derived from the list, never remembered. | BUG-0013 | orchestrator, every agent |
 | R-10 | A privacy rule names which reader it protects against. "The reader", "the user" and "anyone but the reader" are not readers: an employee, a manager, a site lead and an administrator are. A rule that does not say whose eyes it guards against has not been written. | BUG-0020 | every agent |
 | R-11 | A command published in a skill is executable on the Product Lead's machine and has been executed at least once. A skill that names a tool states that the tool is installed. Documentation that cannot run is not documentation. | BUG-0021, BUG-0022, BUG-0023 | every agent |
+| R-12 | A privilege pattern published as doctrine (a grant, a revoke, a policy, a view's invoker mode, a security-definer function) is proved on the offline runner (`npm run db:test`) before it is published, by a test for each client role the pattern grants or refuses. A grant is proved by reading as the grantee. A refusal is proved by asserting the role holds no privilege on the object (`has_table_privilege`), never by a select refused with `42501` alone, because that select is refused whether or not an inert grant sits on a view over a revoked table. A grant that no test exercises as its grantee is not doctrine. An inert grant is removed, never kept, because the next reader makes it work by loosening the lock that made it inert. | BUG-0029 | backend-engineer, tech-architect, code-analyst, security-analyst, qc-engineer, and any pass that edits `actio-supabase`, `actio-architecture` or `actio-test-protocol` |
+| R-13 | A check that judges a run's state is run against every state a healthy run passes through (open, each stage boundary, closure) and returns no finding on any of them before it is published. A finding raised on normal state is a false alarm, and a check that raises false alarms stops being read, so the real finding is lost with them. A detection command in this register meets the same test: it fires on the defective state and is silent on the healthy one. | BUG-0030 | orchestrator, bug-historian, and any pass that edits `.actio/bin/` or `actio-orchestration` |
 
 ---
 
@@ -122,13 +125,22 @@ whose `Status` row reads `open` appears here. The check is
 | Id | What | Surface | Agent at fault | Needs |
 |---|---|---|---|---|
 | BUG-0014 | `BRAND.md` defines a body weight its own hard rule forbids | brand spec | none, a spec defect | shehab |
-| BUG-0015 | The orchestrator's own file calls twelve gates nine | orchestration | the pass that added the security and closure gates | a machinery fix |
-| BUG-0016 | Every `bug-historian` pass writes to one handoff path, so the guard destroys the brief's record | `.claude` | authoring pass | shehab |
-| BUG-0017 | `bug-historian.md` omits the security gate from the guard's position in the flow | `.claude` | the pass that added `security-analyst` | a machinery fix |
-| BUG-0019 | The `c2pa` namespace survived the BUG-0001 strip in three lockups | logo | the BUG-0001 fix | release-engineer |
+| BUG-0028 | Three gates are certified by the role that produced the work | orchestration | not recorded in the entry; a gate-design decision | shehab |
+| BUG-0029 | The I3 doctrine granted clients a `security_invoker` view over a revoked base table, which refuses every caller | back-end doctrine, I3 | authoring pass | backend-engineer, stage 2 of `2026-09-22-site-insights`: remove the client grant on `public.response_feedback` from the migration and the schema file, and replace the `42501` "inert" assertion with the `has_table_privilege` form |
 
 Entries live in the section below in id order, open and closed together, because a reader
 looking up an id should find it in one place. This index is how the open set is read.
+
+**Index rebuilt 2026-09-25T10:40Z** from the `Status` rows, after the second follow-up of the
+day. BUG-0030 closed, BUG-0029 narrowed to its site-insights item, and T-18 was promoted to
+BUG-0032 and closed. BUG-0031 and BUG-0032 were raised and closed the same day, so neither is
+listed. The check returns 3 against 3 rows. The previous rebuild, at 10:21Z, returned 4
+against 4.
+
+**Index corrected 2026-09-25.** The table listed BUG-0015, BUG-0016, BUG-0017 and BUG-0019,
+all four closed in the 2026-09-22 god-mode run, and omitted BUG-0028, raised open in the same
+run. The check above returned 2 against 5 rows. Recorded as a recurrence on BUG-0018, not as a
+new entry, because it is the same defect in the same place.
 
 ---
 
@@ -795,6 +807,18 @@ out what is outstanding.
 **How to detect it next time.** `grep -c '^| Status | open |' BUGS.md` must equal the
 number of data rows in the Open table. Run it before every handoff that touches this file.
 
+**Recurred 2026-09-25.** Found by `bug-historian` in register mode, reading the file before
+recording BUG-0029 and BUG-0030. The 2026-09-22 god-mode run closed BUG-0015, BUG-0016,
+BUG-0017 and BUG-0019 by changing their `Status` rows and appending a "How it was fixed" line,
+and raised BUG-0028 open, and left the Open table untouched. The table named four closed
+entries as open and did not name the open one. The detection command above returned 2
+against a table of 5 rows. It got through because nothing runs that command except a reader
+who chooses to, and the pass that wrote those closures did not: run once after the edit, it
+would have shown 2 against 5. No gate checks the register, as this entry already says. Corrected the
+same day: the table now carries BUG-0014, BUG-0028, BUG-0029 and BUG-0030, and the command
+returns 4 against 4 rows. It is a fourth occurrence of the R-09 pattern, in the file that
+publishes R-09.
+
 ---
 
 ### BUG-0019 · The c2pa namespace survived the BUG-0001 strip in three lockups
@@ -1083,14 +1107,514 @@ design decision and not an agent's to make.
 
 ---
 
+### BUG-0029 · The I3 doctrine granted clients a security_invoker view over a revoked base table, which refuses every caller
+
+| | |
+|---|---|
+| Status | open |
+| Raised by | shehab |
+| Raised on | 2026-09-25 |
+| Run | none, raised in register mode. Carried into the open run `2026-09-22-site-insights` |
+| Surface | back-end doctrine, privacy invariant I3 (free text reworded, names removed) |
+| Component | `.claude/skills/actio-supabase/SKILL.md` I3 section; `.claude/agents/backend-engineer.md` privacy invariants table; `.claude/skills/actio-architecture/SKILL.md` I3 row; `.claude/agents/tech-architect.md` domain table, free-text row. Carried into `supabase/migrations/20260922120000_site_insights.sql`, `supabase/schemas/07_grants.sql`, `supabase/tests/invariants.test.sql` |
+| Agent at fault | authoring pass, the doctrine. Not backend-engineer: the site-insights migration followed the doctrine, found the grant inert, pinned it as inert, and serves excerpts only through `public.site_insights` |
+| Class | privacy-invariant |
+| Severity | major |
+| Evidence | offline proof on PGlite, scratch project bug29, 7 of 7 assertions; scratch project bug29-detect, 6 of 6, for which assertion form can fire (see "Detection corrected") |
+| Fixed in | the doctrine: the four files above plus `actio-code-analysis`, in the working tree on 2026-09-25, not yet committed. The two example tests, later the same day, same state. `actio-test-protocol`'s privacy case table row and its rule for a `deny` cell in the RLS matrix, later again the same day, same state. Not fixed: the client grant in the site-insights migration, schema file and test, see "Why it is open" |
+| Repeat of | BUG-0021, by pattern rather than component: a rule written to read correctly rather than to be run (R-11) |
+
+**What happened.** `actio-supabase`'s I3 section showed
+`grant select on public.response_feedback to authenticated` on a view created
+`with (security_invoker = on)` over `public.responses`, with `public.responses` revoked from
+every client role, and called the view "the only granted path". `backend-engineer.md`,
+`actio-architecture` and `tech-architect.md` repeated the claim. A `security_invoker` view
+resolves privileges as its caller, and the caller needs a grant on every column the view
+reads. With the base table revoked, every client select through the view fails with `42501`.
+The client grant is inert. An inert grant invites a later reader to make it work by turning
+`security_invoker` off, which runs the view as its owner and exposes every reworded response to
+any authenticated caller at every cohort size, around the floor that `public.site_insights`
+applies.
+
+**How it was found.** Building a public, generalised version of the team, the offline runner
+(PGlite, PostgreSQL 18.3) showed the pattern refusing every caller. The site-insights run's
+backend-engineer had found the same behaviour independently: its migration and
+`supabase/tests/invariants.test.sql` (lines 161 to 163) pin the grant as "real and inert", and
+excerpts are served only through the security-definer function `public.site_insights`. The
+shipped code is safe. The doctrine was wrong.
+
+**Proof.** A scratch project run under `node .actio/bin/db-test.mjs`, 7 of 7 assertions.
+(A) The old pattern fails `42501` for `authenticated`. (B) With no client grant on the view,
+the security-definer function returns reworded text, and `authenticated` holds no privilege on
+the view or on the raw table. (C) The column-grant shape, `grant select` on the permitted
+columns of the base table with a `security_invoker` view over exactly those columns, is
+readable by clients, and the hidden column is not.
+
+**Why it got through.** The doctrine was written from how `security_invoker` is described, not
+from running it. No test in the skill's own example ran a client select through the view, so
+the example proved the rewording and never the grant it published. No gate reads a skill's SQL
+as code: the review and security gates read a run's diff, and doctrine is not in one.
+
+**How it was fixed.** The four doctrine files now say that the only client path to free text is
+the security-definer read function. The reworded view carries no client grant, and
+`security_invoker = on` stays as the second lock. Column grants plus a view are the shape for
+hiding columns, never for transforming one. `actio-supabase` gained a traps-table row (line
+532) and a checklist line (line 569). `actio-code-analysis`'s I3 row (line 150) now names a
+client grant on the reworded view. The R-08 search on 2026-09-25 found the phrase "only
+granted path" nowhere under `.claude/` against the view. Its remaining uses
+(`backend-engineer.md` line 146, and comments in the site-insights migration and schema files)
+describe the security-definer function, which is correct.
+
+**Why it is open.**
+
+1. The site-insights work still grants the view to clients:
+   `supabase/migrations/20260922120000_site_insights.sql` line 1219 and
+   `supabase/schemas/07_grants.sql` line 94, both `grant select on public.response_feedback to authenticated;`.
+   `supabase/tests/invariants.test.sql` lines 161 to 163 assert that grant is inert.
+   backend-engineer removes the client grant in its stage-2 pass and changes the assertion to
+   "authenticated holds no privilege on public.response_feedback". Re-checked 2026-09-25: the
+   two grant lines are unchanged, and the "inert" assertion at `invariants.test.sql` lines 160
+   to 163 is a role-switched `throws_ok(..., '42501')`. That form passes with the grant and
+   without it, as proved under "Detection corrected" below. So the replacement is
+   `ok(not has_table_privilege('authenticated', 'public.response_feedback', 'select'), ...)`,
+   the form the skill examples now carry. Another `42501` assertion does not replace it.
+2. The doctrine's own example tests still do not run the view as a client. The I3 assertion in
+   `actio-supabase` (line 491) and in `actio-test-protocol` (line 157) selects from the view
+   without switching role, so it proves the rewording and not the refusal. The only
+   role-switched assertion in either example is `42501` on `public.responses`.
+   `backend-engineer.md` line 148 says pgTAP asserts `authenticated` holds no privilege on the
+   view, and neither example shows it. That is the hole this defect came through, still open
+   after the prose was corrected. Each example needs a role-switched assertion on the view, and
+   `actio-test-protocol`'s invariant matrix needs the row. That is a machinery fix, and
+   `bug-historian` does not make it.
+
+   **Examples fixed 2026-09-25.** Both I3 examples now add
+   `select ok(not has_table_privilege('authenticated', 'public.response_feedback', 'select'), 'authenticated holds no privilege on the reworded view');`
+   (`actio-supabase` line 497, `actio-test-protocol` line 163), and both declare `plan(7)`.
+   A node count of assertions between `plan(` and `finish()` gives 7 of 7 in each. The
+   `actio-supabase` example had declared `plan(8)` over 6 assertions before. The assertion is
+   not role-switched, and it should not be. The prescription above, "a role-switched
+   assertion on the view", was wrong, as "Detection corrected" shows. The form that landed is
+   the right one.
+
+   **Still open from item 2.** The row this item asked for in `actio-test-protocol` has not
+   landed. Section 2's privacy case table (lines 113 to 123) has a row for `authenticated`
+   selecting a base table and none for the reworded view. The RLS matrix (line 203) says "a
+   cell reading `deny` is tested by asserting `42501` or an empty set". For a view over a
+   revoked table, that test passes with an inert grant still in place. So a tester following
+   the protocol can prove the view closed with the one assertion that cannot catch this
+   defect. It needs a case row for the view, asserting no privilege for `authenticated`, and
+   a clause on the `deny` rule saying that a view is proved by `has_table_privilege`. Machinery
+   fix, routed to the pass that fixed the examples.
+
+   **Rest of item 2 fixed, verified 2026-09-25.** Section 2's privacy case table now has a
+   row at line 123: "`authenticated` holds a privilege on the reworded view or the raw
+   free-text column". Expected: no, asserted with `has_table_privilege` and
+   `has_column_privilege`, never by a refused select alone. The RLS matrix rule at line 204
+   now tests every `deny` cell twice. The grant question is asked with `has_table_privilege`
+   returning false. The data question is asked with a select returning `42501` or an empty
+   set. It states that a refused select alone passes an inert grant. The protocol detection
+   below now returns lines 123 and 204, both outside the example block. It returned nothing
+   at `2e7d232`, and only line 163 before this fix, so it fires on the unfixed state. The
+   R-08 search found no other rule that proves a refusal by a select alone. Every other
+   `42501` assertion under `.claude/` targets a base table, where a refused select does prove
+   the grant is absent: `actio-test-protocol` lines 124 and 179, `actio-supabase` line 512,
+   `actio-security` line 322, `release-engineer.md` line 157, `backend-engineer.md` line 148.
+   Item 2 is complete.
+
+The entry closes when item 1 and the rest of item 2 land, and the checks below come out as
+stated.
+
+**Open for item 1 only, from 2026-09-25.** Re-checked the same day, after item 2 landed:
+the item 1 detection still fires on exactly the two grant lines named there, and
+`invariants.test.sql` lines 160 to 163 still carry the role-switched `throws_ok(..., '42501')`
+"inert" assertion. backend-engineer removes the grant and replaces that assertion with the
+`has_table_privilege` form in its stage-2 pass of `2026-09-22-site-insights`. The entry closes
+when the item 1 detection returns nothing outside a comment and the test carries that form.
+
+**The rule this produces.** R-12. Its wording lives only in the standing rules table, so the
+two cannot drift. Amended 2026-09-25, later the same day: as first written, it said the
+proving test "runs as each client role the pattern grants or refuses". For a refusal, that
+reads as a role-switched select expecting `42501`, and that form cannot catch an inert grant
+(see "Detection corrected"). It now says a grant is proved by reading as the grantee, and a
+refusal by asserting the role holds no privilege.
+
+**Who must be briefed.** backend-engineer, tech-architect, code-analyst, security-analyst,
+qc-engineer.
+
+**How to detect it next time.**
+`grep -rn "on public.response_feedback to authenticated" supabase/ .claude/`
+Plain grep, so it reads untracked files. It covers SQL under `supabase/` and Markdown under
+`.claude/`. Any hit outside a comment is a repeat. On 2026-09-25 it fires on exactly the two
+carried lines named above and on nothing under `.claude/`, so it is seen to fire on the unfixed
+state, which BUG-0019 requires before an entry closes.
+
+For open item 2, the examples:
+`for f in .claude/skills/actio-supabase/SKILL.md .claude/skills/actio-test-protocol/SKILL.md; do echo "$f $(grep -c "not has_table_privilege('authenticated', 'public.response_feedback'" "$f")"; done`
+Each file must print at least 1. On 2026-09-25 both print 1 in the working tree, and both
+print 0 against `git show 2e7d232:<file>`, so it fires on the unfixed state.
+
+For the rest of item 2, the protocol: `grep -n 'has_table_privilege' .claude/skills/actio-test-protocol/SKILL.md`
+must return a line outside the example block (lines 134 to 185), in the case table or the
+RLS matrix. On 2026-09-25 it returns only line 163, inside the example. After the fix, the
+same day, it returns 123, 164 and 204. The case table's new row moved the example block to
+lines 135 to 186, so the bounds above are corrected here rather than silently.
+
+**Detection corrected 2026-09-25.** Item 2 first published
+`for f in ...; do echo "$f $(grep -A6 'set local role authenticated' "$f" | grep -c response_feedback)"; done`,
+asking for a role-switched select on the view within six lines of the role switch. That
+assertion cannot fire on this defect. Proved on PGlite, scratch project bug29-detect, 6 of 6:
+`throws_ok($q$ set local role authenticated; select 1 from <view> limit 1 $q$, '42501', ...)`
+passes on a `security_invoker` view with an inert client grant over a revoked table, and
+passes on the same view with no grant. `has_table_privilege('authenticated', <view>, 'select')`
+reads true on the first and false on the second, so `ok(not ...)` fails on the defect and
+passes on the fix. Pinning the error message also separates them: "permission denied for
+table responses" against "permission denied for view ...". The old grep printed 0 on both
+the unfixed and the correctly fixed examples, so it failed R-13's test for a detection
+command. It would also have passed a useless fix. The error was `bug-historian`'s. It was
+caught because the main session wrote the form that can fire rather than the form the entry
+asked for, and the grep then disagreed with a fix that was correct. R-12 is amended the same
+day to say how a refusal is proved.
+
+For the class rather than this one view: every `grant select on <view> to authenticated` or
+`to anon` under `supabase/migrations/` names a view that is either not `security_invoker` over
+a revoked table, or reads only columns granted to that role.
+
+---
+
+### BUG-0030 · The utilisation check raised NEVER_RAN for every stage the moment it became due
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | shehab |
+| Raised on | 2026-09-25 |
+| Run | none, raised in register mode. Observed on the live run `2026-09-22-site-insights` |
+| Surface | orchestration |
+| Component | `.actio/bin/utilisation-check.mjs`, step 1 (HANDOFF EXISTS); `.claude/skills/actio-orchestration/SKILL.md`, the algorithm's step 1 and the `NEVER_RAN` row of the finding taxonomy |
+| Agent at fault | the BUG-0022 fix |
+| Class | process |
+| Severity | major |
+| Evidence | the live run `2026-09-22-site-insights`, re-checked 2026-09-25. The script at commit `2e7d232` raises `NEVER_RAN` against backend-engineer (stage 2) and ux-auditor (stage 3). The working-tree script raises none and lists both as due now. To reproduce the first, save `git show 2e7d232:.actio/bin/utilisation-check.mjs` outside the repository and run it on the same run directory |
+| Fixed in | the NEVER_RAN-at-due behaviour, step 1 of the script (stage pairing, line 248) and step 1 of the skill (lines 210 to 217), then the `NEVER_RAN` row of the skill's finding taxonomy (line 304): working tree on 2026-09-25, not yet committed. Closed 2026-09-25 |
+| Repeat of | BUG-0022 |
+
+**What happened.** A due plan entry with no handoff was raised as `NEVER_RAN` at once.
+Finishing stage N always makes stage N+1 due, so a healthy run could never check clean at a
+stage boundary, and the orchestrator was told to treat normal state as a finding. BUG-0022
+separated "not yet due" from "never ran", but still counted "due and waiting for its dispatch"
+as never ran.
+
+**Why it got through.** BUG-0022's fix was reasoned about at run open, where nothing is due,
+and at closure, where everything should have run. It was never exercised between two stages,
+which is when the orchestrator actually runs the check. BUG-0022 and BUG-0027 both give the
+same reason in the same words: "only ever reasoned about at closure". R-11 was honoured,
+because the script had been executed. Executing a check once is not the same as running it
+against every state it judges.
+
+**How it was fixed.** A due entry with no handoff is `PENDING`, "due now, dispatch it". It
+becomes `NEVER_RAN` only when a later plan entry planned to consume its output has handed off,
+or when the orchestrator has recorded `run-closure`. The report's pending section is headed
+"Pending, not findings". The skill's step 1 and its `NEVER_RAN` taxonomy row say the same.
+
+Two intermediate versions of the fix produced false `NEVER_RAN` findings on the live run and
+were caught there before commit. They are why the fix follows these two rules:
+
+1. **Plan consumes, never handoff citations.** One version read a handoff's `consumed[]` to
+   decide that a later agent had used an entry's output. ux-designer cited an evidence file
+   early, and the stage that owns that file read as skipped. The fix reads only the `consumes`
+   that each plan entry declares.
+2. **Stage pairing, never a file count.** One version counted handoff files to decide which
+   entries had handed off. bug-historian writes two files for its stage-1 brief:
+   `handoff.json`, and the archival `handoff-stage1-brief.json` from BUG-0016. So the count
+   marked its stage-7 guard as done. The fix decides "handed off" through the existing
+   `pairWithPlan` stage pairing.
+
+**Why it was open at registration.** Rule 2 was applied where the second intermediate version failed, and missed
+where the same count still lives. That is R-08's failure, caught before closure rather than
+after it.
+
+1. Step 1 of the script, HANDOFF EXISTS (`utilisation-check.mjs` lines 246 to 248), still
+   picks the missing passes by count: `records.length < entries.length`, then
+   `entries.slice(records.length)`. The comment at lines 230 to 232 says counting files would
+   be wrong. On the live run bug-historian has two files for three planned passes, so the
+   script treats stage 7 as handed off and reports only stage 12 as missing. The plan has 17
+   entries and stage pairing credits 3 of them with a handoff, so 14 are missing. The report
+   lists 13. `bug-historian@7`, the regression guard, appears in neither the pending list nor
+   the findings. The same lines also say, though this was read and not executed: at closure
+   the missing set for bug-historian is still `entries.slice(2)`, so a regression guard that
+   never ran raises no `NEVER_RAN` from this step. The claim that the fixed report matches the
+   run's real state holds for backend-engineer and ux-auditor, and not for the guard.
+2. The skill's step 1 still asks "Does .actio/runs/<run>/<agent>/handoff.json exist?", once
+   per agent. An orchestrator applying it by hand answers yes for bug-historian at stages 7
+   and 12 from the stage-1 file. That is the same trap, in prose. The question should be
+   whether a handoff pairs with each plan entry by stage, as the script's pairing does.
+
+Both are machinery fixes, routed to the pass that made this one. The entry closes when both
+land and all three checks below come out as stated.
+
+**Items 1 and 2 fixed, verified 2026-09-25.** Step 1 of the script now selects the missing
+passes as `entries.filter((e) => !handedOff.has(e))`. `handedOff` is built by `pairWithPlan`,
+the same stage pairing the later checks use (lines 230 to 236), and `entries.slice(records.length)`
+is gone. The skill's step 1 now asks for "a handoff paired to this plan entry's stage" and
+says "Pair by stage, never by counting files". Verified by running:
+
+- Live run, working tree:
+  `node .actio/bin/utilisation-check.mjs .actio/runs/2026-09-22-site-insights` lists 14 stage
+  entries under "Pending, not findings", bug-historian stage 7 among them ("waiting on
+  review-1of3, review-2of3, review-3of3, security, frontend-engineer/files.md"). It raises no
+  `NEVER_RAN`. 17 plan entries, 3 credited with a handoff by stage pairing, 14 missing, 14
+  listed. The intermediate version, captured in the session scratchpad as `uc-fixed.txt`,
+  listed 13 and left out stage 7.
+- Closure, working tree: a scratch copy of the run, differing from the live run only by an
+  added `orchestrator/handoff-stage13.json` recording `run-closure`, raises `NEVER_RAN` 14
+  times, each "has no handoff, and the run is closing", bug-historian stage 7 among them.
+- Closure, pre-fix: the script at `2e7d232` (the scratchpad's `uc-head.mjs`, byte-identical to
+  `git show 2e7d232:.actio/bin/utilisation-check.mjs`) on the same closure copy raises only 2
+  `NEVER_RAN` (backend-engineer, ux-auditor) and nothing for bug-historian stage 7. That
+  settles the closure half of item 1, which was read and not executed when this entry was
+  written: a regression guard that never ran was invisible at closure.
+- The three checks below, working tree against `2e7d232` on the live run: 0 against 2
+  lines, 0 against 2, 1 against 0. The `2e7d232` output was re-run and is identical to the
+  scratchpad's `uc-head.txt`.
+- R-13 on the fix: the two findings the fixed script still raises on the live run, both
+  `UNUSED_OUTPUT` (tech-architect's ADR, ux-designer's `tokens-used.md`), are real. No plan
+  entry in `run.json` declares a consumer for either, and neither is a false alarm on healthy
+  state.
+
+**Why it stayed open after items 1 and 2.** The R-08 search that closing requires found item 2's trap once more, in a
+component this entry names. The `NEVER_RAN` row of the skill's finding taxonomy (line 304)
+still opens "An agent in the plan produced no handoff". Read as written, bug-historian
+produced a handoff (its stage-1 brief), so its missing stage-7 guard is not `NEVER_RAN`,
+which is the exact misreading item 2 closed in step 1. The rest of the row speaks of entries.
+The first clause needs to read per plan entry, for example "A plan entry has no handoff
+paired to its stage". One line of machinery, routed to the pass that fixed step 1. The rest
+of the search is clean: the only other `records.length` uses in `.actio/bin/` are a zero test
+(line 261) and a finding label (line 265), and no prose under `.claude/`, `docs/`,
+`CLAUDE.md` or `README.md` asks whether a bare `handoff.json` exists.
+
+The entry closes when that row lands and the four checks below come out as stated.
+
+**Taxonomy row fixed, verified 2026-09-25. Closed.** Line 304 now opens "A plan entry has no
+handoff paired to its stage, and the run has moved past it". It also says a due entry still
+waiting for its dispatch is `PENDING`, which matches step 1 (lines 210 to 217). The four
+checks below, on the live run with the working-tree script:
+
+1. The filtered `NEVER_RAN` grep returns 0 lines.
+2. `grep -c "NEVER_RAN"` prints 0.
+3. `grep -c "bug-historian: stage 7"` prints 1. The report lists 14 stage entries under
+   "Pending, not findings", stage 7 among them.
+4. The taxonomy grep prints 0. It prints 1 at `2e7d232`, so it fires on the unfixed state.
+
+The closure half was re-run against the current script. A scratch copy of the run, which
+differs only by an added `orchestrator/handoff-stage13.json` recording `run-closure`, raises
+`NEVER_RAN` 14 times. All 14 read "the run is closing", and bug-historian stage 7 is among
+them.
+
+The R-08 search was run across the repository outside `.actio/runs/` for "produced no
+handoff" and for any question about a bare `handoff.json`. It finds nothing outside this
+entry. `NEVER_RAN` appears in the skill only at step 1 (line 214) and in this row, and both
+are per plan entry. In `orchestrator.md` it appears only as a vocabulary name (lines 205 and
+207). The only `records.length` uses in `.actio/bin/` are still lines 261 and 265. The two
+`UNUSED_OUTPUT` findings the script raises are unchanged and real, as stated above. This
+entry belongs to the run-state pattern (R-13, three occurrences), which stays escalated.
+Closing the entry does not answer that decision.
+
+**The rule this produces.** R-13. A check that judges a run's state is run against every
+state a healthy run passes through (open, each stage boundary, closure) and returns no finding
+on any of them before it is published. A finding raised on normal state is a false alarm. A
+check that raises false alarms stops being read, and then the real finding is lost with them.
+A detection command in this register meets the same test: it fires on the defective state
+(BUG-0019) and is silent on the healthy one.
+
+**Who must be briefed.** orchestrator, bug-historian, and any pass that edits `.actio/bin/`
+or `actio-orchestration`.
+
+**How to detect it next time.**
+`node .actio/bin/utilisation-check.mjs .actio/runs/2026-09-22-site-insights | grep "NEVER_RAN" | grep -v -e "already handed off on its output" -e "the run is closing"`
+must return nothing, at any state of that run: a legitimate `NEVER_RAN` names the later
+consumer that handed off, or says the run is closing. On 2026-09-25 it returns 0 lines with the
+working-tree script and 2 with the script at `2e7d232`, so it fires on the unfixed state.
+
+The narrower form Shehab supplied,
+`node .actio/bin/utilisation-check.mjs .actio/runs/2026-09-22-site-insights | grep -c "NEVER_RAN"`,
+returns 0 today. It holds only while stages 2 and 3 are simply due.
+
+For open item 1:
+`node .actio/bin/utilisation-check.mjs .actio/runs/2026-09-22-site-insights | grep -c "bug-historian: stage 7"`
+must print 1 while the guard has not run. On 2026-09-25 it printed 0 on the intermediate
+version and on `2e7d232`. After the fix, the same day, it prints 1.
+
+For the taxonomy row:
+`grep -c 'An agent in the plan produced no handoff' .claude/skills/actio-orchestration/SKILL.md`
+must print 0. On 2026-09-25 it prints 1, and 1 at `2e7d232`. After the fix, the same day, it
+prints 0.
+
+---
+
+### BUG-0031 · The LOOP_SKIPPED check refused the heading the house plan template writes
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | bug-historian, in register mode, as T-16 |
+| Raised on | 2026-09-25 |
+| Run | none, raised in register mode. Observed on the live run `2026-09-22-site-insights` |
+| Surface | orchestration |
+| Component | `.actio/bin/utilisation-check.mjs`, step 7 (`LOOP_SKIPPED`), line 294 at `2e7d232` and line 330 in the working tree; against `.actio/TEMPLATE/plan.md` line 53 and the worked example in `actio-agent-protocol` line 346 |
+| Agent at fault | the BUG-0025 fix, commit `8357d71`, which moved `LOOP_SKIPPED` from `orchestrator.md` into the script |
+| Class | process |
+| Severity | major |
+| Evidence | the script at `2e7d232` on the live run raises `LOOP_SKIPPED` twice against bug-historian (scratchpad `uc-head.txt`, re-run 2026-09-25 and identical); the working-tree script raises none; the detection below |
+| Fixed in | working tree on 2026-09-25, not yet committed. Closed 2026-09-25 |
+| Repeat of | none by component. By pattern, BUG-0003 (R-03): one format defined two ways and read as one |
+
+**What happened.** Step 7 tested `plan.md` for an audit with `/##\s*audit/i`, which needs the
+word "Audit" directly after the hashes. `.actio/TEMPLATE/plan.md` heads step 2
+`## 2. Audit of the plan`, the protocol's worked example does the same, and the protocol tells
+every agent to copy the template. `backend-engineer.md`, `code-analyst.md`,
+`engineering-lead.md`, `tech-architect.md`, `ux-designer.md` and `god-mode-slice.js` say
+`## Audit`, which matched. `orchestrator.md` says a heading "Audit" and gives no level. Any
+agent that followed the template was flagged `LOOP_SKIPPED` once it handed off. The
+taxonomy's remedy for that finding is "Send it back. The deliverable without the loop is not
+accepted", so an orchestrator acting on it rejects a compliant deliverable. Live:
+bug-historian's stage-1 plan carries step 2 at line 115 and was flagged twice, once for
+`handoff.json` and once for the archival `handoff-stage1-brief.json` from BUG-0016. The
+pattern also matched too much, because it was neither anchored nor bounded: `## Auditor notes`
+and a `## Audit` in the middle of a line both passed.
+
+**Why it got through.** When `8357d71` moved the check into the script, the template already
+headed step 2 `## 2. Audit of the plan` (line 46 at that commit). The pattern was written
+against the `## Audit` form the agent files named above use. Nothing on record shows it was run against a plan
+copied from the template, which is the state the protocol tells every agent to produce. The
+heading that marks step 2 is written two ways with no named source (R-03), and the check
+read one of them. No gate reads `.actio/bin/` as code: the review and security gates read a
+run's diff, and the machinery is not in one. It meets the bar for an entry rather than a
+note: it has been committed since `8357d71` and is still at `2e7d232`, it fired on a live
+run, and the next role to follow the
+template would have been sent back for work it had done.
+
+**How it was fixed.** Line 330 tests `/^#{2,}\s*(\d+\.?\s*)?audit\b/im`, with a comment naming
+both heading forms (lines 328 and 329). Checked 2026-09-25 in node: it matches `## Audit`,
+`## 2. Audit`, `## 2. Audit of the plan`, `### 2. Audit your plan` and `## 2 Audit`. It
+refuses `## 1. Plan` with no step 2, `## Auditor notes`, `# Audit`, and `## Audit` in the
+middle of a line. It matches the template, bug-historian's and orchestrator's plans
+(`## 2. Audit`), and tech-architect's and ux-designer's plans (`## Audit`) in the live run. On
+the live run `LOOP_SKIPPED` goes from 2 to 0. The R-08 search found no other markdown-heading
+test under `.actio/bin/`. The one `#` pattern in `db-test.mjs` (line 380) reads TAP
+diagnostics.
+
+**The rule this produces.** None new. R-13 states it: a check is run against every state a
+healthy run passes through before it is published, and a plan copied from the house template
+is one of them. R-03 covers the heading written two ways. The two forms remain: the agent
+files named above against the template and the protocol. The check now accepts both, so they
+no longer disagree about what passes. That is not a defect today. A pass that changes either
+form runs the detection below.
+
+**Who must be briefed.** orchestrator, and any pass that edits `.actio/bin/`,
+`.actio/TEMPLATE/`, the protocol's worked example, or the step-2 heading an agent file
+prescribes.
+
+**How to detect it next time.** From the repository root:
+`node -e "const fs=require('fs');const s=fs.readFileSync('.actio/bin/utilisation-check.mjs','utf8');const re=Function('return '+s.match(/if \(!(\/.+?\/[a-z]*)\.test\(readFileSync\(planMd/)[1])();console.log(re.test(fs.readFileSync('.actio/TEMPLATE/plan.md','utf8')),re.test('## Audit'),re.test('## 1. Plan'))"`
+It reads the pattern out of the script itself and must print `true true false`: the
+template passes, the agent-file form passes, and a plan with no audit is still refused. On
+2026-09-25 the working tree prints `true true false`. The same test against the script at
+`2e7d232` prints `false true false`, so it fires on the unfixed state. If the line is
+restructured and the `match` returns null, the command throws, which is a failure, never a
+pass. The run-level form,
+`node .actio/bin/utilisation-check.mjs .actio/runs/2026-09-22-site-insights | grep -c LOOP_SKIPPED`,
+prints 0 today and 2 at `2e7d232`. It holds only while every handed-off plan in that run
+carries an audit.
+
+---
+
+### BUG-0032 · The RLS matrix gave respondents a read on responses, which I1 revokes from every client role
+
+| | |
+|---|---|
+| Status | closed |
+| Raised by | bug-historian, in register mode, as T-18 |
+| Raised on | 2026-09-25 |
+| Run | none, raised in register mode, found in passing while verifying BUG-0029 |
+| Surface | test protocol, privacy invariant I1 (no cohort below the threshold reports) |
+| Component | `.claude/skills/actio-test-protocol/SKILL.md`, section 2, the RLS matrix, `responses` row, `respondent` column: line 192 at `2e7d232`, line 198 in the working tree. Against `actio-architecture`'s I1 row (line 59), `actio-supabase`'s revoke (lines 182 and 183) and its statement at lines 242 and 243, and the I1 revoke assertion in both skills' invariant examples |
+| Agent at fault | the authoring pass of commit `108dea9`, which wrote the matrix when the back end moved to Supabase. A spec defect, not an implementer's: no migration or test carries the cell, and the site-insights test asserts the opposite, correctly |
+| Class | privacy-invariant |
+| Severity | major |
+| Evidence | the detection below prints `responses 6 false` against `2e7d232` and `responses 6 true` in the working tree. T-18's own detection prints `true` at `2e7d232` and `false` now. `git log -S'own only'` on the file names `108dea9` as the commit that introduced the cell |
+| Fixed in | working tree on 2026-09-25, not yet committed, by the pass that landed BUG-0029's test-protocol rows. Closed 2026-09-25 |
+| Repeat of | none by component. By pattern, BUG-0003 (R-03): one privilege stated two ways, with no named source. By shape, BUG-0029: privacy doctrine stating a client privilege that the revoke forbids, where the reconciliation that looks natural loosens the revoke (R-12) |
+
+**What happened.** The RLS matrix is run cell by cell whenever a policy or a grant changes.
+It gave `respondent` "own only" on `responses`. I1 revokes `responses` from `anon` and
+`authenticated`, and `actio-supabase` says "If `authenticated` can `select` on `responses`,
+every policy above is decoration". A respondent calls as `authenticated`, so the cell could
+pass only with the grant I1 forbids. The same file's invariant example, earlier in the same
+section, asserts `42501` for `authenticated` on that table. Faced with a failing cell, a
+tester or implementer had two ways to reconcile it: loosen the revoke so the cell passes, or
+treat the matrix as wrong. The first ends I1 at every cohort size, for every authenticated
+caller, around the floor that the security-definer read functions apply.
+
+**Why it got through.** No gate reads a skill as code. The review and security gates read a
+run's diff, and doctrine is not in one. BUG-0029 and BUG-0031 give the same reason. The
+matrix was written in `108dea9` beside the revoke and never run against it. The shipped
+tests that exercise this cell assert the opposite, and they are right:
+`supabase/tests/invariants.test.sql` lines 52 to 55 ("authenticated cannot read
+public.responses at all") and lines 301 to 304, on the raw free-text column. The matrix is run at
+`qc-engineer`'s stage, and the only run to touch this surface has not reached it. So the
+contradiction sat between a committed test and a committed skill, and nothing compared them.
+This adds evidence to the machinery-gate decision Shehab has held since 2026-09-22 (decision 1
+in `bug-historian`'s handoff for `2026-09-22-site-insights`). It does not open a new one.
+
+**How it was fixed.** The cell now reads "deny (own answers only through a security-definer
+function)". That defers to I1's revoke rather than stating a privilege of its own. Under the
+matrix's rule for a `deny` cell, landed the same day for BUG-0029, the cell is proved twice:
+`has_table_privilege('authenticated', 'public.responses', 'select')` returns false, and a
+select returns `42501`. R-08 search on 2026-09-25: `own only|own answers|own responses` and
+`respondent` beside `responses` return only the fixed cell, across the repository outside
+`.actio/runs/` and this file. That covers `.claude/`, `docs/` (including the untracked
+`docs/architecture/`) and `supabase/`. The `cohorts` row, the other table `actio-supabase`
+revokes, reads `deny` in every column.
+
+**The rule this produces.** None new. R-03 states it: I1's revoke is the source, and the
+matrix references it. R-12 binds any later change to the cell. A respondent's read of their
+own answers is a security-definer function with a test that reads as the grantee, never a
+grant on `responses`. A matrix cell that states a privilege is doctrine, and R-12 applies to
+it.
+
+**Who must be briefed.** qc-engineer, qc-lead, backend-engineer, security-analyst,
+tech-architect, and any pass that edits `actio-test-protocol`'s RLS matrix or I1 in
+`actio-architecture` or `actio-supabase`.
+
+**How to detect it next time.** From the repository root:
+`node -e "const t=require('fs').readFileSync('.claude/skills/actio-test-protocol/SKILL.md','utf8');for(const n of ['responses','cohorts']){const r=t.split('\n').find(l=>l.split('|')[1]?.replace(/\W/g,'')===n);const c=r.split('|').slice(2,-1).map(s=>s.trim());console.log(n,c.length,c.every(x=>/^deny\b/.test(x)))}"`
+It must print `responses 6 true` and `cohorts 6 true`, meaning every client cell of the two
+tables `actio-supabase` revokes opens with `deny`, whatever words follow. On 2026-09-25 the
+working tree prints both lines true. Against `2e7d232` it prints `responses 6 false`, so it
+fires on the unfixed state. If the matrix is restructured and a row is not found, the
+command throws, which is a failure, never a pass. A `deny` cell that names a security-definer
+path, as the respondent cell now does, passes, because a function is not a grant. An ADR that
+changes I1 changes this check with it. T-18's narrower form,
+`node -e "const t=require('fs').readFileSync('.claude/skills/actio-test-protocol/SKILL.md','utf8');console.log(/responses\W+deny\W+own only/.test(t))"`,
+prints `false` now and `true` at `2e7d232`, but it catches only the old wording.
+
+---
+
 ## Raised and not yet registered
 
-Findings from the 2026-09-22 god-mode run that are real and reproduced, but do not yet have
-an entry of their own. They are here rather than dropped. `bug-historian` promotes each to a
-full entry when the surface it touches is next worked, or sooner if Shehab asks.
+Findings that are real and reproduced, but do not yet have an entry of their own. T-01 to
+T-15 are from the 2026-09-22 god-mode run, and T-16 to T-18 were found in register mode on
+2026-09-25. They are here rather than dropped. `bug-historian` promotes each to a full entry
+when the surface it touches is next worked, or sooner if Shehab asks. A promoted row stays,
+marked with its entry id.
 
-Every one of these is an R-03 or R-11 instance: one concept defined twice, or a rule written
-to read correctly rather than to be run.
+T-01 to T-15 are each an R-03 or R-11 instance: one concept defined twice, or a rule written
+to read correctly rather than to be run. T-16 was promoted to BUG-0031 on 2026-09-25 and closed
+the same day. T-17 is this register failing its own entry format. T-18 was an R-03 instance
+in privacy doctrine: two sections of one skill stated opposite privileges for the same table.
+Its cell was fixed before promotion, so it was promoted to BUG-0032 on 2026-09-25 and closed
+the same day, as T-16 was.
 
 | # | Finding | Files | Raised by |
 |---|---|---|---|
@@ -1109,6 +1633,9 @@ to read correctly rather than to be run.
 | T-13 | `.actio/TEMPLATE` lacks `run.json` and `ledger.md`, so the template does not carry the two files every run must start from. | `.actio/TEMPLATE` | orchestrator |
 | T-14 | Detection commands carry no stack field. BUG-0007's greps for `raise BelowThreshold`, which is Python, against a Supabase, SQL and TypeScript product, so it returns zero for the wrong reason and reads as a pass at a guard. | `actio-bug-register`, BUGS.md entries | bug-historian |
 | T-15 | `bug-historian.md` step 2 says an entry with no "Agent at fault" cannot be routed and must be fixed. Three entries legitimately carry none and route through "Who must be briefed". The agent file names the wrong field. | `bug-historian.md` | bug-historian |
+| T-16 | **Promoted to BUG-0031 and closed, 2026-09-25.** The line number below was the uncommitted intermediate script's; the pattern sat at line 294 at `2e7d232`. The utilisation check's LOOP_SKIPPED test is `/##\s*audit/i`, which needs "Audit" directly after the hashes. `.actio/TEMPLATE/plan.md` heads step 2 `## 2. Audit of the plan`, and the protocol says to copy the template, so every plan that follows it raises LOOP_SKIPPED once its agent hands off. Live: bug-historian's stage-1 plan in `2026-09-22-site-insights` carries step 2 at line 115 and is flagged twice, once per handoff file. The surface is being worked now for BUG-0030, so this is promoted to an entry when that fix lands. Detect: `node -e "console.log(/##\s*audit/i.test('## 2. Audit of the plan'))"` prints `false` today and must print `true`. | `.actio/bin/utilisation-check.mjs` line 326 against `.actio/TEMPLATE/plan.md` line 53 | bug-historian |
+| T-17 | BUG-0020 to BUG-0028 lack fields the entry format requires. None carries a `Raised on`, `Run`, `Agent at fault` or `Evidence` row, or a "Who must be briefed" line. BUG-0022 to BUG-0028 carry no detection command, and BUG-0021's reads "Run it.", which `bug-historian.md` hard rule 6 forbids, because an entry with no detection command cannot be run at a guard. BUG-0024, BUG-0026 and BUG-0028 also carry no "Why it got through". Filling them in means reading the 2026-09-22 god-mode run's record, not inventing from memory. | `BUGS.md` | bug-historian |
+| T-18 | **Promoted to BUG-0032 and closed, 2026-09-25.** The line number below was the working tree's when raised; the cell sat at line 192 at `2e7d232` and is at line 198 after the fix, and the `actio-supabase` statement is at lines 242 and 243. `actio-test-protocol`'s RLS matrix gives `respondent` "own only" on `responses`. I1 revokes `responses` from `authenticated` (`actio-architecture`, I1 row; `actio-supabase` line 242: "If `authenticated` can `select` on `responses`, every policy above is decoration"), and both skills' invariant examples assert `42501` for `authenticated` on it. A respondent calls as `authenticated`, so the cell cannot pass without the grant I1 forbids. A tester or implementer who reconciles the two by making the cell pass loosens the revoke. Found in passing on 2026-09-25 while verifying BUG-0029, in the file that entry's remaining item edits, so it is registered when that fix is made. Detect: `node -e "const t=require('fs').readFileSync('.claude/skills/actio-test-protocol/SKILL.md','utf8');console.log(/responses\W+deny\W+own only/.test(t))"` prints `true` today and must print `false`, unless an ADR changes I1. | `actio-test-protocol` line 197 vs `actio-supabase` line 242 and `actio-architecture` I1 | bug-historian |
 
 ---
 
@@ -1118,13 +1645,15 @@ The point of the register. Reviewed by `bug-historian` at the start of every run
 
 | Pattern | Occurrences | Standing rule | State |
 |---|---|---|---|
-| A count or an index written in prose rather than derived from the list it describes | BUG-0013, BUG-0015, BUG-0018 | R-09 | **three, escalated to shehab 2026-09-22** |
+| A count or an index written in prose rather than derived from the list it describes | BUG-0013, BUG-0015, BUG-0018, and BUG-0018 again on 2026-09-25 | R-09 | **four. Escalated to shehab 2026-09-22; the fourth, in this file, raised again 2026-09-25** |
 | A fix applied where the defect was noticed and missed where the same value also lives | BUG-0009, BUG-0012, BUG-0019 | R-08 | **three, escalated to shehab 2026-09-22** |
-| A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004, BUG-0017, BUG-0024, BUG-0025, BUG-0026 | R-03 | **six, escalated to shehab 2026-09-22** |
-| A rule or command written to read correctly rather than to be run | BUG-0021, BUG-0022, BUG-0023 | R-11 | **three, escalated to shehab 2026-09-22** |
+| A shared vocabulary or schema defined in two files and allowed to drift | BUG-0003, BUG-0004, BUG-0017, BUG-0024, BUG-0025, BUG-0026, BUG-0031, BUG-0032 | R-03 | **eight. Escalated to shehab 2026-09-22; the seventh, BUG-0031, and the eighth, BUG-0032, recorded 2026-09-25** |
+| A rule or command written to read correctly rather than to be run | BUG-0021, BUG-0022, BUG-0023, BUG-0029 | R-11, R-12 | **four. Marked escalated 2026-09-22 with no decision on record; raised again 2026-09-25** |
+| A run-state check reasoned about at run open or at closure and never exercised at the moments between, so it raises findings on a healthy run or misses a real one | BUG-0022, BUG-0027, BUG-0030 | R-13 | **three, escalated to shehab 2026-09-25** |
 | A spec value written from memory rather than read from the file | BUG-0002, BUG-0005 | R-02, R-04 | repeat |
 | A reference image treated as a source of values | BUG-0006, BUG-0011 | R-07 | repeat |
 | A spec that contradicts itself and is relied on by both readings | BUG-0008, BUG-0014 | R-05 | repeat |
+| Privacy doctrine states a client privilege that I1's or I3's revoke forbids or makes inert, so the reconciliation that looks natural loosens the revoke | BUG-0029, BUG-0032 | R-12 | repeat |
 
 Two occurrences of a pattern makes it a repeat. A third escalates to Shehab as a process
 failure rather than a defect, because the register was written and not read.
@@ -1134,3 +1663,32 @@ the product. They are carried in `bug-historian`'s handoff for run
 `2026-09-22-site-insights` as `decisions_for_shehab`, each with options and a
 recommendation. They are recorded here so the next run's brief does not raise them again as
 if they were new.
+
+The R-11 row was added later the same day, by the pass that registered BUG-0021 to BUG-0023,
+and marked escalated. That run's `bug-historian` handoff carries only the first three
+decisions, so no decision on R-11 is on record.
+
+On 2026-09-25 three patterns crossed the line: R-11's reached four with BUG-0029, R-09's
+reached four with a recurrence of BUG-0018 in this file, and a new pattern reached three with
+BUG-0030. Register mode writes no handoff, so all three went to Shehab in `bug-historian`'s
+return for that session, each with options and a recommendation. BUG-0022 sits in two rows
+because it has both shapes: it was written to read correctly, and it was reasoned about only
+at closure. BUG-0021 and BUG-0025 touch the utilisation check too, and are counted in the R-11
+and R-03 rows, which match their shape.
+
+BUG-0031, later on 2026-09-25, is counted in the R-03 row and not in the run-state row. Its
+cause is one heading written two ways and read as one. It was not a check reasoned about
+only at run open or closure: it judges each pass after its handoff, and it was wrong on
+every plan that followed the template. R-13 still names how it got through. The R-03
+decision from 2026-09-22 is still with Shehab, and this occurrence adds evidence to it
+without opening a new one. The three 2026-09-25 decisions above are unchanged.
+
+BUG-0032, later again on 2026-09-25, sits in two rows, as BUG-0022 does, because it has two
+shapes. It is one privilege stated two ways with no named source, which is the R-03 row, and
+that occurrence adds evidence to the R-03 decision without opening a new one. It is also the
+second case of privacy doctrine stating a client privilege that the revoke forbids, after
+BUG-0029. That is a new row at two, a repeat and not yet an escalation. It is the only
+pattern in this table in the product's privacy doctrine rather than in the machinery, and a
+third occurrence escalates. It is not counted in the R-11 row. The cell was never run
+against the revoke, but that is how it got through, not what it is. BUG-0030 closed the
+same day. The run-state row still counts it, because entries close and occurrences stay.

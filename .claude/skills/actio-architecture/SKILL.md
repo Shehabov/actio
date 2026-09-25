@@ -58,7 +58,7 @@ pressure.
 |---|---|---|
 | I1 | No cohort below the reporting threshold of 5 ever reports | Base tables revoked from `anon` and `authenticated`; a security-definer function applies the threshold before returning anything. RLS is row-level and the threshold is an aggregate property, so a row policy cannot express it. |
 | I2 | A manager cannot filter below the threshold | The same function and the same revoke. The filtered set is counted inside the function and refused below the floor, so a manager never reaches the rows to filter them. |
-| I3 | Free text is returned reworded, with names removed | A view with `security_invoker = on` over a revoked base table. The raw column has no grant to anyone. |
+| I3 | Free text is returned reworded, with names removed | The raw column has no grant to anyone. A `security_invoker` view rewords it, and only the security-definer read function selects from it, after the floor. No client role is granted the view (BUG-0029). |
 | I4 | A protected case never appears in the engagement queue | A separate schema with a separate grant, never a flag on `issues`. A flag can be forgotten in a `where` clause; a missing grant cannot. |
 | I5 | An issue cannot transition to closed without attached evidence | A `before update` trigger, security definer, `search_path` pinned. A trigger rather than a policy, because this is a rule about what a valid transition is, not about which rows are visible. |
 | I6 | An issue cannot be assigned to a lane that lacks authority for its category | The same trigger, on the lane change, so it holds on assignment and on reassignment alike. |

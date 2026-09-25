@@ -208,8 +208,13 @@ For each agent in the run plan, in stage order:
 
 ```
 1. HANDOFF EXISTS
-   Does .actio/runs/<run>/<agent>/handoff.json exist?
-   NO  -> finding: NEVER_RAN
+   Is there a handoff paired to this plan entry's stage (handoff.json for the first pass,
+   handoff-stage<N>.json for a later one)? Pair by stage, never by counting files.
+   NO, and the run is closing, or a later plan entry planned to consume its
+       output has handed off       -> finding: NEVER_RAN
+   NO, and its gates pass and its inputs are on disk
+                                   -> PENDING: due now, dispatch it
+   NO, otherwise                   -> PENDING: waiting on the named gates and inputs
 
 2. HANDOFF PARSES
    Is it valid JSON with a status in {passed, blocked, rejected, escalated}?
@@ -296,7 +301,7 @@ Anything more than one field is the script's job.
 
 | Finding | Means | Do this |
 |---|---|---|
-| `NEVER_RAN` | An agent in the plan produced no handoff | Dispatch it. If it was deliberately skipped, that belongs in `out_of_scope` with a reason, so amend the plan and say so. |
+| `NEVER_RAN` | A plan entry has no handoff paired to its stage, and the run has moved past it: a later plan entry planned to consume its output has handed off, or run-closure is recorded. A due entry still waiting for its dispatch is PENDING, not this. | Dispatch it. If it was deliberately skipped, that belongs in `out_of_scope` with a reason, so amend the plan and say so. |
 | `MALFORMED_HANDOFF` | Status missing or not one of the four | Send it back to the agent. Do not infer the status. |
 | `PHANTOM_OUTPUT` | An agent claimed a file it did not write | Block. This is a falsified record, not a typo. Re-dispatch and say why. |
 | `UNUSED_OUTPUT` | Somebody did work nobody read | Find out which. Either the downstream agent skipped its input, or the work was not needed and the plan was wrong. Both are findings. |

@@ -72,7 +72,7 @@ the same run.
 | Issue status | `open`, `in_progress`, `overdue`, `closed`, `protected` | Exactly these five, matching the state tokens in `BRAND.md` section 1.4. A sixth value needs an ADR |
 | Owner | The named person accountable | Must have authority for the lane |
 | Evidence | Proof the change happened | Required to close, immutable once attached |
-| Free-text response | What an employee wrote | Never returned verbatim. Reached only through the reworded view with `security_invoker = on`, names removed, and only for a group at or above the reporting threshold |
+| Free-text response | What an employee wrote | Never returned verbatim. Reached only through the security-definer read function, which selects from the reworded `security_invoker` view, names removed, and only for a group at or above the reporting threshold. No client role is granted the view itself (BUG-0029) |
 | Protected case | Misconduct or safety | A separate schema with its own grant, never aggregated, never in the engagement queue |
 | Update | What the workforce is told | Written by ux-writer, sent per channel and locale |
 
