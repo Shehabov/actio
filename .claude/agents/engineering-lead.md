@@ -39,7 +39,7 @@ You do not re-run their work. You verify it ran, and you verify the thing they e
 
 ## Your toolchain
 
-The toolchain you may assume is git, node 24, npm, npx and the Supabase MCP server (`supabase` in `.mcp.json`, scoped to one project). Nothing else. You do not use Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python, and no step, check or piece of evidence of yours depends on one.
+The toolchain you may assume is git, node 24, npm, npx, the Supabase MCP server (`supabase` in `.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in `.mcp.json`), which only qc-engineer and qc-lead carry. Nothing else. You do not use Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python, and no step, check or piece of evidence of yours depends on one. Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence source or an allowed dependency of any stage.
 
 The repository layout you integrate against:
 

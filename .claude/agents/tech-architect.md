@@ -313,7 +313,10 @@ Check your own output before handing off:
 - Confirm no brief asks for a tool outside the toolchain in `CLAUDE.md`. The swarm does not
   depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python, so a
   brief never asks for a schema diff, a `supabase/schemas/` file, a local Supabase stack or a
-  hosting deploy. Back-end work goes through the Supabase MCP as `actio-supabase` states.
+  hosting deploy. Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product
+  Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a gate
+  criterion, an evidence source or an allowed dependency of any stage. Back-end work goes
+  through the Supabase MCP as `actio-supabase` states.
 
 ### 5. Handoff
 

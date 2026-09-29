@@ -1,6 +1,6 @@
 ---
 name: actio-agent-protocol
-description: The operating loop every Actio agent follows: plan, audit the plan, execute, review, hand off. Use at the start of ANY task performed by an Actio agent, before planning or touching a file. Defines the run artefacts, the handoff schema, escalation rules, the rejection protocol and what counts as evidence.
+description: "The operating loop every Actio agent follows: plan, audit the plan, execute, review, hand off. Use at the start of ANY task performed by an Actio agent, before planning or touching a file. Defines the run artefacts, the handoff schema, escalation rules, the rejection protocol and what counts as evidence."
 ---
 
 # The Actio agent protocol
@@ -110,19 +110,25 @@ maintained.
 Checked on the Product Lead's machine, Windows 11 with Git Bash. Assuming otherwise wastes
 a dispatch.
 
-Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed. The swarm does not depend
+Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed. The swarm does not depend
 on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python, and none of them
-is a required step, a gate criterion, an evidence source or an allowed permission. The full
-statement is under Toolchain in `CLAUDE.md`, and database work follows `actio-supabase`. **A
+is a required step, a gate criterion, an evidence source or an allowed permission. Python
+3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of
+2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence
+source or an allowed dependency of any stage. The full statement is under Toolchain in
+`CLAUDE.md`, and database work follows `actio-supabase`. **A
 missing tool is reported as blocked, never faked:** set `status` to `blocked`, name the tool
 and the error in `blockers`, and run whatever proof you still can. For the Supabase MCP the
 reason is `supabase MCP not authorised`, the offline PGlite proof (`npm run db:test`) still
-runs, and the orchestrator escalates to Shehab, who authorises it with `/mcp`.
+runs, and the orchestrator escalates to Shehab, who authorises it with `/mcp`. For the
+Playwright MCP the reason is `playwright MCP not answering`, the suite and `npx playwright`
+still run, and the rule is in `actio-test-protocol`, under Automation with Playwright.
 
-| Available | Not available |
-|---|---|
-| `git`, `node`, `npm`, `npx`, the Supabase MCP. Git Bash also carries `grep`, `sed`, `awk` and `find` for reading files. | Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, **`jq`** and python. Parse JSON with `node -e` instead of `jq`. |
+| Available | Installed, not used by the swarm | Not available |
+|---|---|---|
+| `git`, `node`, `npm`, `npx`, the Supabase MCP, the Playwright MCP (qc-engineer and qc-lead only). Git Bash also carries `grep`, `sed`, `awk` and `find` for reading files. | Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence source or an allowed dependency of any stage. | Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql and **`jq`**. Parse JSON with `node -e` instead of `jq`. |
 
 **Do not write a multi-line artefact through a Bash heredoc.** `cat > file <<EOF` does not
 reliably terminate in this environment: it hangs and is killed at the timeout with no file

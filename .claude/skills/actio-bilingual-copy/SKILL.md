@@ -1,6 +1,6 @@
 ---
 name: actio-bilingual-copy
-description: Write and review Actio product copy in English and Arabic, with Bahasa Indonesia and Tagalog length budgeting. Use for any user-facing string: interface, error, empty state, notification, WhatsApp or SMS template, and for reviewing existing copy.
+description: "Write and review Actio product copy in English and Arabic, with Bahasa Indonesia and Tagalog length budgeting. Use for any user-facing string: interface, error, empty state, notification, WhatsApp or SMS template, and for reviewing existing copy."
 ---
 
 # Bilingual copy

@@ -255,7 +255,7 @@ without reading a transcript.
 ├── ...
 └── evidence/
     ├── regression/                api-issues-r01.log · bug-0007-detect.log
-    ├── toolchain-preflight.log    node, npm and the Supabase MCP, checked at run open
+    ├── toolchain-preflight.log    node, npm, the Supabase MCP and the Playwright MCP, checked at run open
     ├── backend/                   db-test-pglite.tap · pgtap-project-<test file>.tap
     │                              list-migrations.json · list-tables.json
     │                              advisors-security.json · advisors-performance.json
@@ -328,12 +328,20 @@ every stage it runs `node .actio/bin/sync-gates.mjs .actio/runs/<run-id>` and th
 `node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>`.
 
 At run open, before it dispatches anyone, the orchestrator runs the toolchain pre-flight:
-`node --version` and `npm --version` answer, and the Supabase MCP answers a cheap read,
-`list_tables`. The result goes to `evidence/toolchain-preflight.log`. The toolchain itself is
-in [`CLAUDE.md`](../CLAUDE.md#toolchain): git, node 24, npm, npx and the Supabase MCP, and
-nothing else. If the MCP does not answer, the orchestrator records it, escalates to Shehab,
-who authorises it with `/mcp`, and dispatches no database stage until it answers. The stages
-that do not need it still run. A missing tool is reported as blocked, never faked.
+`node --version` and `npm --version` answer, the Supabase MCP answers a cheap read,
+`list_tables`, and `claude mcp list` prints the `playwright:` line ending `Connected`. The
+result goes to `evidence/toolchain-preflight.log`. The toolchain itself is in
+[`CLAUDE.md`](../CLAUDE.md#toolchain): git, node 24, npm, npx, the Supabase MCP and the
+Playwright MCP, and nothing else. Python 3.14.7 and Django 6.1.1 are installed on the
+machine by the Product Lead's decision of 2026-09-27. They are not part of the stack, and are
+not a step, a gate criterion, an evidence source or an allowed dependency of any stage. If the
+Supabase MCP does not answer, the orchestrator
+records it, escalates to Shehab, who authorises it with `/mcp`, and dispatches no database
+stage until it answers. The stages that do not need it still run. If the Playwright MCP does
+not answer, the orchestrator records it, escalates to Shehab and still dispatches every
+stage: a QA stage that needed it runs the suite for what it can prove and hands off `blocked`
+with the reason `playwright MCP not answering`. A missing tool is reported as blocked, never
+faked.
 
 ```
 Use the orchestrator agent. Brief: add the privacy preview screen ahead of the

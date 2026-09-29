@@ -158,12 +158,16 @@ so every stage lands in the ledger and the utilisation check can see it.
 
 ### Toolchain
 
-Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed.
+Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed.
 
 The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
 or python. None of them is a required step, a gate criterion, an evidence source or an
-allowed permission. A tool that is missing is reported as blocked, never faked.
+allowed permission. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
+Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a
+gate criterion, an evidence source or an allowed dependency of any stage. A tool that is
+missing is reported as blocked, never faked.
 
 Database work goes through the Supabase MCP, from migration files in the repo, and is
 iterated offline with `npm run db:test`, which runs the migrations, the seed and the pgTAP
@@ -171,9 +175,16 @@ tests on PGlite with no Docker. The workflow is in
 [`actio-supabase`](./.claude/skills/actio-supabase/SKILL.md). Hosting deployment is out of
 scope until Shehab chooses a target, and is recorded as `deferred: no target chosen`.
 
-At run open the orchestrator checks that node, npm and the Supabase MCP answer. If the MCP
-does not, it escalates to Shehab before any database stage runs, and he authorises it with
-`/mcp`. The stages that do not need it still run.
+Browser testing uses Playwright two ways: the committed `@playwright/test` suite, `npm run e2e`
+in `web/`, for every regression check and every piece of gate evidence, and the Playwright
+MCP for exploratory testing, reproduction and live capture. The doctrine is in
+[`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md).
+
+At run open the orchestrator checks that node, npm, the Supabase MCP and the Playwright MCP
+answer. If the Supabase MCP does not, it escalates to Shehab before any database stage runs,
+and he authorises it with `/mcp`; the stages that do not need it still run. If the Playwright
+MCP does not, it tells Shehab and every stage still runs, because gate evidence comes from the
+suite.
 
 ---
 

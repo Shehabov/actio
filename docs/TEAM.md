@@ -86,8 +86,8 @@ agent stops and states the decision needed, the options, and its recommendation.
 | **Gate** | Run closure |
 | **Skills** | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard` |
 
-Opens every run with the toolchain pre-flight (node, npm and the Supabase MCP answer, or
-Shehab is told before any database stage runs), decomposes a brief into a run plan,
+Opens every run with the toolchain pre-flight (node, npm, the Supabase MCP and the
+Playwright MCP answer, or Shehab is told before any stage that needs the missing one runs), decomposes a brief into a run plan,
 dispatches agents, enforces gates, maintains the ledger, and runs the **utilisation check**: did every agent that should have run actually
 run, and was every agent that ran actually used. An agent whose output nobody consumed is a
 utilisation failure and gets reported, not hidden. Does not design, code, review or test.
@@ -146,16 +146,23 @@ pushes, and records front-end hosting as `deferred: no target chosen`.
 
 ### Tools
 
-Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed. The swarm does not depend
-on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. The full
-statement is in [`CLAUDE.md`](../CLAUDE.md#toolchain).
+Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed. The swarm does not depend
+on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. Python 3.14.7
+and Django 6.1.1 are installed on the machine by the Product Lead's decision of 2026-09-27.
+They are not part of the stack, and are not a step, a gate criterion, an evidence source or an
+allowed dependency of any stage. The full statement is in
+[`CLAUDE.md`](../CLAUDE.md#toolchain).
 
 An agent that touches the database carries `mcp__supabase` in the `tools` line of its
 frontmatter and works through [`actio-supabase`](../.claude/skills/actio-supabase/SKILL.md).
 `orchestrator` carries `mcp__supabase__list_tables` alone, for the toolchain pre-flight at run
-open, and never applies, queries or changes the database. An agent whose tool does not answer
-hands off `blocked` and says why. It never fakes the result.
+open, and never applies, queries or changes the database. `qc-engineer` and `qc-lead` carry
+`mcp__playwright`, for exploratory testing, reproducing a reported defect and live capture;
+their gate evidence comes from the committed suite, as
+[`actio-test-protocol`](../.claude/skills/actio-test-protocol/SKILL.md) sets out. An agent
+whose tool does not answer hands off `blocked` and says why. It never fakes the result.
 
 ---
 

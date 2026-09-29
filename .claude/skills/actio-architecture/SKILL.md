@@ -1,6 +1,6 @@
 ---
 name: actio-architecture
-description: Design and record Actio system architecture: domain model, system invariants, repository layout, API contracts, ADRs and implementation task briefs. Use when making a technical decision, reviewing whether a change preserves the architecture, or issuing work to the front-end and back-end agents.
+description: "Design and record Actio system architecture: domain model, system invariants, repository layout, API contracts, ADRs and implementation task briefs. Use when making a technical decision, reviewing whether a change preserves the architecture, or issuing work to the front-end and back-end agents."
 ---
 
 # Architecture

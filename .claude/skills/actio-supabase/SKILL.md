@@ -25,12 +25,16 @@ None of that is used here: the toolchain below replaces it.
 This section is the canonical statement of how the swarm does database work. Every other file
 cites it rather than restating it.
 
-Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed.
+Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed.
 
 The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
 or python. None of them is a required step, a gate criterion, an evidence source or an
-allowed permission. A tool that is missing is reported as blocked, never faked.
+allowed permission. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
+Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a
+gate criterion, an evidence source or an allowed dependency of any stage. A tool that is
+missing is reported as blocked, never faked.
 
 Database work goes through the Supabase MCP. Every agent that touches the database carries
 `mcp__supabase` in the `tools` line of its frontmatter.

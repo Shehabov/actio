@@ -1,6 +1,6 @@
 ---
 name: actio-release
-description: Release Actio safely: pre-flight checks, commit and branch conventions, migrations and Edge Functions through the Supabase MCP, post-release verification, release notes and rollback. Use when preparing a release, committing, applying migrations at release, or rolling back.
+description: "Release Actio safely: pre-flight checks, commit and branch conventions, migrations and Edge Functions through the Supabase MCP, post-release verification, release notes and rollback. Use when preparing a release, committing, applying migrations at release, or rolling back."
 ---
 
 # Release
@@ -9,9 +9,13 @@ The release engineer is the only role that pushes to a remote, and the only role
 certifies the Supabase project's state at release. Everything here is a check, not an
 intention.
 
-The toolchain is git, node 24, npm, npx and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed. No step, check or piece of
+The toolchain is git, node 24, npm, npx, the Supabase MCP server (`supabase` in `.mcp.json`,
+scoped to one project) and the Playwright MCP server (`playwright` in `.mcp.json`, carried by
+qc-engineer and qc-lead). Nothing else may be assumed. No step, check or piece of
 evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python.
+Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of
+2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence
+source or an allowed dependency of any stage.
 
 Release, until a hosting target exists: pre-flight; migrations applied to the Supabase
 project through the MCP and verified with `list_migrations`; `get_advisors` clean;

@@ -1,6 +1,6 @@
 ---
 name: actio-design-system
-description: The Actio platform design system, derived from the approved visual references in docs/design-reference. Use when designing or building any Actio surface: the app shell, navigation, metric tiles, cards, the queue, tables, status, empty states or the composer. Covers layout anatomy, density, the inversion rule, mobile-first translation, and which reference patterns are adopted, adapted or rejected.
+description: "The Actio platform design system, derived from the approved visual references in docs/design-reference. Use when designing or building any Actio surface: the app shell, navigation, metric tiles, cards, the queue, tables, status, empty states or the composer. Covers layout anatomy, density, the inversion rule, mobile-first translation, and which reference patterns are adopted, adapted or rejected."
 ---
 
 # The Actio design system

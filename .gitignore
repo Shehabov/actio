@@ -27,6 +27,9 @@ next-env.d.ts
 playwright-report/
 test-results/
 coverage/
+# The Playwright MCP server writes captures that carry no file name to .playwright-mcp/ in its
+# working directory, the repository root. Evidence is saved by name under .actio/runs/ instead.
+.playwright-mcp/
 
 # Temp and build artifacts
 *.tmp

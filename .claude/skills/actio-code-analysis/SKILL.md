@@ -206,10 +206,14 @@ those makes the blocker at the top less likely to be read.
    filters, through `execute_sql` wrapped as `begin; ... rollback;` under
    `set local role authenticated` and `set local request.jwt.claims`, because a plan read as
    the owner skips the policy. Offline, `npm run db:test` runs the migrations and pgTAP in
-   PGlite with no Docker. The toolchain is git, node 24, npm, npx and the Supabase MCP server
-   (`supabase` in `.mcp.json`, scoped to one project). Nothing else may be assumed. No step,
+   PGlite with no Docker. The toolchain is git, node 24, npm, npx, the Supabase MCP server
+   (`supabase` in `.mcp.json`, scoped to one project) and the Playwright MCP server
+   (`playwright` in `.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be
+   assumed. No step,
    check or piece of evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm,
-   psql, jq or python.
+   psql, jq or python. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
+   Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step,
+   a gate criterion, an evidence source or an allowed dependency of any stage.
 6. Write findings to `.actio/runs/<run-id>/code-analyst/findings.md`, ordered by severity.
 7. Set gate `review-2of3`. Any blocker or major means fail.
 

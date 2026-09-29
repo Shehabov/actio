@@ -104,7 +104,9 @@ Write `plan.md` before opening a single screen. It states:
   Targets: measured in CSS pixels, read from the rendered page with Playwright. Zoom:
   Playwright screenshot at 200%. Locale: pseudo-locale expansion at plus 20%. Nothing in
   the plan depends on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or
-  python.
+  python. Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's
+  decision of 2026-09-27. They are not part of the stack, and are not a step, a gate
+  criterion, an evidence source or an allowed dependency of any stage.
 - **Acceptance criteria.** What a pass looks like for this surface, written before you can be
   influenced by what you see.
 - **Out of scope.** Say it explicitly, so nobody reads your silence as a pass.

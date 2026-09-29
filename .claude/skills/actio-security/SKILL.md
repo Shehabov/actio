@@ -1,6 +1,6 @@
 ---
 name: actio-security
-description: The Actio data and code security catalogue. Use on every diff, every build and every commit, and before any release. Covers the vulnerability classes that ship routinely in AI-assisted code: exposed keys, open database endpoints, client-side authentication, IDOR and broken access control, injection, insecure storage, missing headers, absent rate limiting, hallucinated packages, known CVEs, dangerous functions, missing error handling and absent logging. Supabase-specific throughout.
+description: "The Actio data and code security catalogue. Use on every diff, every build and every commit, and before any release. Covers the vulnerability classes that ship routinely in AI-assisted code: exposed keys, open database endpoints, client-side authentication, IDOR and broken access control, injection, insecure storage, missing headers, absent rate limiting, hallucinated packages, known CVEs, dangerous functions, missing error handling and absent logging. Supabase-specific throughout."
 ---
 
 # Security
@@ -38,10 +38,14 @@ whole sweep runs on the resubmission.
 Every pass records the command or the Supabase MCP call and its output as evidence,
 including the passes that found nothing. A clean pass is evidence; an unrun pass is a gap.
 
-The toolchain is git, node 24, npm, npx and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed. No step, check or piece of
+The toolchain is git, node 24, npm, npx, the Supabase MCP server (`supabase` in `.mcp.json`,
+scoped to one project) and the Playwright MCP server (`playwright` in `.mcp.json`, carried by
+qc-engineer and qc-lead). Nothing else may be assumed. No step, check or piece of
 evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python.
-Actio has no Python code, so there is no `pip audit`.
+Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of
+2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence
+source or an allowed dependency of any stage. Actio has no Python code, so there is no
+`pip audit`.
 
 Database passes run on the project through the MCP and only read or probe: `get_advisors`,
 `list_tables`, and `execute_sql` wrapped as `begin; ... rollback;`, with `set local role anon`

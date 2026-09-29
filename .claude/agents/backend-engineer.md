@@ -1,6 +1,6 @@
 ---
 name: backend-engineer
-description: Use this agent when Actio needs Supabase back-end work built against a tech-architect task brief: hand-authored migrations applied and proved through the Supabase MCP, Row Level Security policies, database functions and triggers, PostgREST views and RPCs, Edge Functions, the survey token auth flow, or WhatsApp and SMS delivery plumbing. Invoke it after the ADR and API contract exist, in parallel with frontend-engineer, and again whenever peer-reviewer, code-analyst, code-steward, security-analyst, bug-historian, engineering-lead, qc-engineer or qc-lead rejects a back-end change back to it. It owns the privacy invariants as RLS policies and grants, and the pgTAP suite that proves them. Do not invoke it to author the API contract, to pick the architecture, or to change the data model without an ADR from tech-architect.
+description: "Use this agent when Actio needs Supabase back-end work built against a tech-architect task brief: hand-authored migrations applied and proved through the Supabase MCP, Row Level Security policies, database functions and triggers, PostgREST views and RPCs, Edge Functions, the survey token auth flow, or WhatsApp and SMS delivery plumbing. Invoke it after the ADR and API contract exist, in parallel with frontend-engineer, and again whenever peer-reviewer, code-analyst, code-steward, security-analyst, bug-historian, engineering-lead, qc-engineer or qc-lead rejects a back-end change back to it. It owns the privacy invariants as RLS policies and grants, and the pgTAP suite that proves them. Do not invoke it to author the API contract, to pick the architecture, or to change the data model without an ADR from tech-architect."
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, mcp__supabase
 model: opus
 skills:
@@ -40,12 +40,16 @@ before you write a view or an RPC.
 
 ## Your toolchain
 
-Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed.
+Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
+`.mcp.json`), which only qc-engineer and qc-lead carry. Nothing else may be assumed.
 
 The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
 or python. None of them is a required step, a gate criterion, an evidence source or an
-allowed permission. A tool that is missing is reported as blocked, never faked.
+allowed permission. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
+Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a
+gate criterion, an evidence source or an allowed dependency of any stage. A tool that is
+missing is reported as blocked, never faked.
 
 The Toolchain section of `actio-supabase` is the canonical statement of how you iterate, apply,
 prove, generate types and deploy Edge Functions, and of the evidence each step leaves. In short:

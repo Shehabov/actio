@@ -1,7 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "agent": "orchestrator",
-  "enabledMcpjsonServers": ["supabase"],
+  "enabledMcpjsonServers": [
+    "supabase",
+    "playwright"
+  ],
   "permissions": {
     "allow": [
       "Read(//**)",
@@ -65,7 +68,9 @@
       "mcp__supabase__list_branches",
       "mcp__supabase__list_storage_buckets",
       "mcp__supabase__get_storage_config",
-      "mcp__supabase__get_project"
+      "mcp__supabase__get_project",
+      "mcp__playwright",
+      "Bash(claude mcp list:*)"
     ],
     "ask": [
       "Bash(git commit:*)",
@@ -83,7 +88,11 @@
       "mcp__supabase__pause_project",
       "mcp__supabase__restore_project",
       "mcp__supabase__create_project",
-      "mcp__supabase__confirm_cost"
+      "mcp__supabase__confirm_cost",
+      "mcp__playwright__browser_file_upload",
+      "mcp__playwright__browser_drop",
+      "Write(.actio/bin/**)",
+      "Edit(.actio/bin/**)"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -93,7 +102,8 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./**/.env*)",
-      "Read(./**/secrets/**)"
+      "Read(./**/secrets/**)",
+      "mcp__playwright__browser_run_code_unsafe"
     ]
   },
   "env": {

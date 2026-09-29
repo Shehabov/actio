@@ -142,24 +142,30 @@ Run id is `<yyyy-mm-dd>-<short-slug>`. Timestamps come from the shell, never inv
 
 ## Toolchain
 
-Present on the machine: git, node 24, npm, npx, and the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project). Nothing else may be assumed.
+Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
+`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed.
 
 The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
 or python. None of them is a required step, a gate criterion, an evidence source or an
-allowed permission. A tool that is missing is reported as blocked, never faked.
+allowed permission. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
+Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a
+gate criterion, an evidence source or an allowed dependency of any stage. A tool that is
+missing is reported as blocked, never faked.
 
 | Work | How |
 |---|---|
 | Database | Through the Supabase MCP, from migration files in the repo, never from SQL that is not in one. Iterate offline with `npm run db:test` (PGlite, no Docker). The full workflow is in [`actio-supabase`](./.claude/skills/actio-supabase/SKILL.md). |
-| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`. Screenshots with `npx playwright` (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic. Contrast is computed as WCAG ratios from the `BRAND.md` hex values in a node script, never estimated. |
+| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`. Screenshots with Playwright (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic: the committed suite, `npm run e2e` in `web/`, for every regression check and every piece of gate evidence, and the Playwright MCP for exploration, reproduction and live capture, as [`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md) sets out. Contrast is computed as WCAG ratios from the `BRAND.md` hex values in a node script, never estimated. |
 | Release | Pre-flight; migrations applied to the Supabase project through the MCP and verified with `list_migrations`; `get_advisors` clean; `npm run build` green; tag; `git push` to origin main, by `release-engineer` only. |
 | Hosting | Out of scope until Shehab chooses a target. Recorded as `deferred: no target chosen`, which is not a release-gate failure. |
 
 If the Supabase MCP does not answer (its tools are missing, or a call returns an auth
 error), the agent runs the offline PGlite proof, hands off `blocked` with the reason
 `supabase MCP not authorised`, and the orchestrator escalates to Shehab, who authorises it
-with `/mcp`.
+with `/mcp`. If the Playwright MCP does not answer, the QA agent runs the suite or
+`npx playwright` for what can still be proved, hands off `blocked` with the reason
+`playwright MCP not answering`, and the orchestrator escalates to Shehab.
 
 ```
 web/                                    Next.js App Router app, TypeScript, npm

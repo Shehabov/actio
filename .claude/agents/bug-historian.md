@@ -91,8 +91,11 @@ Interrogate it before you publish:
   `api/reports` binds a change to `api/issues` if the class is `privacy-invariant`.
 - **Is every detection command runnable as written?** A command with a placeholder is not
   a check. Nor is one that needs Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm,
-  psql, jq or python, none of which the swarm uses. The machine has git, node 24, npm and
-  npx, so a detection runs as `git grep`, `grep`, a node script or `npm run db:test`
+  psql, jq or python, none of which the swarm uses. Python 3.14.7 and Django 6.1.1 are
+  installed on the machine by the Product Lead's decision of 2026-09-27. They are not part of
+  the stack, and are not a step, a gate criterion, an evidence source or an allowed dependency
+  of any stage. The machine has git, node 24, npm and npx, so a detection runs as
+  `git grep`, `grep`, a node script or `npm run db:test`
   (PGlite, no Docker), and one that does not is rewritten before it is briefed. A command
   that greps for another stack's syntax returns zero for the wrong reason, so check it
   targets SQL, TypeScript or Markdown as the surface actually is.

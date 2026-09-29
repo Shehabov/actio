@@ -23,28 +23,43 @@ Every other agent is a subagent of the orchestrator: it hands off with `next` an
 ## Toolchain pre-flight, at run open
 
 Run it before the first dispatch, after the `run opened` ledger line. The toolchain is git,
-node 24, npm, npx and the Supabase MCP server (`supabase` in `.mcp.json`, scoped to one
-project). Nothing else may be assumed, and the swarm does not depend on Docker, the Supabase
-CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. The full statement is in `CLAUDE.md`,
-and the database workflow is in `actio-supabase`.
+node 24, npm, npx, the Supabase MCP server (`supabase` in `.mcp.json`, scoped to one
+project) and the Playwright MCP server (`playwright` in `.mcp.json`, carried by qc-engineer
+and qc-lead). Nothing else may be assumed, and the swarm does not depend on Docker, the
+Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. Python 3.14.7 and Django 6.1.1
+are installed on the machine by the Product Lead's decision of 2026-09-27. They are not part
+of the stack, and are not a step, a gate criterion, an evidence source or an allowed
+dependency of any stage. The full statement is in `CLAUDE.md`, the database workflow is in
+`actio-supabase`, and the Playwright doctrine is in `actio-test-protocol`.
 
 | Check | How | Answered means |
 |---|---|---|
 | node | `node --version` | A version string, 24 or later |
 | npm | `npm --version` | A version string |
 | Supabase MCP | One `list_tables` call, the cheapest read the server has | A table list, even an empty one. A missing tool or an auth error is a no. |
+| Playwright MCP | The command below, through Bash | It prints the `playwright:` line ending `Connected`. No line, or any other status, is a no. |
 
-The orchestrator carries `mcp__supabase__list_tables` in its tools line for this check only.
-It never applies, queries or changes the database.
+```bash
+claude mcp list 2>&1 | grep -E '^playwright: .* Connected$'
+```
 
-Write the three results with the shell timestamp to `evidence/toolchain-preflight.log`, cite
+The orchestrator carries `mcp__supabase__list_tables` in its tools line for the Supabase
+check only. It never applies, queries or changes the database. The Playwright check needs no
+MCP tool: `claude mcp list` starts each configured server and reports whether it answered.
+It matches the word `Connected`, because the mark printed before it has differed between
+runs. It proves the server starts, not that a session loaded its tools, so a QA agent still
+confirms its own tools before it plans on them (`actio-test-protocol`, Automation with
+Playwright).
+
+Write the four results with the shell timestamp to `evidence/toolchain-preflight.log`, cite
 it in the orchestrator's handoff, and log a `toolchain pre-flight` ledger line.
 
 | Result | Do this |
 |---|---|
-| All three answer | Dispatch as planned. |
+| All four answer | Dispatch as planned. |
 | node or npm missing | Stop and escalate to Shehab. No stage can run. |
-| The MCP does not answer | Record `supabase MCP not authorised` in the ledger and in the orchestrator's `blockers`, escalate to Shehab, who authorises it with `/mcp`, and dispatch no database stage until a re-run of the check answers. Still dispatch every stage that does not need it. |
+| The Supabase MCP does not answer | Record `supabase MCP not authorised` in the ledger and in the orchestrator's `blockers`, escalate to Shehab, who authorises it with `/mcp`, and dispatch no database stage until a re-run of the check answers. Still dispatch every stage that does not need it. |
+| The Playwright MCP does not answer | Record `playwright MCP not answering` in the ledger and in the orchestrator's `blockers`, escalate to Shehab, who restores it with `/mcp` or a new session so the tools load, and still dispatch every stage, because gate evidence comes from the suite. A QA stage that needed the MCP runs the suite and `npx playwright` for what it can prove and hands off `blocked` with the same reason, and that routes to Shehab the same way. |
 
 A database stage is any plan entry whose task needs the Supabase MCP to apply, prove, type or
 inspect something on the project. `backend-engineer` and `release-engineer` always are. Any
@@ -150,7 +165,7 @@ editing history.
 | Time (UTC) | Event | Agent | Detail |
 |---|---|---|---|
 | 08:02:11 | run opened | orchestrator | brief from shehab |
-| 08:03:05 | toolchain pre-flight | orchestrator | node, npm and the Supabase MCP answered · evidence/toolchain-preflight.log |
+| 08:03:05 | toolchain pre-flight | orchestrator | node, npm, the Supabase MCP and the Playwright MCP answered · evidence/toolchain-preflight.log |
 | 08:04:40 | dispatched | tech-architect | stage: architecture |
 | 08:39:02 | handoff | tech-architect | passed · gate design-authority pass · next ux-designer |
 | 08:39:30 | dispatched | ux-designer | stage: design |
