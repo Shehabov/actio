@@ -24,7 +24,7 @@ sentiment score.
 |---|---|
 | Users | Frontline employee, team lead, operations, site director or COO |
 | Buyer | Operations. The buyer is not the user. |
-| Stack | React and Next.js (App Router, TypeScript, npm) in `web/`. Supabase on the back end: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and Storage, worked through the Supabase MCP from migration files in `supabase/` |
+| Stack | React and Next.js (App Router, TypeScript, npm) in `web/`. A Manifest V3 Chrome extension in React and TypeScript, built with Vite, in `extension/`, for the desktop roles only (ADR-0003). Supabase on the back end: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and Storage, worked through the Supabase MCP from migration files in `supabase/` |
 | Channels | WhatsApp, SMS, web |
 | Locales | Bahasa Indonesia, English, Tagalog, Arabic (RTL) |
 | Target device | A low-cost Android handset, mid-shift, on a constrained connection |
@@ -69,7 +69,7 @@ delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
 | `ux-designer` | Design specs for every surface | – |
 | `ux-auditor` | Independent audit of design and shipped UI | Design gate |
 | `ux-writer` | Every string, English and Arabic | Copy gate |
-| `frontend-engineer` | React and Next.js implementation | – |
+| `frontend-engineer` | React and Next.js implementation in `web/`, and the Chrome extension in `extension/` | – |
 | `backend-engineer` | Supabase: schema, RLS, functions, Edge Functions | – |
 | `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 3) |
 | `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 3) |
@@ -156,7 +156,7 @@ missing is reported as blocked, never faked.
 | Work | How |
 |---|---|
 | Database | Through the Supabase MCP, from migration files in the repo, never from SQL that is not in one. Iterate offline with `npm run db:test` (PGlite, no Docker). The full workflow is in [`actio-supabase`](./.claude/skills/actio-supabase/SKILL.md). |
-| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`. Screenshots with Playwright (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic: the committed suite, `npm run e2e` in `web/`, for every regression check and every piece of gate evidence, and the Playwright MCP for exploration, reproduction and live capture, as [`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md) sets out. Contrast is computed as WCAG ratios from the `BRAND.md` hex values in a node script, never estimated. |
+| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`, and the same in `extension/`, which has no `dev` script and whose one smoke loads the unpacked build in Playwright's chromium (ADR-0003). Screenshots with Playwright (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic: the committed suite, `npm run e2e` in `web/`, for every regression check and every piece of gate evidence, and the Playwright MCP for exploration, reproduction and live capture, as [`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md) sets out. Contrast is computed as WCAG ratios from the `BRAND.md` hex values in a node script, never estimated. |
 | Release | Pre-flight; migrations applied to the Supabase project through the MCP and verified with `list_migrations`; `get_advisors` clean; `npm run build` green; tag; `git push` to origin main, by `release-engineer` only. |
 | Hosting | Out of scope until Shehab chooses a target. Recorded as `deferred: no target chosen`, which is not a release-gate failure. |
 
@@ -170,6 +170,9 @@ with `/mcp`. If the Playwright MCP does not answer, the QA agent runs the suite 
 ```
 web/                                    Next.js App Router app, TypeScript, npm
                                         scripts: dev, build, lint, typecheck, test, e2e
+extension/                              Manifest V3 Chrome extension, React and TypeScript, Vite,
+                                        npm, owned by frontend-engineer (ADR-0003)
+                                        scripts: build, lint, typecheck, test, e2e
 supabase/migrations/<yyyymmddhhmmss>_<slug>.sql
                                         the database source of record: hand-authored,
                                         forward-only, one concern per file, each with a
@@ -179,7 +182,7 @@ supabase/seed.sql                       seed
 supabase/functions/<name>/index.ts      Edge Functions
 content/strings/{en,ar}.json            the shipped string catalogue, written by ux-writer
 design/surfaces/<surface>.md            canonical design specs, written by ux-designer
-package.json                            private, npm workspaces ["web"], dev tooling,
+package.json                            private, npm workspaces ["web", "extension"], dev tooling,
                                         db:test runs node .actio/bin/db-test.mjs
 ```
 
@@ -304,6 +307,6 @@ vocabulary. The per-skill verdicts are in
   orchestrator still records the run and runs the utilisation check at the end.
 - Brand assets live in `logo/`. Never redraw the seal. The arcs are mathematically defined
   and an eyeballed version reads as wrong beside a correct one.
-- Product code starts in `web/` and `supabase/` as runs land. The specification, the brand
+- Product code starts in `web/`, `extension/` and `supabase/` as runs land. The specification, the brand
   and the team are the ground it is built on, and the layout it lands in is under
   [Toolchain](#toolchain).

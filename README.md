@@ -21,7 +21,7 @@ Actio routes employee feedback to whoever can actually fix it, and does not let 
 
 ## Version 1
 
-This is the specification. The product is being built against it, and it lands in `web/` and `supabase/` run by run.
+This is the specification. The product is being built against it, and it lands in `web/`, `extension/` and `supabase/` run by run.
 
 Version 1 fixes the decisions that are expensive to change later: what the product does, who it is for, what it measures, and every rule the interface is built to. Nothing in here is provisional, so the first screen can be written against a decision rather than a preference.
 
@@ -54,7 +54,7 @@ question.
 | **L3** | [`ux-designer`](./.claude/agents/ux-designer.md) | Design specs for every surface | – |
 | | [`ux-auditor`](./.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design |
 | | [`ux-writer`](./.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy |
-| | [`frontend-engineer`](./.claude/agents/frontend-engineer.md) | React and Next.js implementation | – |
+| | [`frontend-engineer`](./.claude/agents/frontend-engineer.md) | React and Next.js implementation in `web/`, and the Chrome extension in `extension/` | – |
 | | [`backend-engineer`](./.claude/agents/backend-engineer.md) | Supabase: schema, RLS, functions, Edge Functions | – |
 | | [`peer-reviewer`](./.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review, 1 of 3 |
 | | [`code-analyst`](./.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review, 2 of 3 |
@@ -176,7 +176,7 @@ tests on PGlite with no Docker. The workflow is in
 scope until Shehab chooses a target, and is recorded as `deferred: no target chosen`.
 
 Browser testing uses Playwright two ways: the committed `@playwright/test` suite, `npm run e2e`
-in `web/`, for every regression check and every piece of gate evidence, and the Playwright
+in `web/` and in `extension/`, for every regression check and every piece of gate evidence, and the Playwright
 MCP for exploratory testing, reproduction and live capture. The doctrine is in
 [`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md).
 
@@ -246,8 +246,9 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 | [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
 | [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run, and the node scripts that check them. |
 | `web/` | The Next.js App Router app, TypeScript, npm. Lands as runs land. |
+| `extension/` | The Chrome extension: Manifest V3, React and TypeScript, built with Vite, for the desktop roles only. Owned by frontend-engineer (ADR-0003). |
 | `supabase/` | The database source of record: migrations, pgTAP tests, seed and Edge Functions. Lands as runs land. |
-| `package.json` | Private, npm workspaces `["web"]`, dev tooling. `npm run db:test` runs the offline database proof. |
+| `package.json` | Private, npm workspaces `["web", "extension"]`, dev tooling. `npm run db:test` runs the offline database proof. |
 | `.mcp.json` | The Supabase MCP server, scoped to one project |
 | [`logo/`](./logo/) | The seal and the lockups, in every colourway. See [`logo/README.md`](./logo/README.md) for which file to use where. |
 
@@ -259,7 +260,7 @@ actio/
 ├── BRAND.md
 ├── Actio-Brand-Guidelines-v1.pdf
 ├── LICENSE
-├── package.json                           npm workspaces ["web"], db:test
+├── package.json                           npm workspaces ["web", "extension"], db:test
 ├── .mcp.json                              the Supabase MCP server
 ├── .claude/
 │   ├── settings.json
@@ -272,6 +273,7 @@ actio/
 │   ├── TEMPLATE/                          plan.md · review.md · handoff.json
 │   └── runs/                              one directory per run
 ├── web/                                   Next.js App Router app, TypeScript, npm
+├── extension/                             Manifest V3 Chrome extension, React, TypeScript, Vite
 ├── supabase/
 │   ├── migrations/                        <yyyymmddhhmmss>_<slug>.sql, the source of record
 │   ├── tests/                             *.test.sql, pgTAP

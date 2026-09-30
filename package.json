@@ -2,7 +2,8 @@
   "name": "actio",
   "private": true,
   "workspaces": [
-    "web"
+    "web",
+    "extension"
   ],
   "engines": {
     "node": ">=24"
@@ -11,6 +12,6 @@
     "db:test": "node .actio/bin/db-test.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8"
+    "@electric-sql/pglite": "0.5.8"
   }
 }

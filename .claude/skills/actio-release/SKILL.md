@@ -69,10 +69,10 @@ Refuse to release if any line is not a yes. Check; do not assume.
 ### Build and test
 
 - [ ] Front end builds clean, no new warnings: `npm ci` at the root, where the workspace
-      lockfile lives, then `npm run build` in `web/`.
-- [ ] Type check passes: `npm run typecheck` in `web/`.
-- [ ] Lint passes: `npm run lint` in `web/`.
-- [ ] Tests pass: `npm test` in `web/`.
+      lockfile lives, then `npm run build` in `web/` and in `extension/`.
+- [ ] Type check passes: `npm run typecheck` in `web/` and in `extension/`.
+- [ ] Lint passes: `npm run lint` in `web/` and in `extension/`.
+- [ ] Tests pass: `npm test` in `web/` and in `extension/`.
 - [ ] Database advisors: `get_advisors` through the Supabase MCP for type `security` and
       type `performance`. Clean, or every finding accepted in writing.
 - [ ] pgTAP green on the Supabase project, including `supabase/tests/invariants.test.sql`:
@@ -168,7 +168,7 @@ the two sides are never incompatible during the window.
 5. Verify:    call each function URL (base from get_project_url) with curl or a node
               fetch script, read get_logs, smoke the API through PostgREST on the new
               shape and the old
-6. Front end: npm ci at the root, npm run build in web/, green. Hosting: deferred: no target chosen
+6. Front end: npm ci at the root, npm run build in web/ and in extension/, green. Hosting: deferred: no target chosen
 7. Verify:    smoke the product flows on a local production build of web/ pointed at
               the project, with Playwright through npx playwright
 8. Tag, then git push origin main and the tag.
@@ -206,7 +206,7 @@ applied. Split it.
 ### Front end, hosting deferred
 
 Hosting deployment is out of scope until Shehab chooses a target. Until then the front-end
-release is `npm ci` at the root and `npm run build` in `web/`, green, with the build log in evidence,
+release is `npm ci` at the root and `npm run build` in `web/` and in `extension/`, green, with the build log in evidence,
 and the release record carries the line `Front-end hosting: deferred: no target chosen`.
 That line is not a release-gate failure. The vendored `deploy-to-vercel`,
 `vercel-cli-with-tokens` and `vercel-optimize` skills stay in the repository as reference

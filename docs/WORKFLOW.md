@@ -41,7 +41,7 @@ flowchart TD
 
   subgraph BUILD ["build track"]
     direction TB
-    FE["<b>frontend-engineer</b><br/>React · Next.js"]:::make
+    FE["<b>frontend-engineer</b><br/>React · Next.js · extension/"]:::make
     BE["<b>backend-engineer</b><br/>Supabase · RLS"]:::make
   end
 

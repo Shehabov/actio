@@ -201,7 +201,7 @@ those makes the blocker at the top less likely to be read.
 4. For each finding, prove it. Trace the path, or write the failing case. A finding you
    could not reproduce is reported as suspected, and labelled as such.
 5. Run the tooling and read its output rather than trusting the exit code: `npm run typecheck`
-   and `npm run lint` in `web/`, the complexity report, `get_advisors` for type `security` and
+   and `npm run lint` in `web/` and in `extension/`, the complexity report, `get_advisors` for type `security` and
    type `performance` through the Supabase MCP, and EXPLAIN ANALYZE on any query a policy
    filters, through `execute_sql` wrapped as `begin; ... rollback;` under
    `set local role authenticated` and `set local request.jwt.claims`, because a plan read as

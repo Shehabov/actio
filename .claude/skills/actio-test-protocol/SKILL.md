@@ -30,7 +30,7 @@ source or an allowed dependency of any stage.
 | Database, on the project | pgTAP: each `supabase/tests/*.test.sql` through `execute_sql`, wrapped as `begin; ... rollback;`. Role and RLS checks use `set local role anon` or `set local role authenticated` and `set local request.jwt.claims` inside that transaction. |
 | Database, offline | `npm run db:test`, which runs `node .actio/bin/db-test.mjs`: PGlite, real Postgres compiled to WebAssembly, no Docker. It applies `supabase/migrations/*.sql` in order plus `seed.sql` onto a Supabase-shaped bootstrap with `anon`, `authenticated`, `service_role`, `auth.uid()` and `auth.jwt()`, runs the test files under a pgTAP-compatible shim and prints TAP. Evidence, labelled as PGlite, and never a substitute for the run on the project. |
 | Edge Functions | Called at the function URL, base from `get_project_url`, with curl or a node fetch script. `get_logs` for what happened. No local Deno. |
-| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`. Screens and flows with Playwright: the committed suite, `npm run e2e` in `web/`, for every regression check and every piece of gate evidence, and the Playwright MCP for exploration, reproduction and live capture. Widths, themes, directions, output paths and the division of work are under [Automation with Playwright](#automation-with-playwright). |
+| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/` and in `extension/`. Screens and flows with Playwright: the committed suite, `npm run e2e` in `web/`, and in `extension/` for the extension, for every regression check and every piece of gate evidence, and the Playwright MCP for exploration, reproduction and live capture. Widths, themes, directions, output paths and the division of work are under [Automation with Playwright](#automation-with-playwright). |
 | Contrast | WCAG ratios computed from the `BRAND.md` hex values in a node script, once the computed style confirms the rendered element uses those values. Never estimated. |
 
 If the Supabase MCP is not connected (its tools are missing, or a call returns an auth
@@ -49,10 +49,10 @@ Two instruments for anything that runs in a browser. Only one of them produces g
 
 | | The suite | The MCP |
 |---|---|---|
-| What it is | `@playwright/test` specs committed in `web/`, run with `npm run e2e` in `web/` | The Playwright MCP server, `playwright` in `.mcp.json`, driven interactively through the `mcp__playwright__*` tools. `.mcp.json` is the source for its version and launch arguments. It holds `@playwright/mcp@0.0.82`, pinned, launched with `--no-webmcp`, so a page cannot add tools to the session |
+| What it is | `@playwright/test` specs committed in `web/`, run with `npm run e2e` in `web/`, and the extension's in `extension/`, run the same way there | The Playwright MCP server, `playwright` in `.mcp.json`, driven interactively through the `mcp__playwright__*` tools. `.mcp.json` is the source for its version and launch arguments. It holds `@playwright/mcp@0.0.82`, pinned, launched with `--no-webmcp`, so a page cannot add tools to the session |
 | Who runs it | Any role with npm: qc-engineer, qc-lead, engineering-lead, frontend-engineer | qc-engineer and qc-lead, the only tools lines that carry `mcp__playwright`. The permission rules reach further, as [The MCP session](#the-mcp-session) says |
 | Used for | Every regression check and every piece of gate evidence | Exploratory testing, reproducing a reported defect, and live capture during an investigation: screenshots, accessibility snapshots, console messages and network requests |
-| Browser | Playwright's Chromium at the version `web/package.json` pins, installed once per machine with `npx playwright install chromium` | Google Chrome, headed. That is the server's default with the configured arguments, so a Chrome window opening mid-run is expected. |
+| Browser | Playwright's Chromium at the version `web/package.json` and `extension/package.json` both pin, installed once per machine with `npx playwright install chromium` | Google Chrome, headed. That is the server's default with the configured arguments, so a Chrome window opening mid-run is expected. |
 | Why | Committed and repeatable: the next agent runs the same case and gets the same answer | Fast to point at a question nobody has written a case for, and neither committed nor repeatable |
 
 **The MCP finds, the suite proves.** An MCP capture is investigation evidence. It can be the
@@ -70,6 +70,14 @@ in `web/e2e/*.spec.ts`, run by the `e2e` script (`playwright test`) in `web/pack
 `docs/architecture/adr/ADR-0002-web-foundation.md` exists it is the source for the config
 path, the spec directory and the pinned version, and this paragraph cites it instead of naming
 them.
+
+The Chrome extension's suite is `extension/playwright.config.ts`, with specs in
+`extension/e2e/*.spec.ts`, run by `npm run e2e` in `extension/`, and ADR-0003 is its source. It
+runs in one project, not the matrix below, until its first surface, because an extension with no
+page has nothing to lay out at a width, a theme or a direction. Its output goes to
+`evidence/<agent>/extension/e2e/<pass>/`, by the gate command below with `cd extension` in
+place of `cd web` and `EV` set to that directory. Its browser is Playwright's chromium, through `channel: "chromium"`, because branded
+Chrome ignores `--load-extension` and the headless shell cannot run extensions.
 
 ### The projects
 

@@ -44,7 +44,7 @@ A release is done only when every one of these is true and has a file backing it
 - Every pre-flight check in the table below ran and recorded its actual output, not a summary of it.
 - The rollback plan existed as a written file before the first `apply_migration` or `deploy_edge_function` call of the release, with a timestamp that proves it.
 - Every file in `supabase/migrations/` is applied to the Supabase project through the MCP, in filename order, and `list_migrations` shows exactly that set. Edge Functions in the diff are deployed with `deploy_edge_function` after the schema they rely on, and called.
-- `get_advisors` is clean for type `security` and type `performance`, or every finding is accepted in writing, and `npm run build` in `web/` is green.
+- `get_advisors` is clean for type `security` and type `performance`, or every finding is accepted in writing, and `npm run build` in `web/` and in `extension/` is green.
 - Front-end hosting is recorded as `deferred: no target chosen`. That line is not a release-gate failure.
 - Post-release smoke covered every critical path in the list below, each with attached evidence: status code, timing, and a Playwright screenshot or a request transcript.
 - The tag exists, the release note is written in Actio's voice, and `main` and the tag are pushed to origin.
@@ -109,11 +109,11 @@ Pre-flight first. Every check runs, records its real output into the evidence di
 | Diff is what the run claims | `git diff --stat <base>..HEAD` | Files outside the run's declared scope are touched |
 | No secrets in the diff | Scan the patch for private key headers, `vca_`, `sk-`, `AKIA`, and assignments to names containing `SECRET`, `TOKEN`, `PASSWORD`, `API_KEY` | Any hit that is not a placeholder in an example file |
 | No committed env file | `git ls-files` for `.env`, `.env.*` excluding `.env.example`, including `web/.env.local` | Any match |
-| Front-end tests green | `npm test` in `web/`, full run, no filter | Non-zero exit, or any skipped test that was not skipped before |
-| Front-end types and lint clean | `npm run typecheck` and `npm run lint` in `web/` | Non-zero exit |
+| Front-end tests green | `npm test` in `web/` and in `extension/`, full run, no filter | Non-zero exit, or any skipped test that was not skipped before |
+| Front-end types and lint clean | `npm run typecheck` and `npm run lint` in `web/` and in `extension/` | Non-zero exit |
 | Back-end tests green, offline | `node .actio/bin/db-test.mjs > evidence/release/db-test-pglite.tap` at the root, the runner behind `npm run db:test` (PGlite, no Docker), called directly so the file opens with its PGlite line rather than npm's banner | Any `not ok` line, or non-zero exit |
 | Back-end tests green, on the project | pgTAP on the Supabase project: each `supabase/tests/*.test.sql`, including the invariant suite, run through `execute_sql` wrapped as `begin; ... rollback;` | Any `not ok` line, or a test file that did not run |
-| Front-end build reproducible | `npm ci` at the root, where the workspace lockfile lives, then `npm run build` in `web/` | Non-zero exit, or the install mutates `package-lock.json` |
+| Front-end build reproducible | `npm ci` at the root, where the workspace lockfile lives, then `npm run build` in `web/` and in `extension/` | Non-zero exit, or the install mutates `package-lock.json` |
 | Migration history matches the repository | `list_migrations` compared against the files in `supabase/migrations/` | A file not applied, an applied migration with no file, a name that is not its file's slug, or an order that differs from the filenames |
 | Advisors and key exposure clean | `get_advisors` for type `security` and type `performance`, plus `git grep service_role` returning only `supabase/functions/` and documentation | Any advisor finding not accepted in writing, or a `service_role` hit outside Edge Functions |
 | Migrations reversible | For each migration, read its written reverse in the run's rollback notes | Any migration with no reverse and no written Shehab decision |
@@ -138,7 +138,7 @@ Release, until a hosting target exists: pre-flight; migrations applied to the Su
 2. Prove on the project. Run each `supabase/tests/*.test.sql` through `execute_sql` wrapped as `begin; ... rollback;`, with role and RLS checks under `set local role anon` or `authenticated` and `set local request.jwt.claims` inside that transaction. Save the output under `evidence/release/`, beside the offline `npm run db:test` output, which is labelled as PGlite.
 3. Advisors. `get_advisors` for type `security` and type `performance`. Clean, or every finding accepted in writing.
 4. Edge Functions. `deploy_edge_function` after the schema they rely on. Verify by calling the function URL (base from `get_project_url`) with curl or a node fetch script, and read `get_logs`. Verify PostgREST is serving the new shape with a request to the REST endpoint under the publishable key.
-5. Front end. `npm ci` at the root, then `npm run build` in `web/`, green, with the build log in evidence. Front-end hosting is recorded as `deferred: no target chosen` in `deploy-log.md` and in `handoff.json`. That is not a release-gate failure, and nothing is deployed to a host.
+5. Front end. `npm ci` at the root, then `npm run build` in `web/` and in `extension/`, green, with the build log in evidence. Front-end hosting is recorded as `deferred: no target chosen` in `deploy-log.md` and in `handoff.json`. That is not a release-gate failure, and nothing is deployed to a host.
 6. Hold destructive migrations. They run in a later run, after the code that stopped reading the column has been live and verified.
 
 Then tag, fast-forward `main` to the release branch with `git merge --ff-only`, `git push origin main`, `git push origin <tag>`, and write the release note.

@@ -116,7 +116,7 @@ section is the source; this is how it applies to you.
   console messages and network requests, each saved by name under `evidence/qc-lead/mcp/`
   with the session written down beside them.
 - **What you certify comes from the suite.** For anything in a browser, every regression check
-  and every piece of gate evidence comes from the committed suite, `npm run e2e` in `web/`,
+  and every piece of gate evidence comes from the committed suite, `npm run e2e` in `web/`, and in `extension/` for the extension,
   because it is committed and repeatable and an interactive session is neither. A screen probe
   that reads passed in `readiness.md` points at a suite run: the qc-engineer's pass directory,
   or a targeted run of the cases in question written to `evidence/qc-lead/e2e/<pass>/`. A

@@ -59,7 +59,7 @@ How each suite reaches the product:
 - **Edge Functions.** Called at the function URL, with the base from `get_project_url`, using
   curl or a node fetch script. `get_logs` shows what the function did. There is no local Deno.
 - **Front end.** `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and
-  `npm test` in `web/`. Screens and flows use Playwright, as the Playwright section below
+  `npm test` in `web/` and in `extension/`. Screens and flows use Playwright, as the Playwright section below
   sets out.
 - **Contrast.** Computed as WCAG ratios from the `BRAND.md` hex values in a node script, after
   the computed style read through Playwright confirms the rendered element uses exactly those
@@ -77,7 +77,7 @@ and the output paths are in `actio-test-protocol`, under Automation with Playwri
 section is the source; this is how it applies to you.
 
 - **The suite is your evidence.** For anything in a browser, every regression check and every
-  piece of test-gate evidence comes from the committed suite, `npm run e2e` in `web/`. It runs
+  piece of test-gate evidence comes from the committed suite, `npm run e2e` in `web/`, and in `extension/` for the extension. It runs
   in every project the protocol defines under The projects, the matrix and the `layout-*` set,
   with the phone widths on a mobile touch profile. Each pass writes to its own directory,
   `evidence/qc-engineer/e2e/<pass>/`, so a failing run survives its re-run. The suite is

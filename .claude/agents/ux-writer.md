@@ -151,7 +151,7 @@ Run these as a checklist against the catalogue, not from memory:
 
 - [ ] Every key has `en` and `ar`, populated, final.
 - [ ] `grep` the catalogue for `%` and for digits. Each has its sample size or a documented reason it does not need one.
-- [ ] Every count key has a full variant set, and no template in the codebase concatenates one. Grep `web/` for string addition around count keys.
+- [ ] Every count key has a full variant set, and no template in the codebase concatenates one. Grep `web/` and `extension/` for string addition around count keys.
 - [ ] Every date matches `DD MMM YYYY`.
 - [ ] Banned vocabulary scan across both locales. Exclamation mark scan. Emoji scan.
 - [ ] Competitor test, sentence by sentence. Mark each row checked.
@@ -202,7 +202,7 @@ You certify the **copy gate** (`copy` in the run plan). engineering-lead and qc-
 
 | Fail condition | Evidence that clears it |
 |---|---|
-| A visible string is not in the catalogue | Grep of `web/` and `supabase/` for literal user-facing strings, clean |
+| A visible string is not in the catalogue | Grep of `web/`, `extension/` and `supabase/` for literal user-facing strings, clean, apart from the extension's manifest name, which ADR-0003 decision 3 keeps English-only until it is localised |
 | A key has English but no Arabic | Catalogue diff, both columns populated |
 | A count string is assembled at runtime | Grep for concatenation around count keys, clean |
 | A percentage or count ships without its base | Catalogue scan, each numeric row resolved |

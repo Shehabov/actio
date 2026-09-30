@@ -44,10 +44,11 @@ The toolchain you may assume is git, node 24, npm, npx, the Supabase MCP server 
 The repository layout you integrate against:
 
 - `web/` is the Next.js App Router app, TypeScript, npm. Its scripts are `dev`, `build`, `lint`, `typecheck` (`tsc --noEmit`), `test` (Vitest) and `e2e` (Playwright).
+- `extension/` is the Manifest V3 Chrome extension, React and TypeScript, built with Vite, owned by frontend-engineer (ADR-0003). Its scripts are `build`, `lint`, `typecheck`, `test` and `e2e`, and it has no `dev`.
 - `supabase/migrations/<yyyymmddhhmmss>_<slug>.sql` is the database source of record. Hand-authored, forward-only, one concern per file, each with a written reverse recorded in the run's rollback notes.
 - `supabase/tests/*.test.sql` is pgTAP, `supabase/seed.sql` is the seed, and `supabase/functions/<name>/index.ts` holds the Edge Functions.
 - There is no declarative `supabase/schemas/` workflow: it needs `supabase db diff`, which needs the Supabase CLI and Docker, and neither is used. Schema files, if any exist, are not a source of record.
-- The root `package.json` is private, with npm workspaces `["web"]` and the dev tooling. Its `db:test` script runs `node .actio/bin/db-test.mjs`.
+- The root `package.json` is private, with npm workspaces `["web", "extension"]` and the dev tooling. Its `db:test` script runs `node .actio/bin/db-test.mjs`.
 
 Database work goes through the Supabase MCP:
 
@@ -125,7 +126,7 @@ Work from a clean tree: `git status` reports nothing uncommitted, dependencies c
 
 Order, and stop on the first hard failure:
 
-| Step | Front end (React/Next, in `web/`) | Back end (Supabase) | Evidence file |
+| Step | Front end (React/Next, in `web/`, and `extension/` when it changes) | Back end (Supabase) | Evidence file |
 |---|---|---|---|
 | Install clean | `npm ci` at the root, which installs the `web` workspace from the committed `package-lock.json`; the row fails if the install rewrites it | every import in a changed Edge Function is pinned to an exact version or to its committed import map; it resolves at `deploy_edge_function`, so the row records the pinned specifiers and the deploy output | `install.txt` |
 | Typecheck | `npm run typecheck` (`tsc --noEmit`), zero errors | Edge Function type checking is deferred: it needs Deno, which is not used. Record `deferred: no local Deno` in the row rather than marking it clean. The function is proven by `deploy_edge_function` succeeding and by calling it | `typecheck.txt` |
