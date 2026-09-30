@@ -3,7 +3,8 @@
   "agent": "orchestrator",
   "enabledMcpjsonServers": [
     "supabase",
-    "playwright"
+    "playwright",
+    "vercel"
   ],
   "permissions": {
     "allow": [
@@ -92,7 +93,8 @@
       "mcp__playwright__browser_file_upload",
       "mcp__playwright__browser_drop",
       "Write(.actio/bin/**)",
-      "Edit(.actio/bin/**)"
+      "Edit(.actio/bin/**)",
+      "mcp__vercel"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -103,7 +105,41 @@
       "Read(./.env.*)",
       "Read(./**/.env*)",
       "Read(./**/secrets/**)",
-      "mcp__playwright__browser_run_code_unsafe"
+      "mcp__playwright__browser_run_code_unsafe",
+      "Read(~/.claude/.credentials.json)",
+      "mcp__vercel__create_api_keys",
+      "mcp__vercel__exchange_sso_token",
+      "mcp__vercel__buy_addon",
+      "mcp__vercel__buy_credits",
+      "mcp__vercel__buy_credits_endpoint",
+      "mcp__vercel__buy_domain",
+      "mcp__vercel__buy_pro",
+      "mcp__vercel__get_access_to_vercel_url",
+      "mcp__vercel__buy_domains",
+      "mcp__vercel__buy_single_domain",
+      "mcp__vercel__create_drain",
+      "mcp__vercel__test_drain",
+      "mcp__vercel__update_drain",
+      "mcp__vercel__filter_project_envs",
+      "mcp__vercel__get_project_env",
+      "mcp__vercel__get_shared_env_var",
+      "mcp__vercel__create_sdk_key",
+      "mcp__vercel__list_feature_flag_sdk_keys",
+      "mcp__vercel__create_edge_config_token",
+      "mcp__vercel__create_kms_signing_key",
+      "mcp__vercel__sign_kms_message",
+      "mcp__vercel__sign_kms_token",
+      "mcp__vercel__accept_project_transfer_request",
+      "mcp__vercel__get_project_token",
+      "mcp__vercel__update_project_protection_bypass",
+      "mcp__vercel__patch_url_protection_bypass",
+      "mcp__vercel__create_sandboxes_v2",
+      "mcp__vercel__create_sandboxes_v3",
+      "mcp__vercel__create_sandboxes_v4",
+      "mcp__vercel__run_session_command",
+      "mcp__vercel__update_session_network_policy",
+      "mcp__vercel__write_session_files",
+      "mcp__vercel__join_team"
     ]
   },
   "env": {

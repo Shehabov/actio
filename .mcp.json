@@ -12,6 +12,10 @@
         "--no-webmcp"
       ],
       "env": {}
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
     }
   }
 }
