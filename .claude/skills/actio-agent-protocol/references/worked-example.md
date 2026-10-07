@@ -53,7 +53,7 @@ first v2 pass. The rules are in `../SKILL.md`; this file only shows them filled 
     { "criterion": "Threshold boundary at 4, 5 and null", "result": "pass", "evidence": "evidence/verify/3f2a9c1/summary.json" }
   ],
   "findings": [
-    { "id": "CA-1", "severity": "minor", "where": "supabase/migrations/20261007091000_privacy_preview.sql:42", "rule": "R-01", "what": "raise message interpolates the filter key", "fix": "state the invariant only", "status": "fixed" }
+    { "id": "CA-1", "severity": "minor", "where": "supabase/migrations/20261007091000_privacy_preview.sql:42", "rule": "privacy-invariant", "what": "raise message interpolates the filter key", "fix": "state the invariant only", "status": "fixed" }
   ],
   "blockers": [],
   "missing_inputs": [],
@@ -76,7 +76,7 @@ A rejection, round 2:
 "next": "tech-architect"
 ```
 
-A gate that does not apply to this change (R-18):
+A gate that does not apply to this change:
 
 ```json
 "gates": [{ "name": "copy", "result": "n/a", "reason": "no user-visible string changed: the diff touches only supabase/tests/" }]

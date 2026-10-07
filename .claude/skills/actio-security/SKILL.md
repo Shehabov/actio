@@ -96,7 +96,7 @@ Checked on every diff, in addition to everything above.
 | RLS off, or on with no policy, on any table in `public` | An open endpoint |
 | A `security definer` function without `set search_path = ''` | Privilege escalation by object shadowing |
 | A view over protected data without `security_invoker = on` | Runs as its creator, bypassing the caller's policies |
-| An error naming the filter that tripped a threshold | Lets a manager binary-search to an individual. Standing rule R-01. |
+| An error naming the filter that tripped a threshold | Lets a manager binary-search to an individual. |
 | Free text, a name or a phone number in a log, URL or error | The product's core claim |
 | A storage bucket holding evidence marked public | Evidence is attached to an issue and is never public |
 | A survey token that is reusable, long-lived, or logged | A shared handset makes each of those a breach |
@@ -136,7 +136,7 @@ All in `.claude/skills/actio-security/references/`.
 
 | File | Holds | Read when |
 |---|---|---|
-| `sweep.md` | The grep sweep as one Bash block (B, E, C4, F3, D3, G1), the database passes, and the history scan from the last clean point | Every pass, as the first step of Execute |
+| `sweep.md` | The grep sweep as one Bash block (B, E, C4, F3, D3, G1), the database passes, the history scan from the last clean point, and the resubmission rules | Every pass, as the first step of Execute |
 | `auth.md` | A1 to A5: client-side authentication, IDOR, broken access control, sessions, bypass paths | The diff touches auth, sessions, a route guard, a policy, an Edge Function that takes an id, or any path into the data |
 | `secrets-injection.md` | B1 to B2 and C1 to C4: credentials, exposed keys, SQL, XSS, command injection, dangerous functions | The diff adds config, env or keys, or lets user input reach SQL, a shell, the DOM, `eval` or a dynamic import |
 | `data-handling.md` | D1 to D6: client storage, password storage, URLs and logs, headers, CSRF, rate limits | The diff touches client storage, logging, URLs, headers, cookies, forms, or anything that sends a message or validates a token |

@@ -1,6 +1,6 @@
 ---
 name: actio-test-protocol
-description: "Plan, run and evidence testing for Actio: API contract, privacy invariants, state machine, product flows, accessibility, locales and regression. Use when testing any change, reviewing a test log, or deciding release readiness."
+description: "Test planning, evidence and release readiness for Actio: API negatives, privacy invariants on the project, state machine, phone flows, four locales, themes, accessibility and regression, with the committed Playwright suite as gate evidence and the MCP for exploration only. Use when qc-engineer plans or runs a pass, qc-lead audits evidence and issues the quality go or no-go, or engineering-lead scopes regression. Findings go in handoff.json, evidence under the run directory."
 ---
 
 # Test protocol
@@ -34,7 +34,7 @@ There is no `plan.md`. Before the first test, write `evidence/qc/cases.md`: one 
 
 ## Surfaces
 
-Every change is tested across the API contract, the privacy invariants, the state machine, product flows, cross-cutting and regression. "Covered" means evidenced on this build, never reasoned. A surface the change cannot touch is `n/a` with the reason (R-18), never skipped in silence. Flows and cross-cutting are in `references/ui-pass.md`.
+Every change is tested across the API contract, the privacy invariants, the state machine, product flows, cross-cutting and regression. "Covered" means evidenced on this build, never reasoned. A surface the change cannot touch is `n/a` with the reason, never skipped in silence. Flows and cross-cutting are in `references/ui-pass.md`.
 
 ## 1. API contract
 
@@ -68,7 +68,7 @@ running system, not only against a unit test.
 | Protected case in the engagement queue | Absent. The count reconciles; no title, no detail, no assignee. |
 | Protected case through search, export, or any list endpoint | Absent |
 | Employee requests their own cohort size | Returned. Disclosure to the reader about themselves is not a report about others. |
-| `authenticated` holds a privilege on the reworded view or the raw free-text column | No. Asserted with `has_table_privilege` and `has_column_privilege`, never by a refused select alone: a `security_invoker` view refuses a select whether a grant exists or not, so only the privilege check catches an inert grant (BUG-0029). |
+| `authenticated` holds a privilege on the reworded view or the raw free-text column | No. Asserted with `has_table_privilege` and `has_column_privilege`, never by a refused select alone: a `security_invoker` view refuses a select whether a grant exists or not, so only the privilege check catches an inert grant. |
 | `authenticated` selects a base table directly | `42501`, insufficient privilege. **This is the case that proves the revoke actually happened**, and the one most likely to be missing. Without it every other case above can pass while the data is reachable by another path. |
 
 The suite is `supabase/tests/invariants.test.sql`, run two ways on every change: on the project through `execute_sql`, and offline with `npm run db:test`, each output labelled with where it ran. **A change that touches a policy, a grant, a view or a security-definer function and does not touch this file is a finding.** The SQL example and the RLS matrix are in `references/invariants-sql.md`.
@@ -107,7 +107,7 @@ EV=../.actio/runs/<run-id>/evidence/<ev>/e2e/<pass>; mkdir -p "$EV"
 PLAYWRIGHT_HTML_OPEN=never PLAYWRIGHT_HTML_OUTPUT_DIR="$EV/report" PLAYWRIGHT_JSON_OUTPUT_FILE="$EV/results.json" npm run e2e -- --reporter=list,html,json --trace=on --output="$EV/artifacts" > "$EV/run.log" 2>&1; echo "exit $?" >> "$EV/run.log"
 ```
 
-Read counts from `results.json` stats (R-09). Never open the HTML report or the trace viewer: both never return (BUG-0023).
+Read counts from `results.json` stats. Never open the HTML report or the trace viewer: both never return.
 
 - **The MCP** (`mcp__playwright__*`, qc-engineer and qc-lead only) is for exploration, reproduction and live capture. Read `references/playwright-mcp.md` before the first call. When it does not answer, run the suite for what can still be proved, set `status: blocked` with the reason `playwright MCP not answering`, and name each planned case that needed it.
 

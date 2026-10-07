@@ -155,7 +155,7 @@ Examples of a module header, a docstring and a policy comment, in SQL: `referenc
 - Custom exception types carry the domain: `EvidenceRequired`, `LaneLacksAuthority`,
   `BelowThreshold`. `ValueError("bad")` tells nobody anything.
 - An exception raised by a privacy invariant states the invariant, never the input that
-  tripped it. See `BUGS.md` R-01.
+  tripped it.
 
 Swallowed exceptions and unhandled rejections are `code-analyst`'s defects; you file how an error is worded and which domain it carries.
 
@@ -192,7 +192,7 @@ concept.
 - [ ] Every comment says why, not what
 - [ ] No commented-out code, no stale or contradicting comment, no ownerless TODO
 - [ ] Invariants cited by number where they are enforced
-- [ ] Custom exceptions carry the domain, and an invariant error states the invariant, never the input (`R-01`)
+- [ ] Custom exceptions carry the domain, and an invariant error states the invariant, never the input
 - [ ] Tests read as specifications
 - [ ] No third duplication of the same concept left unextracted
 - [ ] No second way to do something the codebase already does once

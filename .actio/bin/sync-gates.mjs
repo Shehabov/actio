@@ -5,13 +5,13 @@
  * A gate's result lives in `run.json`. Its owner records the result in its own handoff.
  * Nothing copied one into the other until the orchestrator closed the run, so mid-run every
  * gate read `pending` and the rule that a stage waits for its gates could not be enforced by
- * reading the file the rule points at. Recorded as BUG-0027. `run.mjs next` runs this first.
+ * reading the file the rule points at. `run.mjs next` runs this first.
  *
  * Invariants this file upholds:
  *   - It only ever copies a result an owner recorded. It never decides a gate.
  *   - It refuses a result from an agent the plan does not name as that gate's owner
  *     (GATE_SELF_CERTIFIED), a gate the run does not have (UNKNOWN_GATE), a result other than
- *     pass, fail or n/a, and an n/a without a reason (R-18).
+ *     pass, fail or n/a, and an n/a without a reason.
  *   - A `working` handoff is a checkpoint, not a verdict, so its gates are never copied.
  *   - When an owner records the same gate more than once (a fail, a fix, then a re-review
  *     that passes), the latest record wins, judged by the handoff's `finished` time and then
@@ -90,7 +90,7 @@ for (const c of claims) {
   if (!gate) refused.push(`${where} certified "${c.name}", which is not a gate in this run (UNKNOWN_GATE)`)
   else if (gate.owner !== c.agent) refused.push(`${where} certified "${c.name}", owned by ${gate.owner} (GATE_SELF_CERTIFIED)`)
   else if (!RESULTS.has(c.result)) refused.push(`${where} recorded "${c.name}" as "${c.result}", which is not pass, fail or n/a`)
-  else if (c.result === 'n/a' && !(typeof c.reason === 'string' && c.reason.trim())) refused.push(`${where} recorded "${c.name}" as n/a without a reason (R-18)`)
+  else if (c.result === 'n/a' && !(typeof c.reason === 'string' && c.reason.trim())) refused.push(`${where} recorded "${c.name}" as n/a without a reason`)
   else latest.set(c.name, c)
 }
 

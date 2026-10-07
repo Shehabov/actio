@@ -6,7 +6,7 @@ experience**: anatomy, density, hierarchy, interaction.
 What they do not contribute is colour, gradient, motion or copy style. **They never define
 colour.** Vega `#00BFC4` is the accent and [`BRAND.md`](../../BRAND.md) is the only source
 for it. A design document that cites a reference image as the reason for a colour value is a
-defect, recorded as BUG-0006 in [`BUGS.md`](../../BUGS.md).
+defect.
 
 Motion comes from the spec too, and the smoothness doctrine `ref-06` produces does not
 change a value of it: one curve, `cubic-bezier(.2, 0, .2, 1)`, at 120ms micro, 200ms panel,

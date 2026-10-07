@@ -73,8 +73,7 @@ Three things that are not negotiable:
    control and run their own code as the definer.
 2. **The error names the invariant, never the input.** `below_threshold`, never
    `below_threshold: shift`. Naming the filter lets a manager binary-search their way to an
-   individual, which is the exact failure the threshold exists to prevent. This is standing
-   rule R-01 in `BUGS.md`.
+   individual, which is the exact failure the threshold exists to prevent.
 3. **Base tables are revoked.** If `authenticated` can `select` on `responses`, every policy
    above is decoration.
 
@@ -110,7 +109,7 @@ selecting the view directly holds no grant on `public.responses`, so the select 
 every size through a view whose name says it is the safe one. So the view carries no client
 grant, and `security_invoker = on` stays as the second lock for the day someone adds one.
 
-This is BUG-0029. The pattern this section used to show, a client grant on a
+The pattern this section used to show, a client grant on a
 `security_invoker` view over a revoked base table, refuses every caller.
 
 When a view only needs to hide columns, never to transform one, there is a second shape

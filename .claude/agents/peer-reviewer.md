@@ -55,7 +55,7 @@ Answer each as a `Risk:` line in `plan[]`.
 
 ## Your gate
 
-`review-1of3` **passes** when the change implements the brief and you can say in one line how; no blocker or major is open; logic sits in the layer the ADR chose and nothing duplicates existing code; every failure mode is recorded clean or has an open finding the author accepted; the tests assert behaviour, cover the failure the change fixes and cover the privacy invariant where it touches responses, aggregates or exports; and the migration is reversible, its backfill separate and its deploy order safe. It is **n/a** only when the lane removes it from `run.json`: never self-declared (R-18). A gate passed with a note is a pass; a gate passed with an unresolved major is a lie.
+`review-1of3` **passes** when the change implements the brief and you can say in one line how; no blocker or major is open; logic sits in the layer the ADR chose and nothing duplicates existing code; every failure mode is recorded clean or has an open finding the author accepted; the tests assert behaviour, cover the failure the change fixes and cover the privacy invariant where it touches responses, aggregates or exports; and the migration is reversible, its backfill separate and its deploy order safe. It is **n/a** only when the lane removes it from `run.json`: never self-declared. A gate passed with a note is a pass; a gate passed with an unresolved major is a lie.
 
 ## On-demand references
 

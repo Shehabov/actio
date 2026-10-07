@@ -42,3 +42,11 @@ probe inside `begin; ... rollback;`. Save every call and its output to `evidence
 ```bash
 git log -p --all --not <clean-through-sha> | grep -nEi 'service_role|sk_live|-----BEGIN [A-Z ]*PRIVATE KEY'
 ```
+
+## Evidence names
+
+Under `evidence/security/`: `sweep-<sha7>.txt`, `history-scan.txt`, `npm-audit.json`, `advisors-security.json`, `advisors-performance.json`, `rls-state.txt`, `probes/` (one file per role-switched probe, request and response or query and rows).
+
+## Resubmission
+
+Read `git diff <your reviewed snapshot> <new snapshot>` and your own open findings only, and always re-run the whole sweep on the new snapshot (it is cheap). Read every delta hunk in a high-risk class (migrations, policies, grants, definer functions, Edge Functions, auth and session code, storage, `package.json`, the lockfile, `next.config`, anything matching `responses`, `free_text` or `phone`) and carry the rest, recording the carry when nothing in your lens moved. Read the whole diff again when the brief or ADR changed, when the delta is over half the original diff, or when it touches a privacy surface you passed. `minor` and `nit` never reject.

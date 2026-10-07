@@ -1,6 +1,6 @@
 # The UI pass: product flows, cross-cutting, every width, both languages
 
-Read when: the change touches a screen, a string, a layout or a locale file. Skip it for a change with no user-visible surface and record the surface `n/a` with the reason (R-18).
+Read when: the change touches a screen, a string, a layout or a locale file. Skip it for a change with no user-visible surface and record the surface `n/a` with the reason.
 
 ## 4. Product flows
 

@@ -18,7 +18,7 @@
  *   - snapshot never touches the real index, the working tree or the stash. It builds the tree
  *     in a temporary GIT_INDEX_FILE and uses plumbing only: write-tree, commit-tree, update-ref.
  *     A snapshot whose tree equals the previous one is reused, so the same code has one sha.
- *   - dispatch never writes the ledger. The SubagentStart hook records the dispatch (R-15).
+ *   - dispatch never writes the ledger. The SubagentStart hook records the dispatch.
  *   - Timestamps come from the clock, never from a typed value.
  *
  * Environment: ACTIO_RUNS_DIR (default .actio/runs, relative to the repository root),
@@ -101,7 +101,7 @@ function needRun(arg) {
   return { dir, run, id: run.run || basename(dir) }
 }
 
-/** The swarm roster is the set of agent files, so there is no second list to drift (R-03). */
+/** The swarm roster is the set of agent files, so there is no second list to drift. */
 export function agentNames() {
   try {
     return readdirSync(join(CODE_ROOT, '.claude', 'agents')).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3))
@@ -308,7 +308,7 @@ export function validateHandoff(path) {
   if (run && h.run != null && h.run !== run.run) E(`run "${h.run}" does not match run.json "${run.run}"`)
   if (h.agent != null && h.agent !== folder) E(`agent "${h.agent}" does not match its folder "${folder}"`)
 
-  // Stage: pairs the handoff with its plan entry, and the file name with the pass (BUG-0016).
+  // Stage: pairs the handoff with its plan entry, and the file name with the pass.
   const stage = Number(h.stage)
   if ('stage' in h && !Number.isInteger(stage)) E(`stage "${h.stage}" is not a whole number`)
   else if (run && 'stage' in h) {
@@ -340,7 +340,7 @@ export function validateHandoff(path) {
   for (const k of ['consumed', 'produced']) {
     arr(h[k]).forEach((p, i) => {
       if (typeof p !== 'string' || !p.trim()) return E(`${k}[${i}] is not a path`)
-      if (/\s/.test(p)) return E(`${k}[${i}] is not one plain path (R-16): "${clip(p)}"`)
+      if (/\s/.test(p)) return E(`${k}[${i}] is not one plain path: "${clip(p)}"`)
       if (/[<>*]/.test(p)) return E(`${k}[${i}] is a placeholder; name the real path: ${p}`)
       const at = locate(p, runDir)
       // A working checkpoint names what it will write before writing it; only a hand-off must deliver.
@@ -359,7 +359,7 @@ export function validateHandoff(path) {
     if (run && !def) E(`gate "${g.name}" is not in run.json gates (UNKNOWN_GATE)`)
     else if (def && def.owner !== h.agent) E(`gate "${g.name}" is owned by ${def.owner} (GATE_SELF_CERTIFIED)`)
     if (!RESULTS.includes(g.result)) E(`gate "${g.name}" result "${g.result}" is not pass, fail or n/a`)
-    if (g.result === 'n/a' && !(typeof g.reason === 'string' && g.reason.trim())) E(`gate "${g.name}" is n/a without a reason (R-18)`)
+    if (g.result === 'n/a' && !(typeof g.reason === 'string' && g.reason.trim())) E(`gate "${g.name}" is n/a without a reason`)
     if (g.result === 'pass' && !g.evidence) E(`gate "${g.name}" passes with no evidence path`)
     else if (g.result === 'pass' && !locate(g.evidence, runDir)) E(`gate "${g.name}" evidence ${g.evidence} does not exist (GATE_UNRESOLVED)`)
   })

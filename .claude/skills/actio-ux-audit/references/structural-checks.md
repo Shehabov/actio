@@ -45,7 +45,7 @@ Two of the component rows are blockers rather than majors: a quote-led row carry
 because that is the privacy promise rather than a style rule, and a surface that fails the `ref-04`
 test, because the product has then become the thing it exists to refuse.
 
-**The `ref-04` test, run once per run, and again for any view whose composition differs from the one tested.** In spec mode answer it by reading the spec against the `ref-04` table in `actio-design-system` (`references/reference-set.md`); build the paired frame below once, from a rendered frame where one exists, and record it `n/a` with the reason where the spec has none (R-18). Open
+**The `ref-04` test, run once per run, and again for any view whose composition differs from the one tested.** In spec mode answer it by reading the spec against the `ref-04` table in `actio-design-system` (`references/reference-set.md`); build the paired frame below once, from a rendered frame where one exists, and record it `n/a` with the reason where the spec has none. Open
 `docs/design-reference/ref-04-category-dashboard.png`, put the surface under audit beside it in
 one frame, and ask whether a stranger could tell which product routes work to a named owner and
 which one reports a mood. Build the frame as a local HTML page holding both images and capture

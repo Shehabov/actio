@@ -174,8 +174,8 @@ no longer waits for the design gate: `ux-writer` works from `string-slots.json` 
 `ux-auditor` audits, and if the audit moves a slot the writer does a delta pass.
 
 `bug-historian` bookends the run. It opens by briefing every agent on what has already
-broken on these surfaces, and it closes by recording what broke this time and the standing
-rule that follows. The guard in the middle is where the brief is enforced rather than
+broken on these surfaces, and it closes by recording the product-code defects found this time
+and the standing rule that follows. The guard in the middle is where the brief is enforced rather than
 merely published. It is a script run on the same snapshot as the reviews, so it costs no
 wait, and it runs again, cheaply, on the new snapshot after any fix. It still blocks
 `engineering-lead`.
@@ -263,7 +263,7 @@ utilisation check can say which reviewer is outstanding instead of reporting a s
 ambiguous failure. They run in parallel with the guard and none sees another's verdict
 first.
 
-A gate result is `pass`, `fail`, or `n/a` with a written reason (R-18). A bare `n/a` is a
+A gate result is `pass`, `fail`, or `n/a` with a written reason. A bare `n/a` is a
 `MALFORMED_HANDOFF`. A stage does not start until every upstream gate reads `pass` or `n/a`,
 and a gate whose owner is not in the lane's plan is absent from `run.json` and recorded in
 `out_of_scope`. The orchestrator is the role that catches a skipped gate, and a skipped gate
@@ -279,7 +279,7 @@ delta, `git diff <old> <new>`, and does not start again.
 
 `regression-guard` is the only gate whose owner also runs at the start and the end of the
 run. `bug-historian` publishes the regression brief in stage 1, the guard at stage 5 checks
-that the brief was honoured, and the record at stage 10 writes down what broke. An
+that the brief was honoured, and the record at stage 10 writes down the product-code defects found. An
 unchecked standing rule fails the gate exactly as a broken one does.
 
 The utilisation check splits its findings into blocking (`NEVER_RAN`, `MALFORMED_HANDOFF`,

@@ -3,8 +3,7 @@
 Moved verbatim from `.claude/agents/ux-auditor.md` (Pass D) and `actio-ux-audit` (the responsive
 pass) on 2026-10-07. Read it in built-UI mode: implemented markup, a preview build or a shipped
 surface, and also whenever the designer has written a frame board you can render. At the design
-gate on a spec alone, the checks that need rendered UI are recorded `n/a` with the reason
-(R-18), never failed for being absent. Evidence lands under
+gate on a spec alone, the checks that need rendered UI are recorded `n/a` with the reason, never failed for being absent. Evidence lands under
 `.actio/runs/<run-id>/evidence/ux-auditor/`: contrast output, Playwright screenshots at every
 width and at 200%, desaturated frames, keyboard traces, on-load motion recordings, gap
 measurements, per-component 360px captures, RTL renders and the `ref-04` paired frame.

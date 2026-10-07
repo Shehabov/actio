@@ -4,7 +4,7 @@ Moved verbatim from `actio-design-system/SKILL.md` on 2026-10-07. Read it before
 any pattern from an image in `docs/design-reference/`, before arguing with a rule in the core
 skill, and when a `ref-04` test result is contested. The sections it names (Smoothness, the
 inversion rule, the chart section, the departures table) are in the core skill or in the
-reference its References table names. The images never define colour (R-07, BUG-0006).
+reference its References table names. The images never define colour.
 
 ## The seven references
 
@@ -101,5 +101,4 @@ Actio's accent is Vega `#00BFC4`, and `BRAND.md` is the only source for it. The 
 banned in an Actio interface, so adopting it would break the suite as well as the brand.
 
 Any sentence in a design document that names a reference image as the reason for a colour
-is a defect. It is recorded in `BUGS.md` as BUG-0006 and the rule it produced binds
-`ux-designer`, `ux-auditor` and `frontend-engineer`.
+is a defect, and binds `ux-designer`, `ux-auditor` and `frontend-engineer`.

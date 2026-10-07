@@ -1,7 +1,7 @@
 # ADR template
 
 Read when writing or superseding an ADR. This is the one ADR shape: it replaces the two
-that `tech-architect.md` and `actio-architecture` used to carry (R-03).
+that `tech-architect.md` and `actio-architecture` used to carry.
 
 One file per decision. Numbered, immutable once accepted. Supersede rather than edit.
 

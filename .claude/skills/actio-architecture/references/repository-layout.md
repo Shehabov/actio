@@ -1,7 +1,7 @@
 # Repository layout
 
 Read when a brief names a path you have not confirmed, or when a change adds a folder or a
-workspace (R-09: every enumeration of the layout is updated in the same change). Moved
+workspace (every enumeration of the layout is updated in the same change). Moved
 verbatim from `actio-architecture`.
 
 Where the product code lives. The architecture of record cites this section rather than

@@ -37,7 +37,7 @@ finds. Every hit here is at least a **major**, and most are blockers.
 
 | Defect | Why it matters |
 |---|---|
-| A view over free text without `security_invoker = on`, a grant on the raw column, or a client grant on the reworded view (inert under `security_invoker`, BUG-0029) | I3 |
+| A view over free text without `security_invoker = on`, a grant on the raw column, or a client grant on the reworded view (inert under `security_invoker`) | I3 |
 
 - An error message that leaks internals to the client.
 - A failure path with no observability: nothing logged, no metric, no way to know at 2am.

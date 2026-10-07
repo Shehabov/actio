@@ -1,10 +1,10 @@
 # Entry template, detect grammar and history
 
-Read before writing or correcting any `BUGS.md` entry, and before converting a legacy entry.
+Read before writing or correcting any `BUGS.md` entry.
 The register's own `## Entry format` and `## Classes` sections stay the source for the field
-meanings and the class list; this file is the v2 layout the script parses.
+meanings and the class list; this file is the layout the script parses.
 
-## The v2 entry (at most 40 lines and 2,560 bytes)
+## The entry (at most 40 lines and 2,560 bytes)
 
 ````markdown
 ### BUG-NNNN · One line saying what broke, sentence case
@@ -52,9 +52,6 @@ git grep -nE "update issue set status *= *'closed'" -- supabase/migrations
 | `Severity` | `blocker`, `major`, `minor`, `nit` |
 | `History` | Present once the entry has any dated paragraph. The file must exist (`bugs.mjs lint` checks) |
 | `Reopened` | Optional one-line row, `yyyy-mm-dd, run-id`, when a closed entry reopens |
-
-Keep the free-text `Surface` row out of new entries. Legacy entries keep theirs until
-converted; the script maps it through `aliases` in `surfaces.json`.
 
 ## The `detect` block
 
@@ -105,7 +102,7 @@ export const proof = {
 The module takes precedence over the block's commands. `proof` lets `bugs.mjs proof BUG-NNNN`
 prove it with no refs.
 
-## Two-sided proof (R-11, R-13)
+## Two-sided proof
 
 Before an entry with a new or corrected detection is written:
 
@@ -138,18 +135,3 @@ Run 2026-10-07-issue-reassignment. Proof: `BUG-NNNN  defective: hit  healthy: si
 
 Headings, one per event: `Raised`, `Fixed`, `Reopened`, `Recurred`, `Detection corrected`
 (with the old block verbatim), `Closed`, `Verified`. Never edit a past section.
-
-## Converting a legacy entry
-
-`bugs.mjs lint` reports `legacy-format` for entries written before this layout. Convert one
-only when a record pass touches it:
-
-1. Add `Surfaces`, `Binds` and `Rule` rows (from the `Surface`, "Who must be briefed" and "The
-   rule this produces" text). Retire its `entry_tags` line in `surfaces.json` if it has one.
-2. Put the current command in a `detect` block. Where "How to detect" and a later paragraph
-   both hold a command, the later correction is current; prove it two-sided first.
-3. Move every dated paragraph (How it was fixed, Reopened, Recurred, Detection corrected,
-   Closed, Verified) verbatim to the history file and add the `History` row.
-4. Re-run `bugs.mjs index` and `lint`: the entry must parse clean and fit 40 lines and 2.5 KB.
-
-Moved text is not deleted text. Nothing leaves the register except into its history file.

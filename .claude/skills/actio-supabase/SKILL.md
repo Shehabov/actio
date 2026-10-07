@@ -46,12 +46,12 @@ Each is proved by pgTAP in `supabase/tests/`, offline and on the project. Code: 
 
 | Invariant | Mechanism | Proof |
 |---|---|---|
-| I1, I2 threshold | Base tables revoked from `anon` and `authenticated`; the only path is a security-definer function with `set search_path = ''` that counts the final filtered set against `greatest(5, tenant override)` and refuses before returning anything. The error is `below_threshold`, never the filter (R-01) | `is_empty` at 4, `lives_ok` at 5, `throws_ok` P0001 `below_threshold` on a narrowing filter, `42501` on the base table |
-| I3 free text | Raw column ungranted; a `security_invoker = on` view rewords and strips names; **no client grant on the view** (BUG-0029: it is inert, and invites turning `security_invoker` off); only the definer function reads it, after the floor | Reworded value as owner; `not has_table_privilege('authenticated', <view>, 'select')` |
+| I1, I2 threshold | Base tables revoked from `anon` and `authenticated`; the only path is a security-definer function with `set search_path = ''` that counts the final filtered set against `greatest(5, tenant override)` and refuses before returning anything. The error is `below_threshold`, never the filter | `is_empty` at 4, `lives_ok` at 5, `throws_ok` P0001 `below_threshold` on a narrowing filter, `42501` on the base table |
+| I3 free text | Raw column ungranted; a `security_invoker = on` view rewords and strips names; **no client grant on the view** (it is inert, and invites turning `security_invoker` off); only the definer function reads it, after the floor | Reworded value as owner; `not has_table_privilege('authenticated', <view>, 'select')` |
 | I4 protected | A separate schema with its own grant, access by named assignment (`protected.handlers`), never a role name read from the token; the engagement queue reconciles from a count-only view | `is_empty` on the engagement queue; no usage on the schema |
 | I5 to I7 close | `before update` trigger (definer, pinned), evidence checked in the same transaction under `select ... for update`, transition log, insert-only closures; `transition()` reads the actor from `(select auth.uid())` | Every illegal transition refused; close without evidence refused |
 
-A change to a policy, grant, view or definer function that leaves `invariants.test.sql` untouched is a finding. A refusal is proved by `has_table_privilege`, never by `42501` alone (R-12).
+A change to a policy, grant, view or definer function that leaves `invariants.test.sql` untouched is a finding. A refusal is proved by `has_table_privilege`, never by `42501` alone.
 
 ## Traps
 
@@ -102,4 +102,4 @@ Hand-authored in `supabase/migrations/<yyyymmddhhmmss>_<slug>.sql`, one concern 
 | `references/edge-functions.md` | Per-function idempotency rules, deploy and proof | Any Edge Function |
 | `references/auth.md` | The survey token flow, JWT claims, session rules | The token flow, claims or sign-out |
 | `references/mcp-workflow.md` | Evidence names, offline-proof limits, secrets, settings, seeding | Evidence names; a secret, setting or seed |
-| `references/privilege-review.md` | The P1 to P11 catalogue, R-12 refusal proofs, the diff reading list | Reviewing grants and policies; backend self-check |
+| `references/privilege-review.md` | The P1 to P11 catalogue, refusal proofs, the diff reading list | Reviewing grants and policies; backend self-check |

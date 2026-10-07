@@ -140,8 +140,8 @@ review or test.
 | [`bug-historian`](../.claude/agents/bug-historian.md) | [`BUGS.md`](../BUGS.md), the standing rules, the regression brief | Regression guard | `sonnet` | medium | `actio-bug-register` |
 
 `bug-historian` bookends every run. It opens by briefing every agent on what has already
-broken on the surfaces this change touches, and it closes by recording what broke this
-time and the standing rule that follows. The brief (`bugs.mjs brief`) and the guard
+broken on the surfaces this change touches, and it closes by recording the product-code
+defects found this time and the standing rule that follows. The brief (`bugs.mjs brief`) and the guard
 (`bugs.mjs guard`) are scripts it runs and then judges, so it does not read the whole
 register. Its gate in the middle is where the brief is enforced rather than merely
 published. It is the only agent that writes to `BUGS.md`.

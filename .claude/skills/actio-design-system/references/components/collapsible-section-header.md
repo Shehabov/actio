@@ -17,7 +17,7 @@ For a long page that the reader works down. `ref-06` uses it for Statistics and 
 | Header row | 48px tall, the full content width, so the whole row is the target on touch as well as under a pointer |
 | Inline padding | 0, so the title aligns with the content beneath it. The hover and focus shape takes an 8px radius and 8px of inline padding, bleeding outward. |
 | Count | 8px after the title |
-| Chevron | 16px, 1.5px stroke, inline-end. **Not 20px.** Icons are drawn on `BRAND.md` §6's 24px grid and rendered at a size that is on the §1.5 spacing scale, so 16 or 24. 20 is on neither (BUG-0005, R-04). |
+| Chevron | 16px, 1.5px stroke, inline-end. **Not 20px.** Icons are drawn on `BRAND.md` §6's 24px grid and rendered at a size that is on the §1.5 spacing scale, so 16 or 24. 20 is on neither. |
 | Gap to the body | 16 when open |
 | Gap to the next header | 24 when closed |
 | Rule | None. The header sits on space. |

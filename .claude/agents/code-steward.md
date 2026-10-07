@@ -31,7 +31,7 @@ Never re-run the build or tests. Reject back a diff that does not exist or does 
 3. **Domain names:** issue, owner, lane, evidence, cycle, response. Booleans read as claims, functions are verbs, constants name the meaning. A name that needs a comment is a naming defect.
 4. **Comments say why.** A comment that contradicts the code never survives: it is worse than none (a comment over an empty `catch` promising a refresh that did not happen is exactly this). "Self-documenting" is not an answer for a non-obvious decision: code says what, never why it was chosen.
 5. **No commented-out code, no ownerless TODO.**
-6. **Invariant errors name the invariant, never the input (R-01).** You check the wording at the raise site and that custom exceptions carry the domain. Whether the error path leaks is `code-analyst`'s.
+6. **Invariant errors name the invariant, never the input.** You check the wording at the raise site and that custom exceptions carry the domain. Whether the error path leaks is `code-analyst`'s.
 7. **Tests are named as specifications**, and every rule here applies to test code.
 8. **Size as reading cost, with the measured number:** a function over 50 lines, over 4 parameters, a flag argument that forks a body, a file over 400 lines, a class over 15 methods, and guard clauses where nesting hides the happy path (below the nesting threshold, which is `code-analyst`'s). A threshold finding without its number is an opinion.
 9. **One way to do each thing.** A second pattern for a job the codebase does once, and a third occurrence of the same concept left unextracted, are findings. Twice is fine.
@@ -67,7 +67,7 @@ Answer each as a `Risk:` line in `plan[]`.
 
 ## Your gate
 
-`review-3of3` **passes** when every line of the `actio-clean-code` checklist is worked with evidence and no blocker or major is open. It is **n/a** only when the lane removes it from `run.json` (a diff with no code file): never self-declared (R-18).
+`review-3of3` **passes** when every line of the `actio-clean-code` checklist is worked with evidence and no blocker or major is open. It is **n/a** only when the lane removes it from `run.json` (a diff with no code file): never self-declared.
 
 ## On-demand references
 

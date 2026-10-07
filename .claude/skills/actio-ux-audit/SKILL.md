@@ -1,6 +1,6 @@
 ---
 name: actio-ux-audit
-description: Audit an Actio interface against interaction design heuristics, accessibility, localisation and the brand bans. Use when reviewing a design spec, a built screen, or a shipped surface, and when filing or triaging UX findings.
+description: "The Actio UX audit rubric: mechanical pass and brand bans, interaction heuristics, WCAG 2.2 AA, frontline reality, localisation and RTL, state coverage, and the structural checks against the design system. Use when auditing a design spec, a built screen or a shipped surface. Defines the single severity ladder (blocker, major, minor, nit) and the finding format: evidence, no fix field, recorded as findings[] in handoff.json. Structural checks and built-UI measurement methods are in references/ and are read when that mode applies."
 ---
 
 # UX audit
@@ -11,7 +11,7 @@ The auditor finds and proves; the designer fixes. An author grading their own wo
 
 | Mode | When | Rule |
 |---|---|---|
-| Spec | The design gate on `ux-designer/spec.md`, the default plan | Audit what the spec states: tokens, values, states, focus order, RTL, slot budgets. A check that needs rendered UI is recorded `n/a`, reason "spec only, nothing rendered", never failed for being absent (R-18) |
+| Spec | The design gate on `ux-designer/spec.md`, the default plan | Audit what the spec states: tokens, values, states, focus order, RTL, slot budgets. A check that needs rendered UI is recorded `n/a`, reason "spec only, nothing rendered", never failed for being absent |
 | Built UI | Implemented markup, a preview, a shipped surface, or a frame board you can render | Everything applies. Read `references/built-ui-methods.md` |
 
 A check that applies and was not performed fails the gate. One that cannot apply is `n/a` with its reason. Neither is silent.
@@ -117,7 +117,7 @@ The baseline is a low-cost Android, one hand, mid-shift, second language, glare,
 
 ## 6. State coverage
 
-Every surface, all eight states in `actio-design-system` States, plus dark, 200% zoom and RTL. An uncovered cell is a **major** (the state will happen), and a state you cannot reach is itself a finding. Below threshold must name whom the suppression guards against: cohort size is never shown to a manager, a site lead or an administrator (R-10, BUG-0020).
+Every surface, all eight states in `actio-design-system` States, plus dark, 200% zoom and RTL. An uncovered cell is a **major** (the state will happen), and a state you cannot reach is itself a finding. Below threshold must name whom the suppression guards against: cohort size is never shown to a manager, a site lead or an administrator.
 
 ## 7. The platform design system
 
@@ -126,7 +126,7 @@ Audit against `actio-design-system` and the reference for each element used. A b
 - Structure and smoothness: prove each failure with `references/structural-checks.md`. The panel versus record-list split is settled in `BRAND.md` v1.5 §1.1: a missing override record is never a finding, a hairline lifting a panel is. Queue rows are 48 (12 + 24 + 12), not 44 or 52.
 - The five components, from each component's reference. (a) All seven headings present: dimensions, type, states, keyboard, 360px, dark mode, RTL. One absent, or answered "per the design system" instead of the value for this surface, is a major filed against the component. (b) Every row of its Audit block. (c) No keyboard path is a blocker where the component is the only path to the task. (d) Dark pairs outside the §2 table measured. A quote-led row carrying a name is a blocker.
 - A 360px view exists as a designed artefact and desktop traces back to it.
-- A spec citing a reference image beside a colour, size or radius is a finding on its own (R-07, BUG-0006). A surface failing the `ref-04` test is a blocker.
+- A spec citing a reference image beside a colour, size or radius is a finding on its own. A surface failing the `ref-04` test is a blocker.
 
 ## Running an audit
 

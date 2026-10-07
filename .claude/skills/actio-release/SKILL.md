@@ -1,6 +1,6 @@
 ---
 name: actio-release
-description: "Release Actio safely: pre-flight checks, commit and branch conventions, migrations and Edge Functions through the Supabase MCP, post-release verification, release notes and rollback. Use when preparing a release, committing, applying migrations at release, or rolling back."
+description: "Release procedure for Actio, owned by release-engineer: pre-flight rows with raw output, scoped commit and branch conventions, migrations and Edge Functions through the Supabase MCP, smoke, release note, rollback.md before the first apply, and rollback triggers. Use when preparing or running a release after qc-lead records a go, committing, applying migrations at release, or rolling back. Records the release gate in handoff.json."
 ---
 
 # Release
@@ -15,14 +15,14 @@ The release engineer is the only role that pushes to a remote, and the only role
 
 Refuse to release if any applicable row is not a yes. Check, do not assume. Each row's raw output goes to `evidence/release/preflight-<n>.txt` and is one `checks[]` entry in the handoff.
 
-**Change class.** A release whose diff touches no path under `web/`, `extension/` or `supabase/` is a `tooling` release. Rows marked `web` or `db` are then `n/a` with the reason (R-18), and so are sequence steps 3 to 7. Its rollback is `git revert`. A row is never failed for being absent and never skipped in silence.
+**Change class.** A release whose diff touches no path under `web/`, `extension/` or `supabase/` is a `tooling` release. Rows marked `web` or `db` are then `n/a` with the reason, and so are sequence steps 3 to 7. Its rollback is `git revert`. A row is never failed for being absent and never skipped in silence.
 
 | # | Applies | Check and how | Fails if |
 |---|---|---|---|
 | 1 | all | qc-lead's `handoff.json` read from file: `status: passed`, the go written, its `quality` gate `pass`, and its `reviewed` snapshot equals the tree you release (`node .actio/bin/run.mjs snapshot <run>`, then `git diff --stat` between the two) | Not passed, the go implied, the gate absent, or a path changed since it judged (`GATE_STALE`) |
 | 2 | all | `run.json` gate list read from file: every upstream gate `pass`, or `n/a` with its reason; `node .actio/bin/run.mjs next <run>` shows no blocking finding | A gate absent, `fail` or `blocked`; a blocking finding |
 | 3 | all | Shehab has answered in writing for each step under "What goes to Shehab first" that this run needs. `git commit` and `git push` are on `ask` in `.claude/settings.json`: the permission prompt is his approval | A step unanswered. Authorisation is never inferred |
-| 4 | all | Scope (R-19). The manifest is the repository paths in the maker handoffs' `produced` lists. `git status --porcelain -- <manifest>` shows the run's change; another run's paths are named and left alone. Stage with `git add -- <manifest>`, never `add -A` or `add .` | A whole-tree step; a manifest path missing |
+| 4 | all | Scope. The manifest is the repository paths in the maker handoffs' `produced` lists. `git status --porcelain -- <manifest>` shows the run's change; another run's paths are named and left alone. Stage with `git add -- <manifest>`, never `add -A` or `add .` | A whole-tree step; a manifest path missing |
 | 5 | all | On a release branch `<type>/<run-slug>` made at the base commit, not detached, not `main`. If `main` moved, rebase and re-verify | Detached, on `main`, or `main` moved with no re-verify |
 | 6 | all | `git diff --stat <base>..HEAD` equals the manifest | A file outside the run's scope |
 | 7 | all | `git grep -n '^<<<<<<<' -- <manifest>` | Any hit |
@@ -69,7 +69,7 @@ git push origin main
 git push origin v0.4.0
 ```
 
-`git fetch . <branch>:main` moves `main` by fast-forward only and needs no checkout (R-19). Never force. Then verify the origin: `git ls-remote origin refs/heads/main refs/tags/v0.4.0` equals the local tips, saved under `evidence/release/`.
+`git fetch . <branch>:main` moves `main` by fast-forward only and needs no checkout. Never force. Then verify the origin: `git ls-remote origin refs/heads/main refs/tags/v0.4.0` equals the local tips, saved under `evidence/release/`.
 
 Each step is a row in `evidence/release/sequence.md` (time, step, result, evidence path); step 2's time is the baseline for the logs comparison. The release note is `release-engineer/release-note.md`, in Actio's voice: what changed, what it means for the reader, what cannot be done yet. No exclamation marks, emoji or numeric-only dates; a sample size beside every number.
 

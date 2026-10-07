@@ -18,7 +18,7 @@ The accountability layer for engagement and culture surveys, a Lumofy product. *
 |---|---|
 | `BRAND.md` | The brand spec: tokens, contrast, type, components, copy rules. **Binding on every role**; it wins over any design instinct or vendored skill. |
 | `Actio-Brand-Guidelines-v1.pdf` | The same rules for people, with the reasoning. The four v1.5 amendments are in `BRAND.md`, not yet here. |
-| `BUGS.md` | The defect register and standing rules. Written only by `bug-historian`; each agent gets the entries for its surfaces as a brief slice. |
+| `BUGS.md` | The product-code defect register and standing rules. Written only by `bug-historian`; each agent gets the entries for its surfaces as a brief slice. |
 
 ## The team
 
@@ -62,7 +62,7 @@ Fifteen house skills (`actio-*`) and twenty-two vendored ones live in `.claude/s
 
 Seven approved references in `docs/design-reference/` set the platform shape. `ref-06-insights-panel.webp` is **the primary reference**, for anatomy as well as feel. `ref-02-ops-dashboard.png` supports; its six-tile metric row and filled sidebar are not adopted. Where they disagree, `ref-06` wins, with one written exception: the issue queue is deliberately denser. `ref-04-category-dashboard.png` is a **counter-example**, kept to be recognised and refused: a red to green sentiment heatmap, a score per cohort presented as a thing to defend.
 
-References give anatomy, density, hierarchy and interaction; **they never define colour**. Vega `#00BFC4` is the accent and `BRAND.md` its only source; citing a reference image as the reason for a colour is a defect (BUG-0006). Their lime accent, gradients, tinted callouts, multi-hue chart ramps and Title Case are banned. Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins and the override is recorded: taste skills serve composition, never decoration.
+References give anatomy, density, hierarchy and interaction; **they never define colour**. Vega `#00BFC4` is the accent and `BRAND.md` its only source; citing a reference image as the reason for a colour is a defect. Their lime accent, gradients, tinted callouts, multi-hue chart ramps and Title Case are banned. Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins and the override is recorded: taste skills serve composition, never decoration.
 
 ## Hard rules
 

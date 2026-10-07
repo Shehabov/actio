@@ -23,7 +23,7 @@ Read the diff line by line for facts: a defect is true or false regardless of ta
 | Wrong comparison | `==` on floats, identity where equality was meant, string comparison of numbers |
 | Timezone and DST | `timestamp` where `timestamptz` was meant, date arithmetic across a DST boundary, a deadline rendered in the server zone rather than the site zone |
 | Money as float | Currency as `float` or `real`. Actio quotes `Rp 2.450.000`. Use `numeric` or minor units as `bigint`. |
-| Race condition | Read then write without a lock or a transaction, check-then-act, two requests both passing a uniqueness check |
+| Race condition | Read then write without a lock or a transaction, check-then-act, two requests both passing a uniqueness check, an upsert used as a lock, a counter incremented in the client instead of in SQL |
 | Mutation of shared state | A module-level mutable in an Edge Function reused across invocations, a React state object mutated in place |
 | Unawaited async | A promise created and dropped in an Edge Function, so the runtime freezes before it settles |
 | Incorrect early return | A guard that returns before a required side effect |
@@ -45,7 +45,7 @@ Not filed here. `security-analyst` owns it. The two exceptions, double-owned on 
 | Migration outside the source of record | Migrations are hand-authored in `supabase/migrations/<yyyymmddhhmmss>_<slug>.sql`, forward-only, one concern per file. The finding is SQL applied to the project that has no file (`list_migrations` shows a name with no file), a file edited after it was applied, a file carrying more than one concern, or a change made only in a `supabase/schemas/` file. There is no declarative schema workflow: it needs `supabase db diff`, and the Supabase CLI and Docker are not used, so a schema file is not a source of record. |
 | `count(*)` in a loop | One aggregate, not one per row |
 
-Reversibility, the written reverse and the backfill split are `peer-reviewer`'s rollout lens.
+A migration with no written reverse in `reverse.md` and no stated reason at the head of the file is a finding here; whether the reverse is sound, and the backfill split, are `peer-reviewer`'s rollout lens.
 
 ## 3a. Row Level Security: performance
 
@@ -99,7 +99,7 @@ that touches UI, reporting, or the issue lifecycle.
 | A status rendered by colour with no written label | Fails for deuteranopia, and it is a brand rule |
 | White text on a Vega fill | 2.27:1. Measured. Fails. |
 | A grant on a base table holding response or cohort data | I1. RLS is row-level; the threshold is an aggregate property. The only safe path is revoked tables plus a threshold-applying security-definer function. |
-| A filter validated client side only, or a below-threshold error naming the filter | I2, and standing rule R-01. The error names the invariant, never the input. |
+| A filter validated client side only, or a below-threshold error naming the filter | I2. The error names the invariant, never the input. |
 | A protected case reachable from an engagement query, or protected data as a flag on `issues` rather than a separate schema | I4 |
 | A close path with no evidence check, or the guard written as a policy rather than a before-update trigger | I5. The product's entire claim. |
 | An assignment with no lane-authority check | I6 |
@@ -110,9 +110,9 @@ that touches UI, reporting, or the issue lifecycle.
 | `.from('cohorts').select()` or any other direct client read of reportable data | The base table is revoked for a reason. The only read path is the threshold-applying function. |
 | A reporting query, export, sort or aggregate that can return a group below the minimum, or a filter that narrows past it | I1, I2. A blocker, always. |
 
-**Double-owned on purpose with `security-analyst`, who probes the project:** the threshold leak (I1, I2, R-01), a close with no evidence (I5) and a grant on a base table holding response, cohort or protected data. A miss on these is unrecoverable, so both of you check. Do not soften yours because the other passed.
+**Double-owned on purpose with `security-analyst`, who probes the project:** the threshold leak (I1, I2), a close with no evidence (I5) and a grant on a base table holding response, cohort or protected data. A miss on these is unrecoverable, so both of you check. Do not soften yours because the other passed.
 
-Severity and citation for the UI facts. Read the cited `BRAND.md` section before you cite it (R-02) and never quote a token value from memory:
+Severity and citation for the UI facts. Read the cited `BRAND.md` section before you cite it and never quote a token value from memory:
 
 | Fact | Severity | Cite |
 |---|---|---|
@@ -129,7 +129,7 @@ For any other row above (a status by colour alone, white text on a Vega fill), f
 
 ## Findings
 
-One format: a `findings[]` entry in your handoff (`actio-agent-protocol`). `id` `CA-n`; `where` file:line; `rule` the class (`correctness`, `data`, `structure`, `I1`, `R-01`, `BRAND.md §3`); `what` the defect and why it is wrong, at most 240 characters; `fix` concrete enough to apply without asking what you meant; `evidence` an optional path under `evidence/code-analyst/` holding the quoted lines. Rank by severity. No padding with style opinions.
+One format: a `findings[]` entry in your handoff (`actio-agent-protocol`). `id` `CA-n`; `where` file:line; `rule` the class (`correctness`, `data`, `structure`, `I1`, `BRAND.md §3`); `what` the defect and why it is wrong, at most 240 characters; `fix` concrete enough to apply without asking what you meant; `evidence` an optional path under `evidence/code-analyst/` holding the quoted lines. Rank by severity. No padding with style opinions.
 
 ```json
 {"id":"CA-1","severity":"blocker","where":"web/src/lib/issues/close.ts:61","rule":"I7","evidence":"evidence/code-analyst/close-ts-61.txt","what":"closeIssue() updates issues then inserts the Closure in two calls with no shared transaction. If the insert fails the issue reads closed with no audit record, silently.","fix":"One public.close_issue function called once through rpc, plus a pgTAP test that forces the insert to fail and asserts the status is unchanged.","status":"open"}

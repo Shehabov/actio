@@ -19,7 +19,7 @@
 //   1. It never writes BUGS.md. It writes only inside a run directory: bug-historian/brief.md,
 //      bug-historian/brief/<agent>.md, bug-historian/guard.md, evidence/regression/guard.json.
 //   2. A detection runs exactly as read from the register. The command string is handed to
-//      `bash -c` untouched, never retyped or re-quoted (BUG-0047: a `\|` retyped inside a JS
+//      `bash -c` untouched, never retyped or re-quoted (a `\|` retyped inside a JS
 //      string literal became "match anything").
 //   3. A detection that cannot run (placeholder, missing path, refused as unsafe, error,
 //      timeout) is never a pass. It is listed for judgement.
@@ -30,8 +30,8 @@
 //   6. The base tree, and a --head ref, is a temporary `git worktree` under the OS temp folder,
 //      removed afterwards. With no --head the detections run in the working tree under a
 //      temporary GIT_INDEX_FILE holding HEAD plus every change, untracked files included, so
-//      `git grep` sees what is not yet committed (BUG-0019). The real working tree, index,
-//      stash and branches are never touched (R-19).
+//      `git grep` sees what is not yet committed. The real working tree, index,
+//      stash and branches are never touched.
 //   7. Detections run in parallel (--jobs, default the core count up to 8); each is bounded by
 //      the timeout and never reads stdin.
 //
@@ -185,7 +185,7 @@ async function withWorktree(root, ref, fn) {
 /**
  * Runs fn(env) with GIT_INDEX_FILE pointing at a throwaway index that holds HEAD plus every
  * working-tree change, untracked files included and ignored files excluded. Detections that
- * use `git grep` or `git ls-files` then see uncommitted work (BUG-0019). The real index is
+ * use `git grep` or `git ls-files` then see uncommitted work. The real index is
  * never read for writing or written.
  */
 async function withSnapshotIndex(root, fn) {
@@ -197,7 +197,7 @@ async function withSnapshotIndex(root, fn) {
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 }
 
-/** Every path changed against base, untracked files included (BUG-0019), deletions included. */
+/** Every path changed against base, untracked files included, deletions included. */
 function changedPaths(root, base, head) {
   const split = (s) => s.split('\0').filter(Boolean).map(posix)
   if (head) return split(git(['diff', '--name-only', '--no-renames', '-z', base, head], root))
@@ -841,7 +841,7 @@ async function cmdGuard(ctx, opts) {
     }
     if (task.role === 'secondary' && task.state === 'repeat') task.state = 'secondary-fires'
   }
-  const say = { 'not-runnable': (x) => `cannot run (${x.det.issues.join(', ')}): ${clip(x.det.cmd, 100)}`, error: (x) => `detection errored (${x.headEval.why}): ${clip(x.det.cmd, 90)}`, 'hit-base-unknown': (x) => `fires at head; base could not run (${x.baseEval ? x.baseEval.why : 'not run'}), so repeat against pre-existing is undecided`, 'pre-existing': (x) => `closed entry fires at base too (${x.headEval.lines.length} lines): a recurrence older than this change, or a detection not silent on healthy state (R-13)`, 'open-spread': (x) => `open entry gains ${x.newLines.length} new line(s) at head: this change spreads it`, 'secondary-fires': (x) => `a non-current candidate detection fires new at head: decide which detection is current` }
+  const say = { 'not-runnable': (x) => `cannot run (${x.det.issues.join(', ')}): ${clip(x.det.cmd, 100)}`, error: (x) => `detection errored (${x.headEval.why}): ${clip(x.det.cmd, 90)}`, 'hit-base-unknown': (x) => `fires at head; base could not run (${x.baseEval ? x.baseEval.why : 'not run'}), so repeat against pre-existing is undecided`, 'pre-existing': (x) => `closed entry fires at base too (${x.headEval.lines.length} lines): a recurrence older than this change, or a detection not silent on healthy state`, 'open-spread': (x) => `open entry gains ${x.newLines.length} new line(s) at head: this change spreads it`, 'secondary-fires': (x) => `a non-current candidate detection fires new at head: decide which detection is current` }
   for (const task of tasks) if (say[task.state] && !(task.role === 'secondary' && task.state !== 'secondary-fires')) judgement.push({ id: task.id, kind: task.state, text: say[task.state](task) })
 
   // Rules: each binding rule is checked by its entries' detections, or it is a judgement item.

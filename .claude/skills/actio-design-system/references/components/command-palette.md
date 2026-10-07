@@ -39,7 +39,7 @@ From `ref-05`. For an operator moving between sites, cycles and issues quickly.
 | Closed | Nothing rendered. No element persists in the document waiting to be shown. |
 | Open, empty query | Recent first, at most five, then sites, cycles and issues under their labels with the three most recent each. |
 | Typing | Results replace the sections. Matches stay ordered by section, sites then cycles then issues, **never interleaved by relevance score**, so the reader learns where to look rather than re-reading the list each time. |
-| Selected row | The ground steps one away from the popover surface: Ink 50 in light mode, stepping back toward the page, and `#232320` in dark, the hover step **above** the `#1A1A18` surface rather than the same value as it (R-06). Never a Vega fill, which would spend the accent budget on a menu row. |
+| Selected row | The ground steps one away from the popover surface: Ink 50 in light mode, stepping back toward the page, and `#232320` in dark, the hover step **above** the `#1A1A18` surface rather than the same value as it. Never a Vega fill, which would spend the accent budget on a menu row. |
 | Hover | The same treatment as selected, and hovering moves the selection, so there is only ever one highlighted row. |
 | No results | One row in the product's own words naming what was searched and what the search covers: `No match for "warehous". Search covers sites, cycles and issues.` No illustration, no apology. |
 | Loading | The palette opens immediately with recent, which is held on device. A pending remote section renders its label above one reserved 40px row. No shimmer. |
@@ -99,7 +99,7 @@ each row off the named heading; on built UI, use the method given.
 |---|---|
 | Focus leaking behind the palette, left on `body` after Escape, or moved off the input by the arrow keys | Spec: the Keyboard heading names `aria-activedescendant`, Escape returning focus to the trigger and Tab cycling inside only. Built UI: keyboard trace |
 | A floating palette with a shadow at 360px, or a shortcut column kept there | Spec: the 360px heading. Built UI: capture at 360px |
-| In dark mode, the overlay shadow kept, or the surface, its border and the selected row not three different values (R-06, BUG-0009) | Read the dark tokens off the spec: surface `#1A1A18`, border `#33332F`, selected row `#232320` |
+| In dark mode, the overlay shadow kept, or the surface, its border and the selected row not three different values | Read the dark tokens off the spec: surface `#1A1A18`, border `#33332F`, selected row `#232320` |
 | Matches interleaved by relevance score rather than ordered by section | Spec: the Typing state |
 | A selected row on a Vega fill | Read the selected-row ground. It spends the accent budget on a menu row |
 | An identifier reversed under RTL, or the dot and the shortcut not swapping ends | Spec: the RTL heading. Built UI: render under `dir="rtl"` |

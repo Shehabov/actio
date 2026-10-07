@@ -166,7 +166,7 @@
     },
     {
       "stage": 10, "agent": "bug-historian",
-      "task": "Record pass: every defect and agent mistake from this run into BUGS.md with its standing rule; ids from bugs.mjs next-id, the Open index from bugs.mjs open-index.",
+      "task": "Record pass: every product-code defect from this run into BUGS.md with its standing rule; ids from bugs.mjs next-id, the Open index from bugs.mjs open-index.",
       "consumes": ["qc-engineer/handoff.json", "qc-lead/handoff.json", "bug-historian/guard.md"],
       "produces": ["BUGS.md"],
       "blocked_by": ["release"],

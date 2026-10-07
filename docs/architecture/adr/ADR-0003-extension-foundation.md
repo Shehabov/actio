@@ -133,7 +133,7 @@ so brief-extension step 6 can diff the two. "Latest" is the registry `latest` ta
 | extension devDependencies | vitest | 5.0.2 | 5.0.2 | yes, and equal to ADR-0002 |
 
 The table has 15 entries: 2 dependencies and 13 devDependencies. Brief-extension step 6 prints
-the number it compared (R-09).
+the number it compared.
 
 **Said plainly.** Eleven of the 15 pins are the latest. The four that are not are
 `typescript`, `eslint`, `@types/node` and `@eslint/js`. Each equals ADR-0002's pin for the same
@@ -161,7 +161,7 @@ every React component in an extension is a page, and pages are surfaces (decisio
   `.npmrc` relaxation and no forced install.
 - **One version.** `extension/package.json` carries no `version`. The extension's version is
   the manifest's `version`, the one Chrome reads. A second copy in the npm manifest would drift
-  from it (R-03). npm accepts a private workspace with no version: `npm ls` exits 0 and prints
+  from it. npm accepts a private workspace with no version: `npm ls` exits 0 and prints
   `extension@` (`EV/s2/npm-ls-extension.txt`).
 - **No `type` key.** The Vite and Vitest configs are named `.mts`, for ADR-0002 decision 7's
   reason. Playwright's config and specs load as CommonJS, as `web/`'s do.
@@ -175,12 +175,11 @@ The names are ADR-0002 decision 6's, where they apply. This ADR adds no name.
 | `build` | `vite build` | Writes `extension/dist/`, the unpacked build Chrome loads |
 | `lint` | `eslint` | ESLint 9 flat config, `extension/eslint.config.mjs` |
 | `typecheck` | `tsc --noEmit` | Works on a fresh clone. No code generation first |
-| `test` | `vitest run` | `run`, never watch mode (BUG-0023's shape) |
+| `test` | `vitest run` | `run`, never watch mode |
 | `e2e` | `playwright test` | Builds first, in Playwright's global setup (decision 4) |
 
 - **Not carried over: `dev` and `start`.** In `web/` they run Next's servers, and the extension
-  has no server. A watch build never exits, so an agent that ran it would hang (BUG-0023's
-  shape). The first surface run adds a dev loop if it needs one, by ADR.
+  has no server. A watch build never exits, so an agent that ran it would hang. The first surface run adds a dev loop if it needs one, by ADR.
 - **Where each command runs.** Inside `extension/` with `npm run <name>`, or from the root with
   `npm run <name> --workspace extension`. There are no root proxy scripts (ADR-0002 decision 6).
 - **cmd.exe.** None of the five commands uses a construct cmd.exe cannot run (D-10's rule).
@@ -285,7 +284,7 @@ condition under "Binding on later runs" is met.
 - **One project, `chromium-extension`, not the doctrine's 20.** `actio-test-protocol` generates
   a width, theme and locale matrix for `web/`, where every spec lays out a page. This extension
   has no page. A width, a theme or a direction has nothing to change, and a spec that passes in
-  20 projects while exercising nothing in 19 reads as proof (BUG-0019's shape). The spec title
+  20 projects while exercising nothing in 19 reads as proof. The spec title
   says why, as the doctrine asks. The first surface run decides which projects its pages need.
   `enumeration-patch.md` proposes the doctrine sentence that records this, because
   `.claude/skills/` is a shared file.
@@ -429,7 +428,7 @@ For the record, the rejected WXT made no connection during `wxt prepare` or `wxt
 React and TypeScript, on the same npm workspace and toolchain. No new role is needed.
 
 Every file that gives `web/` as frontend-engineer's boundary, or enumerates the repository
-layout, must also name `extension/` and its owner (R-09, done_means 10).
+layout, must also name `extension/` and its owner (done_means 10).
 
 - **The grep and the list.** The files come from a grep, saved with its command and its output
   as `EV/r09-enumeration-grep.txt`.
@@ -537,4 +536,4 @@ never enforces an invariant, checks a permission of its own or holds an elevated
 | The localised name, the description and the store listing | Before any distribution | Binding on later runs, above |
 | Sign-in and data | The auth run | Decision 5 |
 | A content script | The run that needs one | Re-opens decision 1 |
-| The doctrine sentence for the extension's suite, and the R-09 enumerations | `enumeration-patch.md`, applied when the shared files are clean | Decision 7 |
+| The doctrine sentence for the extension's suite, and the enumerations | `enumeration-patch.md`, applied when the shared files are clean | Decision 7 |

@@ -19,6 +19,12 @@ request twice to the deployed function and counts the rows through `execute_sql`
 | `webhook-delivery` | Idempotent on the provider's message id. Providers redeliver, routinely. |
 | `survey-token` | The only place the signing secret is read. Never logs a token. |
 
+An Edge Function authenticates, validates, calls one RPC and shapes the result; a rule in it
+that a direct PostgREST call could skip moves into the database.
+
 All three: no personal data in a log line, no phone number in a URL, and a dead-letter row
-rather than a silent drop. The secrets they read are set by Shehab in the dashboard, as the
+rather than a silent drop. WhatsApp templates are the utility category: the template ids and
+payloads sent must match what was submitted to Meta as utility. Retries are bounded, backed
+off and only for transient provider codes; a permanent failure is terminal and recorded with
+the provider reason; cost is recorded per send. The secrets they read are set by Shehab in the dashboard, as the
 Toolchain section says.

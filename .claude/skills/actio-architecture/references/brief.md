@@ -1,7 +1,7 @@
 # Task brief template
 
 Read when writing a task brief or a remediation brief. This is the one brief shape: it
-replaces the two that `tech-architect.md` and `actio-architecture` used to carry (R-03).
+replaces the two that `tech-architect.md` and `actio-architecture` used to carry.
 
 This is the artefact `frontend-engineer` and `backend-engineer` build from. It must be
 implementable without a follow-up question. If the implementer has to ask, the brief was

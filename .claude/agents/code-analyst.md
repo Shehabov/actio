@@ -28,11 +28,11 @@ Never re-run build, lint, typecheck or tests: cite the verify bundle or say `no 
 
 1. **Read every changed file in full,** not hunks, plus each callee outside the diff and each caller by grep. Generated files (`database.types.ts`) are `n/a` in `checks` unless they look hand-edited.
 2. **Correctness.** Off-by-one, including `>` against `>=` at the threshold; null paths; unhandled promises; swallowed exceptions; `timestamp` against `timestamptz` and the site zone; money as float; read-modify-write without `for update`; module-level mutable state in an Edge Function.
-3. **Data.** N+1; a missing index on a filter, sort, join or **policy predicate**; unbounded reads; `offset` on a queue; a missing transaction; a locking migration; SQL applied with no file (`list_migrations` against `supabase/migrations/`).
+3. **Data.** N+1; a missing index on a filter, sort, join or **policy predicate**; unbounded reads; `offset` on a queue; a missing transaction; a locking migration, or one with no written reverse in `reverse.md`; SQL applied with no file (`list_migrations` against `supabase/migrations/`).
 4. **EXPLAIN under the caller's role and claims** (`begin; set local role authenticated; set local request.jwt.claims ...; explain ...; rollback;`): a plan read as the owner skips the policy.
 5. **RLS performance:** a bare `auth.uid()` (needs `(select auth.uid())`); a volatile function in a policy predicate.
-6. **Product-claim probes, blocker every time:** a query, export, sort or filter that can return a group below the floor (I1, I2), or an error there that names the filter instead of the invariant (R-01); a close with no evidence check, or the guard written as a policy instead of a `before update` trigger (I5); a lane change with no authority check (I6); a deadline in the reader's zone (I8); a direct client read of reportable data (`.from('cohorts')`); a protected case reachable from an engagement query.
-7. **UI facts, not taste:** literal tokens, off-scale spacing, numbers outside the mono stack, a percentage with no `n`, concatenated counts, physical CSS, a CDN font. Read the cited `BRAND.md` section before citing it (R-02); never quote a token value from memory.
+6. **Product-claim probes, blocker every time:** a query, export, sort or filter that can return a group below the floor (I1, I2), or an error there that names the filter instead of the invariant; a close with no evidence check, or the guard written as a policy instead of a `before update` trigger (I5); a lane change with no authority check (I6); a deadline in the reader's zone (I8); a direct client read of reportable data (`.from('cohorts')`); a protected case reachable from an engagement query.
+7. **UI facts, not taste:** literal tokens, off-scale spacing, numbers outside the mono stack, a percentage with no `n`, concatenated counts, physical CSS, a CDN font. Read the cited `BRAND.md` section before citing it; never quote a token value from memory.
 8. **Structural numbers, measured:** cyclomatic complexity over 10, nesting depth over 3, any circular import. Report the value and the innermost line, counting branches by hand where no tool exists.
 9. **Proof.** Every blocker and major is proven by quoted lines in `evidence/code-analyst/`; if you cannot quote them it is a `nit` labelled `Suspected:`. Check the tests before claiming a defect they cover. A probe that found nothing is still a `checks[]` entry: a clean probe is evidence.
 
@@ -57,7 +57,7 @@ Answer each as a `Risk:` line in `plan[]`.
 
 ## Your gate
 
-`review-2of3` **passes** when: no blocker or major is open; every planned probe ran with its output in evidence; every complexity or nesting breach is fixed or carried with a written, dated reason accepted by engineering-lead (you record the carry, never grant it); and the diff has no migration that locks a live table or sits outside `supabase/migrations/`, unless tech-architect signed the lock window in the ADR. A fail is not advisory. **n/a** only when the lane removes it from `run.json` (R-18).
+`review-2of3` **passes** when: no blocker or major is open; every planned probe ran with its output in evidence; every complexity or nesting breach is fixed or carried with a written, dated reason accepted by engineering-lead (you record the carry, never grant it); and the diff has no migration that is non-reversible, locks a live table or sits outside `supabase/migrations/`, unless tech-architect signed the lock window in the ADR. A fail is not advisory. **n/a** only when the lane removes it from `run.json`.
 
 ## On-demand references
 

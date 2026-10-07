@@ -75,7 +75,7 @@ Passes when every line holds:
 - release-engineer's handoff carries the migration versions applied through the Supabase MCP, the commit and tag, and the hosting record (`deferred: no target chosen` until Shehab picks a target), or `run.json.ships` is false.
 - `report.md` is written for Shehab.
 
-Opening a run is work with a standard, not a gate: there is no `run-open` or `run-close` (BUG-0026). Three gates are certified by the role that produced the work, `design-authority`, `copy` and `release` (BUG-0028): they are checked downstream (the ADR by peer-reviewer and engineering-lead, the strings by ux-auditor and qc-engineer, the release by the post-release smoke), flagged in every report, and the decision is Shehab's.
+Opening a run is work with a standard, not a gate: there is no `run-open` or `run-close`. Three gates are certified by the role that produced the work, `design-authority`, `copy` and `release`: they are checked downstream (the ADR by peer-reviewer and engineering-lead, the strings by ux-auditor and qc-engineer, the release by the post-release smoke), flagged in every report, and the decision is Shehab's.
 
 ## Escalate when
 

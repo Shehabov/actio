@@ -36,9 +36,9 @@ projects.
 | Output | Where | Notes |
 |---|---|---|
 | Console log and exit code | `run.log` | The list reporter, one line per case, then `exit N` |
-| Counts | `results.json`, its `stats` | expected, unexpected, skipped and flaky. A count in a test log is read from here (R-09). |
-| Report | `report/index.html` | `PLAYWRIGHT_HTML_OPEN=never`, because a report that opens and serves itself is a command that never returns (BUG-0023) |
-| Traces | `artifacts/<test>/trace.zip`, one per case | `--trace=on` for every gate run. Playwright's trace viewer is for a person reading a trace, and no agent runs it: it opens an interactive viewer, the hazard the Report row names (BUG-0023). An agent reads a case from `run.log`, `results.json` and the screenshots. Traces carry tokens and bodies, so the data rule under [The MCP session](playwright-mcp.md) covers them. |
+| Counts | `results.json`, its `stats` | expected, unexpected, skipped and flaky. A count in a test log is read from here. |
+| Report | `report/index.html` | `PLAYWRIGHT_HTML_OPEN=never`, because a report that opens and serves itself is a command that never returns |
+| Traces | `artifacts/<test>/trace.zip`, one per case | `--trace=on` for every gate run. Playwright's trace viewer is for a person reading a trace, and no agent runs it: it opens an interactive viewer, the hazard the Report row names. An agent reads a case from `run.log`, `results.json` and the screenshots. Traces carry tokens and bodies, so the data rule under [The MCP session](playwright-mcp.md) covers them. |
 | Screenshots | `artifacts/<test>/<surface>-<case>-<project>.png` | Saved by the spec through `testInfo.outputPath(...)`, named as [Evidence](#evidence) says, for example `queue-sort-360-dark-ar.png` |
 
 The command-line flags and the environment variables take precedence over the reporter and

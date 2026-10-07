@@ -1,6 +1,6 @@
 ---
 name: actio-brand-guard
-description: Enforce the Actio brand spec on any surface, string, component or asset. Use before designing, writing copy, building UI, or reviewing anything a user will see. Covers the pre-flight checklist, the highest-frequency failure modes with their fixes, and which vendored design skills are approved for Actio work.
+description: "Brand pre-flight for any Actio surface, string, component or asset: use before designing, writing copy, building UI or reviewing anything a user will see. Gives the checklist, the highest-frequency failure modes with their fixes, and the verdict on each vendored design skill (BRAND.md always wins, and each departure is recorded). Vendored skills are read on demand, never preloaded."
 ---
 
 # Brand guard
@@ -43,10 +43,10 @@ Every line is a yes or a finding. Do not ship on a maybe.
 
 ### Space, radius, motion
 
-- [ ] Every spacing value is 4, 8, 12, 16, 24, 32, 48 or 64. **14, 18, 20 and 30 do not exist** (R-04).
+- [ ] Every spacing value is 4, 8, 12, 16, 24, 32, 48 or 64. **14, 18, 20 and 30 do not exist**.
 - [ ] Radius: 8 controls, 12 cards (a modal takes it), 999 pills, 0 on any single-sided border. No fourth token.
 - [ ] Nothing in the document flow carries a shadow. Only overlays lift.
-- [ ] Surfaces separate by lightness and space, not outline: a panel lifts off the Ink 50 page with the tint step (white), settled in `BRAND.md` v1.5 §1.1 and needing no override record. The Ink 150 hairline stays for repeated records, structural chrome edges and dividers inside one surface. A hairline doing the lifting, or a tint doing a row rule's job, is the defect. Surface, border and hover are three different values (R-06).
+- [ ] Surfaces separate by lightness and space, not outline: a panel lifts off the Ink 50 page with the tint step (white), settled in `BRAND.md` v1.5 §1.1 and needing no override record. The Ink 150 hairline stays for repeated records, structural chrome edges and dividers inside one surface. A hairline doing the lifting, or a tint doing a row rule's job, is the defect. Surface, border and hover are three different values.
 - [ ] One curve `cubic-bezier(.2, 0, .2, 1)`: 120ms micro, 200ms panel, 300ms ceiling, `transform` and `opacity` only.
 - [ ] Every transition is reader-triggered. **Nothing animates on load** (a progress indicator reports work and is exempt). Nothing counts up, shimmers or draws itself; no spring, overshoot, stagger or parallax. `prefers-reduced-motion` honoured on every transition.
 

@@ -7,19 +7,19 @@
  *
  * This file is the executable form of the utilisation-check algorithm in
  * `.claude/skills/actio-orchestration/SKILL.md`. That skill originally published the check
- * as `jq` one-liners that could not run here (BUG-0021); the skill is the specification and
- * this file the implementation, one source and one reference (R-03).
+ * as `jq` one-liners that could not run here; the skill is the specification and
+ * this file the implementation, one source and one reference.
  *
  * Invariants this file upholds:
  *   - It never writes. A checker that repairs what it checks cannot be trusted.
  *   - It never reads the ledger. The ledger is narrative; handoffs are the record.
  *   - A stage that is not yet due is PENDING, not NEVER_RAN, so the check is meaningful
- *     mid-run and not only at closure (BUG-0022). A `working` handoff is a checkpoint, not a
+ *     mid-run and not only at closure. A `working` handoff is a checkpoint, not a
  *     hand-off: its stage is running.
  *   - Every finding is blocking or advisory. Exit code is 1 only when a blocking finding is
  *     raised, so run-closure can depend on it while advisory findings go to the report.
  *   - It must return no finding on every healthy state of a v2 run and must not crash on a
- *     legacy run (R-13).
+ *     legacy run.
  *
  * Usage:  node .actio/bin/utilisation-check.mjs [<run-dir> | <run-id>] [--json] [--compact] [--closing]
  *         --closing judges the run as if run-closure were being recorded (used by run.mjs close).
@@ -47,7 +47,7 @@ const F = {
   UNKNOWN_GATE: 'UNKNOWN_GATE',
   // A gate passed on a snapshot older than the latest maker snapshot (A2).
   GATE_STALE: 'GATE_STALE',
-  // The two checks that used to live only in orchestrator.md's parallel taxonomy (BUG-0025).
+  // The two checks that used to live only in orchestrator.md's parallel taxonomy.
   LOOP_SKIPPED: 'LOOP_SKIPPED',
   NO_TIMING: 'NO_TIMING',
 }
@@ -97,7 +97,7 @@ const planAgents = new Set(plan.map((e) => e.agent))
 
 /**
  * Handoffs, keyed by agent. A pass after the first writes `handoff-stage<N>.json`, because two
- * passes writing one file destroyed the first record (BUG-0016). This reader accepts both.
+ * passes writing one file destroyed the first record. This reader accepts both.
  */
 function loadHandoffs() {
   const out = []
@@ -303,7 +303,7 @@ const waiting = []
 for (const [agent, entries] of planByAgent) {
   const records = handoffsByAgent.get(agent) || []
 
-  // 1. HANDOFF EXISTS, once per planned pass, by the stage pairing, never a count of files (BUG-0030).
+  // 1. HANDOFF EXISTS, once per planned pass, by the stage pairing, never a count of files.
   for (const entry of entries.filter((e) => !handedOff.has(e))) {
     const readers = readersOf(entry)
     const ckpt = runningRec.get(entry)
@@ -370,7 +370,7 @@ for (const [agent, entries] of planByAgent) {
       }
       if (gateByName.get(g.name).owner !== agent) raise(F.GATE_SELF_CERTIFIED, label, `certified "${g.name}", owned by ${gateByName.get(g.name).owner}`)
       if (g.result === 'pass' && g.evidence && !locate(g.evidence)) raise(F.GATE_UNRESOLVED, label, `gate "${g.name}" passed on evidence ${g.evidence}, which does not exist`)
-      if (g.result === 'n/a' && !(typeof g.reason === 'string' && g.reason.trim())) raise(F.MALFORMED_HANDOFF, label, `gate "${g.name}" is n/a without a reason (R-18)`)
+      if (g.result === 'n/a' && !(typeof g.reason === 'string' && g.reason.trim())) raise(F.MALFORMED_HANDOFF, label, `gate "${g.name}" is n/a without a reason`)
       else if (isV2 && !['pass', 'fail', 'n/a'].includes(g.result)) raise(F.MALFORMED_HANDOFF, label, `gate "${g.name}" result "${g.result}" is not pass, fail or n/a`)
     }
 

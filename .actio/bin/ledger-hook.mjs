@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ledger-hook.mjs: writes the dispatch and return rows of the active run's ledger, so the
- * orchestrator never spends a turn on them (R-15).
+ * orchestrator never spends a turn on them.
  *
  * Wired in .claude/settings.json as the SubagentStart (`start`) and SubagentStop (`stop`)
  * command hooks. Reads the hook payload from stdin and appends to the ledger of the run named

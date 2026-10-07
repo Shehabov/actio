@@ -39,7 +39,10 @@ create trigger issue_transition_guard
 
 A trigger rather than a policy, because a policy decides *whether a row is visible or
 writable* and this is a rule about *what a valid transition is*. Both are database-level and
-neither is bypassable from a client.
+neither is bypassable from a client. The legal-transition table is also backed by a check
+constraint, and `transition()` is the one RPC that takes the target state and evidence, reads
+the actor from `(select auth.uid())`, and does `select ... for update` on the row and writes
+a transition-log row per change, all in one transaction.
 
 ## PostgREST conventions
 
@@ -48,7 +51,7 @@ shape; only the transport does.
 
 | Concern | Convention |
 |---|---|
-| Reads | A view or an RPC, never a base table. Base tables are revoked. |
+| Reads | A view or an RPC, never a base table. Base tables are revoked. A view shapes a read and holds no business branching. |
 | Writes | An RPC for anything with a rule. Direct table writes only where a policy fully expresses the rule. |
 | Errors | `raise exception '<snake_case_code>' using errcode = 'P0001'`. The code reaches the client in PostgREST's `message`, and the front end's data client wraps it into the one error shape in `actio-architecture`. Edge Functions return that shape directly. Copy belongs to `ux-writer`. |
 | Pagination | Keyset on `(due, id)` for the queue. Never `offset`, because rows move while a reader pages. |

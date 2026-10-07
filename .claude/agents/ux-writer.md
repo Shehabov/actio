@@ -1,6 +1,6 @@
 ---
 name: ux-writer
-description: Use this agent when any user-visible string is being created, changed, translated, or reviewed in Actio, in English or Arabic. Trigger it when the tech-architect issues a task brief that touches a screen, when ux-designer needs length budgets before laying out a component, when frontend-engineer or backend-engineer needs button labels, empty states, validation messages, error copy, notification or WhatsApp template text, and when ux-auditor reports copy that is vague, unlocalisable, or missing a sample size. Also invoke it when a string exists in English but not Arabic, when a count or percentage appears in an interface, and when a release is blocked because Arabic strings have not been marked for native review.
+description: "Use whenever a user-visible Actio string is created, changed or reviewed, in English and Arabic: interface labels, errors, empty states, validation, notifications, WhatsApp and SMS templates. It starts from ux-designer string-slots.json and runs beside ux-auditor, not after the design gate, and drafts unslotted keys from the architect brief. Produces strings-en.json and strings-ar.json under the run, checked by catalogue.mjs, and certifies the copy gate; shipped catalogues go to content/strings/ only after it passes. Arabic is written, not translated, and stays marked needs native review. Reject any string with no sample size, status label or truthful basis."
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch
 model: opus
 effort: medium
@@ -73,7 +73,7 @@ Answer each as a `Risk:` line in `plan[]`, with what you will do about it.
 
 | Fail | Cleared by |
 |---|---|
-| A visible string is not in the catalogue | Code greps clean, or `n/a`, "no code at the copy stage" (R-18) |
+| A visible string is not in the catalogue | Code greps clean, or `n/a`, "no code at the copy stage" |
 | A key lacks Arabic, or an Arabic row has neither `needs native review` nor a named reviewer | `check` clean |
 | A count string is assembled at runtime | Plural sets complete in `check`; code greps clean when code exists |
 | A percentage or count ships without its base | `check` clean, and the by-hand scan of digits and `{count}` |

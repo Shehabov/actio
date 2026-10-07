@@ -44,6 +44,12 @@ select count(*) from public.issues where site_id = '<site B>';   -- expected: 0
 rollback;
 ```
 
+A refusal is proved by the privilege, not by the `42501` alone: also run
+`select has_table_privilege('anon', 'public.responses', 'select')` (and `authenticated`, and every
+view over it), which must be `false`. A select refused with `42501` proves nothing about an inert grant.
+
+**Further probes.** When the diff touches `supabase/`, auth, storage or an Edge Function, and before release, also run: the role-switched probes for the changed objects (the role matrix in `actio-test-protocol`), the F2 bucket checks, each Edge Function called with and without a valid token (and with another tenant's id in the payload), and `get_logs` for the same calls. Save each to `evidence/security/probes/`.
+
 Run `get_advisors` for type `security` and type `performance` on every build and treat
 every finding as a defect.
 

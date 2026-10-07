@@ -1,11 +1,11 @@
 ---
 name: actio-design-system
-description: "The Actio platform design system, derived from the approved visual references in docs/design-reference. Use when designing or building any Actio surface: the app shell, navigation, metric tiles, cards, the queue, tables, status, empty states or the composer. Covers layout anatomy, density, the inversion rule, mobile-first translation, and which reference patterns are adopted, adapted or rejected."
+description: "The Actio platform design system, from the approved references in docs/design-reference: shell anatomy, metric tiles, cards, queue, charts, the eight states, dark mode values, the inversion rule, density, mobile-first translation and the pre-flight list. Use when designing, auditing or building any Actio surface. The five components (bare sparkline, collapsible section header, command palette, pill tab group, quote-led row) have specs in references/components/ with seven headings and an Audit block, read when a surface uses one."
 ---
 
 # The Actio design system
 
-Seven references in `docs/design-reference/` set the platform's shape; this skill turns them into rules. `BRAND.md` governs tokens, type, colour, motion and copy. This skill governs layout anatomy, component structure, density and states. Vendored skills contribute craft only and lose to both (`actio-brand-guard`). Read a `BRAND.md` section before citing it (R-02).
+Seven references in `docs/design-reference/` set the platform's shape; this skill turns them into rules. `BRAND.md` governs tokens, type, colour, motion and copy. This skill governs layout anatomy, component structure, density and states. Vendored skills contribute craft only and lose to both (`actio-brand-guard`). Read a `BRAND.md` section before citing it.
 
 ## References
 
@@ -25,7 +25,7 @@ Under `.claude/skills/actio-design-system/references/`. Read the file when its t
 
 ## Structure, never colour
 
-References define anatomy, density, hierarchy and interaction. They never define colour, size, weight or radius: Vega `#00BFC4` is the accent and `BRAND.md` is the only source of values. A reference image cited beside a value is a defect (R-07, BUG-0006). `ref-06` is primary; where it and `ref-02` disagree `ref-06` wins, except the queue, which is deliberately denser.
+References define anatomy, density, hierarchy and interaction. They never define colour, size, weight or radius: Vega `#00BFC4` is the accent and `BRAND.md` is the only source of values. A reference image cited beside a value is a defect. `ref-06` is primary; where it and `ref-02` disagree `ref-06` wins, except the queue, which is deliberately denser.
 
 **The `ref-04` test.** `ref-04` is the counter-example: a matrix of tinted cells on a red-to-green ramp, a score per cohort, sentiment as the lead figure, a comment count with no owner, colour carrying a cell's whole meaning. Put the screen beside it. If a stranger cannot tell which product routes work to a named owner and which reports a mood, the screen has failed whatever its palette.
 
@@ -39,7 +39,7 @@ If a screen has these it reads as `ref-06`; with none it reads as every other pr
 4. **Two large panels, never a row of small tiles.** Three is the ceiling; four or more is a finding.
 5. **Air.** Metric tile padding 48, section gaps 48, a screen that ends well before the fold.
 
-**Row heights are composed, not picked**: block padding from the scale, plus the line box, plus the same padding again. If the height you want is not reachable from a scale step, the padding is wrong, not the scale (R-04).
+**Row heights are composed, not picked**: block padding from the scale, plus the line box, plus the same padding again. If the height you want is not reachable from a scale step, the padding is wrong, not the scale.
 
 | Row | Derivation | Height |
 |---|---|---|
@@ -67,7 +67,7 @@ Smoothness is consistency, not gloss. Full text: `references/smoothness.md`.
 
 | Rule | |
 |---|---|
-| Surface | Light: Ink 50 page, white panel (the tint step), white plus `shadow-overlay` for an overlay (`BRAND.md` §1.1 v1.5, settled; no override record). Dark: Cosmos page, `#1A1A18` panel, overlay with a `#33332F` border. An Ink 150 hairline separates repeated records, marks a structural chrome edge, or divides inside one surface. It never lifts a panel. Surface, border and hover are three different values (R-06) |
+| Surface | Light: Ink 50 page, white panel (the tint step), white plus `shadow-overlay` for an overlay (`BRAND.md` §1.1 v1.5, settled; no override record). Dark: Cosmos page, `#1A1A18` panel, overlay with a `#33332F` border. An Ink 150 hairline separates repeated records, marks a structural chrome edge, or divides inside one surface. It never lifts a panel. Surface, border and hover are three different values |
 | Type | One scale across its full range. The featured figure is Plex Mono 500 at Display 40/46, label and meta at Caption and Small, no mid-size between |
 | Chrome | Delete before styling: border, legend, axis, gridline, container, an icon repeating its label, a count nobody asked for |
 | Motion | One curve `cubic-bezier(.2, 0, .2, 1)`; 120ms micro, 200ms panel, 300ms ceiling; `transform` and `opacity` only; triggered by a reader action, nothing animates on load (a progress indicator reports work and is exempt); reduced motion honoured. Never a spring, overshoot, stagger, parallax, count-up, self-drawing chart or shimmer |
@@ -90,7 +90,7 @@ Every surface ships all eight, each with its own layout, focus order and string 
 | Error | What happened, then the next step, the control beside the message where the action is possible |
 | Dense | The realistic worst case: 40 issues, the longest locale, the longest names. Truncation is specified, never accidental |
 | Protected | Row present so the count reconciles; no title, no detail, no assignee. `state-protected` reads as its own class, never as an error or as overdue |
-| Below threshold | Degrades without leaking the cohort size to a manager, a site lead or an administrator, the readers this suppression guards against. Only the cohort's own members may see it. States the rule in plain terms with its threshold of 5 and never names the filter. The earlier wording named no reader and was a defect (BUG-0020, R-10) |
+| Below threshold | Degrades without leaking the cohort size to a manager, a site lead or an administrator, the readers this suppression guards against. Only the cohort's own members may see it. States the rule in plain terms with its threshold of 5 and never names the filter. The earlier wording named no reader and was a defect |
 | Offline | Answers held on device, stated plainly, sent on reconnect; nothing typed is lost |
 
 ## Responsive

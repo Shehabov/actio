@@ -40,7 +40,7 @@ select lives_ok(
   'a cohort of five reports'
 );
 
--- I2, and R-01: the refusal must not name the filter
+-- I2: the refusal must not name the filter
 select throws_ok(
   $$ select * from public.cohort_report('<cycle>', '{"shift":"night"}'::jsonb) $$,
   'P0001', 'below_threshold',
@@ -53,7 +53,7 @@ select is(
   'the roster is late',
   'free text is returned reworded with names removed'
 );
--- I3: the refusal, checked for the client role, never assumed (BUG-0029)
+-- I3: the refusal, checked for the client role, never assumed
 select ok(
   not has_table_privilege('authenticated', 'public.response_feedback', 'select'),
   'authenticated holds no privilege on the reworded view'

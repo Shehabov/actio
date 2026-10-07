@@ -59,7 +59,7 @@ Paths per stage are fixed in the lane templates. Gate names never change; the ca
 | `read`, `brand`, `accept` | Files to read first; `BRAND.md` sections (`"§1"`); acceptance criteria from `done_means` |
 | `model` | `null` uses the agent's frontmatter; a name overrides it |
 
-An entry is due when every `blocked_by` gate reads `pass` or `n/a` and every `consumes` path is on disk (a handoff counts once it leaves `working`). Only `sync-gates.mjs` writes `gates[].result` (BUG-0027). After the first dispatch, amend only by appending an entry and a ledger row; never edit one in place. Skipping an agent is a planning decision in `out_of_scope`, never a silent omission.
+An entry is due when every `blocked_by` gate reads `pass` or `n/a` and every `consumes` path is on disk (a handoff counts once it leaves `working`). Only `sync-gates.mjs` writes `gates[].result`. After the first dispatch, amend only by appending an entry and a ledger row; never edit one in place. Skipping an agent is a planning decision in `out_of_scope`, never a silent omission.
 
 ## run.mjs
 
@@ -101,7 +101,7 @@ A database stage is one whose task needs the project: backend-engineer and relea
 
 ## The utilisation check
 
-`run.mjs next` runs `sync-gates.mjs` then `utilisation-check.mjs --compact`. The script implements this table; change both together (R-03). PENDING (gates or inputs not ready, a consumer not yet dispatched) is not a finding.
+`run.mjs next` runs `sync-gates.mjs` then `utilisation-check.mjs --compact`. The script implements this table; change both together. PENDING (gates or inputs not ready, a consumer not yet dispatched) is not a finding.
 
 | Code | Class | Means | Do this |
 |---|---|---|---|
@@ -140,7 +140,7 @@ Also watch for ping-pong (two agents rejecting each other: the contract is wrong
 
 ## The run report
 
-`report.md` at closure, for Shehab: plain, specific, no summary language. Sections: **Brief** and **Status** (one line each, counting his decisions and the untested items) · What changed (surface, change) · Who did what (agent, produced, gate and result) · Utilisation (agents run of planned; blocking and advisory at closure; unconsumed outputs named) · What needs you (decision, options, recommendation) · Knowingly untested (what, why, risk) · Gates certified by their own producer (BUG-0028). Then `orchestrator/handoff.json` with `run-closure`, and `run.mjs close <run> --confirm`.
+`report.md` at closure, for Shehab: plain, specific, no summary language. Sections: **Brief** and **Status** (one line each, counting his decisions and the untested items) · What changed (surface, change) · Who did what (agent, produced, gate and result) · Utilisation (agents run of planned; blocking and advisory at closure; unconsumed outputs named) · What needs you (decision, options, recommendation) · Knowingly untested (what, why, risk) · Gates certified by their own producer. Then `orchestrator/handoff.json` with `run-closure`, and `run.mjs close <run> --confirm`.
 
 ## References
 

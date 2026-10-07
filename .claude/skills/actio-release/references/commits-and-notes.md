@@ -1,6 +1,6 @@
 # Commits, tags, the release note and the sequence record
 
-Read when: you write the first commit, the release note or `evidence/release/sequence.md` of a release. The pre-flight and the sequence are in `SKILL.md`; the commands for the tag and the push are there too (`git fetch . <branch>:main`, never a checkout of `main`, R-19).
+Read when: you write the first commit, the release note or `evidence/release/sequence.md` of a release. The pre-flight and the sequence are in `SKILL.md`; the commands for the tag and the push are there too (`git fetch . <branch>:main`, never a checkout of `main`).
 
 ## Branches and commits
 

@@ -92,7 +92,7 @@ column matches the manifest and the section inside it, so a node command can dif
 
 The table has 14 entries: 5 web dependencies, 8 web devDependencies and 1 root devDependency.
 Count them again with the diff command in brief-frontend step 20, which prints the number it
-compared (R-09).
+compared.
 
 **Not installed:** `tailwindcss`, latest 4.3.3 (decision 4). **Resolved by the lockfile, not
 pinned in a manifest:** every transitive package. That includes `vite` 8.3.1, which vitest
@@ -111,7 +111,7 @@ ADR, on the triggers under "What would make us revisit".
 
 | Option | Consequence |
 |---|---|
-| 7.0.2, the latest | Rejected. It installs, and typecheck, lint and build all exit 0 in the mirror. They pass only because npm quietly keeps TypeScript 6.0.3 at the root to satisfy typescript-eslint, while 7.0.2 sits in `web/` (`ts7-two-compilers.txt`). The project would run two compilers. `tsc` and `next build` would check with one. The linter would parse with the other, a version no manifest names and only the lockfile chooses. That is R-03's shape in the toolchain itself. Once 7.x adds syntax that 6.0 cannot parse, lint would fail or misread it. 7.0.2 also carries no compiler API, so the Next.js editor plugin cannot load it. And Next reaches 7 only through an option its own docs call experimental |
+| 7.0.2, the latest | Rejected. It installs, and typecheck, lint and build all exit 0 in the mirror. They pass only because npm quietly keeps TypeScript 6.0.3 at the root to satisfy typescript-eslint, while 7.0.2 sits in `web/` (`ts7-two-compilers.txt`). The project would run two compilers. `tsc` and `next build` would check with one. The linter would parse with the other, a version no manifest names and only the lockfile chooses. That is that shape in the toolchain itself. Once 7.x adds syntax that 6.0 cannot parse, lint would fail or misread it. 7.0.2 also carries no compiler API, so the Next.js editor plugin cannot load it. And Next reaches 7 only through an option its own docs call experimental |
 | 7.0.2 with 6.0.3 pinned beside it under an alias | Rejected. It declares the two compilers instead of hiding them, but there would still be two |
 | **6.0.3** | **Chosen.** It is the latest release that every package in the stack declares support for. One compiler serves `tsc`, `next build` and the linter (`install.txt`, `npm-ls-healthy.txt`). `@types/react` publishes its `ts6.0` tag at 19.3.0. TypeScript 6.0 is the last JavaScript-based release, built as the bridge to 7.0, so moving later is a pin change, re-proved by the same commands |
 
@@ -140,7 +140,7 @@ workspace admits means code cannot call an API the runtime lacks.
 ## Decision 2 · Pinning policy
 
 - **Exact versions for every direct dependency, in both manifests.** Both `web/package.json` and
-  the root `package.json` follow this. It is one policy for the workspace (R-03). The root's
+  the root `package.json` follow this. It is one policy for the workspace. The root's
   `@electric-sql/pglite` moves from `^0.5.8` to `0.5.8`, which the root lockfile already
   resolves, so the change moves nothing.
 - **The root `package-lock.json` pins every transitive package, and it is the only lockfile.**
@@ -173,7 +173,7 @@ npx --yes create-next-app@16.3.6 web --yes --ts --app --eslint --src-dir --use-n
 | `--yes` with every option named | `--yes` fills any option you leave out from preferences saved on the machine. create-next-app keeps eight of those: typescript, app, linter, srcDir, importAlias, tailwind, reactCompiler and agentsMd. All eight are named on this line, so a preference saved by an earlier run cannot change the output |
 | `--no-tailwind` | Decision 4 |
 | `--no-react-compiler` | It would add `babel-plugin-react-compiler`, a dependency no decision has taken |
-| `--no-agents-md` | The default writes `web/AGENTS.md` and `web/CLAUDE.md`. That is a second agent-instructions file (R-03), carrying tool text (hard rule 1) |
+| `--no-agents-md` | The default writes `web/AGENTS.md` and `web/CLAUDE.md`. That is a second agent-instructions file, carrying tool text (hard rule 1) |
 | `--empty` | The empty template. It never writes the demo page styles, `public/` and its SVGs, the favicon, the `next/font/google` Geist import or a stylesheet |
 | `--skip-install` | Without it, the command installs inside `web/` at the template's ranges (react 19.2.8, typescript `^5`, eslint `^9`). The pins are set first, and one install runs at the root |
 | `--disable-git` | No nested repository |
@@ -194,7 +194,7 @@ not whether the tokens reach it.
 
 | Option | Consequence |
 |---|---|
-| Tailwind now, as generated | Rejected. Its default theme ships a full colour palette and a spacing, type and radius scale, and none of it is `BRAND.md`'s. The first class anyone writes would carry a value outside the scale (R-04, hard rule 4, BUG-0005). Its preflight also sets a line height and a font stack |
+| Tailwind now, as generated | Rejected. Its default theme ships a full colour palette and a spacing, type and radius scale, and none of it is `BRAND.md`'s. The first class anyone writes would carry a value outside the scale (hard rule 4). Its preflight also sets a line height and a font stack |
 | Tailwind now, with the default theme cleared | Rejected. Clearing the theme is a token-layer decision taken before the tokens exist. It installs a dependency nothing uses, and security-analyst would audit it for nothing |
 | **Not installed now. The tokens run decides it, with the tokens** | **Chosen.** The tokens run takes `BRAND.md` §9 step 1. It decides whether Tailwind is the consumption layer or the CSS custom properties alone are, and it pins the version then |
 
@@ -218,13 +218,13 @@ used. `next/font/local` is the candidate mechanism, and the fonts run decides.
 | Generated file | Fate | Why |
 |---|---|---|
 | `web/.gitignore` | Deleted | Decision 9 |
-| `web/README.md` | Deleted | It names create-next-app, the hosting vendor and three package managers this machine does not have (D-01, D-14). It would also be a third place to find the script names (R-03) |
+| `web/README.md` | Deleted | It names create-next-app, the hosting vendor and three package managers this machine does not have (D-01, D-14). It would also be a third place to find the script names |
 | `web/next-env.d.ts` | Left alone, never committed | Gitignored at the root, and regenerated by `next dev`, `next build` and `next typegen` |
 | `web/package.json` | Edited | Decisions 1, 2 and 6 |
 | `web/tsconfig.json` | One edit: `"types": ["node"]` in `compilerOptions` | Decision 1, TypeScript |
 | `web/next.config.ts` | Edited | Two options, below, and the telemetry line of decision 11. The template's placeholder comment goes |
 | `web/eslint.config.mjs` | Unchanged | It lints all 11 files and exits 0 |
-| `web/src/app/layout.tsx` | Rewritten | Three things go. The `metadata` export goes: its title is a product string, and its description is a "generated by" line (BUG-0001, hard rule 1). `lang="en"` goes: the language is decided per locale by locale routing, and `en` is wrong for three of the four locales. `LayoutProps<"/">` goes, replaced by an explicit `children` type, so that `tsc --noEmit` passes on a fresh clone |
+| `web/src/app/layout.tsx` | Rewritten | Three things go. The `metadata` export goes: its title is a product string, and its description is a "generated by" line (hard rule 1). `lang="en"` goes: the language is decided per locale by locale routing, and `en` is wrong for three of the four locales. `LayoutProps<"/">` goes, replaced by an explicit `children` type, so that `tsc --noEmit` passes on a fresh clone |
 | `web/src/app/page.tsx` | Rewritten to render nothing | Below |
 
 **`next.config.ts` carries two options, each with a one-line comment saying why:**
@@ -277,13 +277,13 @@ under Repository layout. This ADR adds the command line for each. It adds no nam
 | `start` | `next start` | Kept from the template. The e2e web server uses it |
 | `lint` | `eslint` | ESLint 9 flat config, `web/eslint.config.mjs` |
 | `typecheck` | `tsc --noEmit` | |
-| `test` | `vitest run` | `run`, never watch mode, which does not exit (BUG-0023's shape) |
+| `test` | `vitest run` | `run`, never watch mode, which does not exit |
 | `e2e` | `playwright test` | |
 
 - **Where each command runs.** Run a script inside `web/` with `npm run <name>`, or from the
   root with `npm run <name> --workspace web`.
 - **No proxy scripts at the root.** A root `build` that calls the workspace's `build` would be
-  a second definition of each name (R-03). The root keeps its one script, `db:test`.
+  a second definition of each name. The root keeps its one script, `db:test`.
 - **cmd.exe.** None of these commands uses a construct cmd.exe cannot run (D-10).
 
 ---
@@ -310,7 +310,7 @@ source is `actio-test-protocol`, section "Automation with Playwright", written b
 `2026-09-27-qa-playwright`. That section was not on disk when this stage started. It landed
 during the stage, and it changed again after the first handoff of this ADR (skill file time
 20:02:26Z, handoff 20:01:57Z). This decision conforms to the section as it stands at the resumed
-pass of this stage, and cites it rather than restating it (R-03). The division of work is the
+pass of this stage, and cites it rather than restating it. The division of work is the
 doctrine's: the suite is the only Playwright instrument that produces gate evidence, and it is
 the only one frontend-engineer holds, because only qc-engineer and qc-lead carry the Playwright
 MCP. What the doctrine leaves to ADR-0002, this decision records:
@@ -341,7 +341,7 @@ MCP. What the doctrine leaves to ADR-0002, this decision records:
 | Setting | Value | Why |
 |---|---|---|
 | `testDir` | `./e2e` | The doctrine's spec directory |
-| `reporter` | `[["list"]]` | This is the default for a plain `npm run e2e`. When a test fails, the HTML reporter serves its report and waits, which never returns in a non-interactive shell (BUG-0023's shape). The doctrine's gate command overrides the reporters on its command line, with `PLAYWRIGHT_HTML_OPEN=never` |
+| `reporter` | `[["list"]]` | This is the default for a plain `npm run e2e`. When a test fails, the HTML reporter serves its report and waits, which never returns in a non-interactive shell. The doctrine's gate command overrides the reporters on its command line, with `PLAYWRIGHT_HTML_OPEN=never` |
 | `forbidOnly`, `retries` | `true`, `0` | A stray `.only` fails the run, and a failure is never retried into a pass |
 | `use.baseURL` | `http://localhost:3000` | Next's default port |
 | `use.trace` | `"retain-on-failure"` | This is the default for a plain run, and traces go to `web/test-results/`, which the root ignores. The doctrine's gate command sets `--trace=on` |
@@ -364,7 +364,7 @@ title says why it does not". This one runs in the five `<width>-light-en` projec
 skipped in the other 15 by a file-level `test.skip` whose reason cites this decision. The title
 says why: the app has no theme and no direction yet. In a `dark` or `ar` project it would pass
 while exercising nothing, because the page sets no theme and no direction for the project to
-change. A check that cannot reach what it names reads as proof (BUG-0019's shape). The skips are
+change. A check that cannot reach what it names reads as proof. The skips are
 visible in the results, as `skipped: 15`.
 
 **What it asserts, in this order:**
@@ -467,7 +467,7 @@ browser.
 **`web/.gitignore` is deleted, not patched.** The generated file ignores `.env*`, and a nested
 ignore file governs its own directory, so `web/.env.example` would be ignored and never
 committed. Patching it with `!.env.example` would leave two files governing one env file, which
-is R-03's shape. The root `.gitignore` was written for `web/`: its comments name `web/.env.local`
+is that shape. The root `.gitignore` was written for `web/`: its comments name `web/.env.local`
 and `web/.next/`. Checked against every path the app writes (`gitignore-check.txt`), it:
 
 - ignores `node_modules/`, `.next/`, `next-env.d.ts`, `*.tsbuildinfo`, `coverage/`,
@@ -556,7 +556,7 @@ only that preference, and never loads the project's config, so on this machine i
 
 ---
 
-## One source per concept (R-03)
+## One source per concept
 
 The regression brief lists six concepts that could be defined twice in this run. Each has one
 source.
@@ -582,7 +582,7 @@ source.
 - The scaffold builds, lints, typechecks, tests and boots in the mirror with no `.env.local`.
   The commands frontend-engineer runs are the ones that already ran here.
 - `web/` holds no demo artefact, stylesheet, font, icon, agent file or product string to strip.
-  Almost everything is prevented at creation rather than removed afterwards (R-08).
+  Almost everything is prevented at creation rather than removed afterwards.
 - A fresh clone typechecks before any build.
 - The smoke holds the no-CDN rule at runtime, not only by grep.
 - The Playwright config carries the testing doctrine's full matrix from the first commit, so the

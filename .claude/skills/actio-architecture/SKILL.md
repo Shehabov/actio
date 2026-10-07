@@ -1,6 +1,6 @@
 ---
 name: actio-architecture
-description: "Design and record Actio system architecture: domain model, system invariants, repository layout, API contracts, ADRs and implementation task briefs. Use when making a technical decision, reviewing whether a change preserves the architecture, or issuing work to the front-end and back-end agents."
+description: "Actio domain model, system invariants I1 to I8, the invariant and boundary checklist B1 to B9, API conventions and the rules for briefs, ADRs and contracts. Use when making a technical decision, checking that a change preserves the architecture, or issuing work to the front-end and back-end agents. The ADR, brief and contract templates and the repository layout sit in references/ and are read only when writing that artefact."
 ---
 
 # Architecture
@@ -54,7 +54,7 @@ amended by ADR only.
 |---|---|---|
 | I1 | No cohort below the reporting threshold of 5 ever reports | Base tables revoked from `anon` and `authenticated`; a security-definer function applies the threshold before returning anything. RLS is row-level and the threshold is an aggregate property, so a row policy cannot express it |
 | I2 | A manager cannot filter below the threshold | The same function and revoke. The filtered set is counted inside the function and refused below the floor, so a manager never reaches the rows to filter them |
-| I3 | Free text is returned reworded, with names removed | The raw column has no grant to anyone. A `security_invoker` view rewords it; only the security-definer read function selects from it, after the floor. No client role is granted the view (BUG-0029) |
+| I3 | Free text is returned reworded, with names removed | The raw column has no grant to anyone. A `security_invoker` view rewords it; only the security-definer read function selects from it, after the floor. No client role is granted the view |
 | I4 | A protected case never appears in the engagement queue | A separate schema with a separate grant, never a flag on `issues`. A flag can be forgotten in a `where` clause; a missing grant cannot |
 | I5 | An issue cannot transition to closed without attached evidence | A `before update` trigger, security definer, `search_path` pinned. A trigger, not a policy: this is a rule about a valid transition, not about row visibility |
 | I6 | An issue cannot be assigned to a lane that lacks authority for its category | The same trigger, on the lane change, so it holds on assignment and reassignment |

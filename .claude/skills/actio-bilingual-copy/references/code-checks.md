@@ -2,7 +2,7 @@
 
 Read when source under `web/`, `extension/` or `supabase/` exists at the snapshot you are
 certifying. At the usual copy stage none does: record these `n/a` with the reason "no code
-at the copy stage" (R-18). They are re-run by whoever reads built code (code-analyst,
+at the copy stage". They are re-run by whoever reads built code (code-analyst,
 qc-engineer) or by you on a later pass. Never run them against code that is not there.
 
 Run each with the Grep tool (ripgrep syntax, patterns exactly as written, `|` is

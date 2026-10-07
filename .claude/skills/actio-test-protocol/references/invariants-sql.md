@@ -25,7 +25,7 @@ select lives_ok(
   'a cohort of five reports'
 );
 
--- I2, and standing rule R-01: the refusal must not name the filter
+-- I2: the refusal must not name the filter
 select throws_ok(
   $$ select * from public.cohort_report('<cycle>', '{"shift":"night"}'::jsonb) $$,
   'P0001', 'below_threshold',
@@ -38,7 +38,7 @@ select is(
   'the roster is late',
   'free text is returned reworded with names removed'
 );
--- I3: the refusal, checked for the client role, never assumed (BUG-0029)
+-- I3: the refusal, checked for the client role, never assumed
 select ok(
   not has_table_privilege('authenticated', 'public.response_feedback', 'select'),
   'authenticated holds no privilege on the reworded view'
@@ -80,7 +80,7 @@ every role, every command, positive and negative.
 | `evidence` | deny | deny | own lane | own site | all | deny |
 | `protected.cases` | deny | deny | deny | deny | deny | allow |
 
-A cell reading `deny` is tested twice, never assumed: the grant question with `has_table_privilege` returning false, and the data question with a select that returns `42501` or an empty set. A refused select alone passes an inert grant (BUG-0029).
+A cell reading `deny` is tested twice, never assumed: the grant question with `has_table_privilege` returning false, and the data question with a select that returns `42501` or an empty set. A refused select alone passes an inert grant.
 A cell reading a scope is tested twice: once inside the scope expecting rows, once outside
 expecting none. Each cell runs on the project through `execute_sql`, inside
 `begin; ... rollback;`, as `set local role anon` or `set local role authenticated` with
