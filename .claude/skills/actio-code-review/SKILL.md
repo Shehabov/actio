@@ -1,6 +1,6 @@
 ---
 name: actio-code-review
-description: "Review Actio code the way a senior engineer reviews a colleague: design judgement, boundaries, failure modes, test quality and rollout safety. Use when reviewing a diff or a pull request before it reaches the engineering gate."
+description: "Senior engineering review for review-1of3: problem fit against the brief and ADR, simplicity, boundaries, the failure-mode walk, test quality and rollout safety, in that order, with one checks entry per lens and line-anchored findings in the handoff. Use when reviewing a diff before the engineering gate. It is a judgement review, not a defect scan, readability pass or security sweep, which code-analyst, code-steward and security-analyst own."
 ---
 
 # Senior review

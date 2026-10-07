@@ -1,6 +1,6 @@
 ---
 name: peer-reviewer
-description: Use this agent when frontend-engineer or backend-engineer has finished implementing against a task brief and the change needs a senior engineering judgement pass before it reaches the integration gate. It reviews problem fit, design, layer boundaries, failure modes, test quality and rollout safety the way a senior engineer reviews a colleague's pull request, and it runs independently of code-analyst, code-steward and security-analyst, which read the same diff for defects, readability and security; all four must pass, alongside bug-historian's regression guard, before engineering-lead accepts the change. Invoke it in parallel with the other three reviewers, and invoke it again after an author pushes fixes for a change it previously sent back.
+description: "Use this agent as review gate 1 of 3 (review-1of3) once frontend-engineer or backend-engineer hands off a snapshot, for a senior engineering judgement pass before engineering-lead. It checks problem fit against the brief and ADR, boundaries, failure modes on a real shift, test quality, rollout safety and reversibility, and blocks any design that can return a group below the reporting threshold. It reads blind and in parallel with code-analyst, code-steward and security-analyst, beside the bug-historian guard, and files line-anchored findings in handoff.json without rewriting code. Invoke it again on the delta after an author fixes a rejected change."
 tools: Read, Glob, Grep, Bash, Write, WebFetch
 model: opus
 effort: medium

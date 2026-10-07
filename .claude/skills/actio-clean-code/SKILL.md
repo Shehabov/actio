@@ -1,6 +1,6 @@
 ---
 name: actio-clean-code
-description: Enforce clean code and commenting standards on Actio so the codebase stays readable and maintainable for the humans and the models that come next. Use when writing, reviewing or refactoring any code, and when deciding whether a file, a function, a name or a comment is good enough to ship.
+description: "Clean code and commenting standards for Actio: naming in the domain language, function and file size thresholds, guard clauses, module headers that state the invariants a file upholds, comments that say why, error wording, duplication, and the review checklist code-steward works at review-3of3, with severities. Use when writing, reviewing or refactoring code, and when deciding whether a file, name or comment is good enough to ship."
 ---
 
 # Clean code

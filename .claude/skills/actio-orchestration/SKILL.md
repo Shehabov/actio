@@ -1,6 +1,6 @@
 ---
 name: actio-orchestration
-description: Run planning, gate enforcement and the agent utilisation check for the Actio swarm. Use when planning a run, dispatching agents, checking whether every required agent ran and was actually used, detecting stalls or rejection loops, or closing a run with a report for the Product Lead.
+description: "Run planning and gate enforcement for the Actio swarm: the lanes (micro, standard-db, standard-ui, full), run.json v2, the stage routine run through run.mjs, the utilisation check and its blocking and advisory codes, the append-only ledger, rejection loops, resume, and the run report for the Product Lead. Use when planning a run, dispatching agents, checking that every required agent ran and was used, or closing a run."
 ---
 
 # Orchestration

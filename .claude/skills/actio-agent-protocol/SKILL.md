@@ -1,11 +1,11 @@
 ---
 name: actio-agent-protocol
-description: "The operating loop every Actio agent follows: plan, audit the plan, execute, review, hand off. Use at the start of ANY task performed by an Actio agent, before planning or touching a file. Defines the run artefacts, the handoff schema, escalation rules, the rejection protocol and what counts as evidence."
+description: "The operating loop every Actio agent follows (read the dispatch, plan with a Risk line and checkpoint, execute, self-check, hand off), the handoff v2 schema validated by run.mjs handoff, the toolchain and what to do when a tool is missing, what counts as evidence, the rejection protocol (blocker and major only, round 3 escalates), escalation to Shehab, and the hard rules. Use at the start of any task performed by an Actio agent, before planning or touching a file."
 ---
 
 # The Actio agent protocol
 
-The one copy of the loop, handoff schema and toolchain. The universal standing rules open your brief slice and bind every task. `references/worked-example.md`: when `run.mjs handoff` rejects yours. `references/history.md`: why v2.
+The one copy of the loop, handoff schema and toolchain. Any standing rules in your brief slice bind every task. `references/worked-example.md`: when `run.mjs handoff` rejects yours. `references/history.md`: why v2.
 
 ## The loop
 
