@@ -1,6 +1,6 @@
 ---
 name: actio-orchestration
-description: Run planning, gate enforcement and the agent utilisation check for the Actio swarm. Use when planning a run, dispatching agents, checking whether every required agent ran and was actually used, detecting stalls or rejection loops, or closing a run with a report for the Product Lead.
+description: "Run planning and gate enforcement for the Actio swarm, run by the orchestrator: pick a lane (micro, standard-ui, standard-db, full), open the run with run.mjs, dispatch due stages in parallel, enforce the 12 gates and gate snapshots, resume cut-off agents, and close with the utilisation check and a report for the Product Lead."
 ---
 
 # Orchestration
@@ -147,5 +147,4 @@ Also watch for ping-pong (two agents rejecting each other: the contract is wrong
 | File | Read when |
 |---|---|
 | `references/run-report-example.md` | Writing `report.md` |
-| `references/v1-orchestration.md` | A run's `run.json` has no `"version": 2` |
 | `.actio/TEMPLATE/lanes/<lane>.json` | Tailoring a lane, or a plan path is in doubt |
