@@ -207,15 +207,16 @@ const gateResolved = (name) => RESOLVED.has(gateByName.get(name)?.result)
 
 /**
  * An agent is due when its gates pass (or are n/a with a reason) AND every input it is planned
- * to consume is on disk. A consumed handoff counts only once it has left `working`: a maker's
- * checkpoint is not something a reviewer can review yet.
+ * to consume is on disk. A consumed handoff counts only when it parses and its status is
+ * `passed`: a maker's `working` checkpoint is not reviewable yet, and blocked, rejected or
+ * escalated work is not something a reviewer or a successor should be dispatched onto.
  */
 function presentForDue(p) {
   if (isWholePlaceholder(p)) return true
   const at = locate(p, { pattern: true })
   if (!at) return false
   if (!/handoff(-[^\\/]+)?\.json$/.test(at)) return true
-  try { return JSON.parse(readFileSync(at, 'utf8')).status !== WORKING } catch { return true }
+  try { return JSON.parse(readFileSync(at, 'utf8')).status === 'passed' } catch { return false }
 }
 /**
  * A maker writes its deliverables as it goes, so a file on disk is not yet an input: it is

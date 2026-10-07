@@ -52,7 +52,7 @@ Present: git, node 24, npm, npx, the Supabase MCP (`supabase` in `.mcp.json`, on
 - **Release:** release-engineer only: pre-flight, migrations through the MCP checked with `list_migrations`, `get_advisors` clean, build green, tag, push to origin main. Hosting waits for Shehab: `deferred: no target chosen`, not a gate failure.
 - **MCP silent:** the agent runs the PGlite proof or the suite and hands off `blocked` with `supabase MCP not authorised` or `playwright MCP not answering`. The orchestrator escalates; Shehab restores it with `/mcp`.
 
-Layout: `web/`, `extension/` (npm workspaces); `supabase/` (forward-only migrations, one concern per file, each with a written reverse); `content/strings/{en,ar}.json`; `design/surfaces/`.
+Layout: `web/`, `extension/` (npm workspaces, built); `supabase/` (forward-only migrations, one concern per file, each with a written reverse; only its README exists so far); `content/strings/{en,ar}.json`; `design/surfaces/`.
 
 ## Skills
 
@@ -82,5 +82,6 @@ References give anatomy, density, hierarchy and interaction; **they never define
 ## Working in this repository
 
 - Agents work autonomously; ask only for decisions that are the Product Lead's.
-- Start any change with the orchestrator as the main thread (`claude --agent orchestrator`; `.claude/settings.json` sets it). It runs `node .actio/bin/run.mjs open`, picks the lane and is the only dispatcher: a dispatch it did not make reads as a skipped gate. An agent that needs another role says so in `next`. Small changes take the `micro` lane.
+- Start any change with the orchestrator as the main thread (`.claude/settings.json` sets it). It runs `node .actio/bin/run.mjs open`, picks the lane and is the only dispatcher: a dispatch it did not make reads as a skipped gate. An agent that needs another role says so in `next`. Small changes take the `micro` lane.
+- Commands and working steps: `docs/DEVELOPMENT.md`.
 - Brand assets live in `logo/`. Never redraw the seal: the arcs are mathematically defined.

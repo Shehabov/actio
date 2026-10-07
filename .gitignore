@@ -51,3 +51,4 @@ logo/**/*.png
 
 # God-mode test run artefacts. Kept locally; the register carries the findings.
 .actio/runs/
+.actio/verify/

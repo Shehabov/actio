@@ -1,5 +1,6 @@
 {
   "name": "actio",
+  "description": "Actio, the accountability layer for engagement and culture surveys. Root of the npm workspaces: the web app and the Chrome extension.",
   "private": true,
   "workspaces": [
     "web",
