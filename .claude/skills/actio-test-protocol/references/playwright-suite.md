@@ -4,12 +4,7 @@ Read when: you write or run a suite pass, add a project, or work on the extensio
 
 ### Where the suite lives
 
-By convention, until ADR-0002 records it: the config at `web/playwright.config.ts`, the specs
-in `web/e2e/*.spec.ts`, run by the `e2e` script (`playwright test`) in `web/package.json`.
-`web/` is being created in run `2026-09-27-dev-setup`. Once
-`docs/architecture/adr/ADR-0002-web-foundation.md` exists it is the source for the config
-path, the spec directory and the pinned version, and this paragraph cites it instead of naming
-them.
+The source for the config path, the spec directory and the pinned version is `docs/architecture/adr/ADR-0002-web-foundation.md`: the config at `web/playwright.config.ts`, the specs in `web/e2e/*.spec.ts`, run by the `e2e` script in `web/package.json`.
 
 The Chrome extension's suite is `extension/playwright.config.ts`, with specs in
 `extension/e2e/*.spec.ts`, run by `npm run e2e` in `extension/`, and ADR-0003 is its source. It

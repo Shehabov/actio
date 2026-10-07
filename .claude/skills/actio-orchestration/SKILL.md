@@ -147,5 +147,4 @@ Also watch for ping-pong (two agents rejecting each other: the contract is wrong
 | File | Read when |
 |---|---|
 | `references/run-report-example.md` | Writing `report.md` |
-| `references/v1-orchestration.md` | A run's `run.json` has no `"version": 2` |
 | `.actio/TEMPLATE/lanes/<lane>.json` | Tailoring a lane, or a plan path is in doubt |
