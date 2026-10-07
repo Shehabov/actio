@@ -5,7 +5,7 @@ description: "The operating loop every Actio agent follows (read the dispatch, p
 
 # The Actio agent protocol
 
-The one copy of the loop, handoff schema and toolchain. Any standing rules in your brief slice bind every task. `references/worked-example.md`: when `run.mjs handoff` rejects yours. `references/history.md`: why v2.
+The one copy of the loop, handoff schema and toolchain. Any standing rules in your brief slice bind every task. `references/worked-example.md`: when `run.mjs handoff` rejects yours.
 
 ## The loop
 
