@@ -5,186 +5,110 @@ description: Enforce the Actio brand spec on any surface, string, component or a
 
 # Brand guard
 
-`BRAND.md` in the repository root is the spec. This skill does not repeat it. This skill is
-the operational bridge: what to check before you ship, what goes wrong most often, and
-which of the vendored design skills you are allowed to apply to an Actio surface.
+`BRAND.md` in the repository root is the spec. This skill does not repeat it. It is the operational bridge: what to check before you ship, and which vendored design skills you may apply to an Actio surface.
 
-**Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins.** Record the override in
-`.actio/runs/<run-id>/<agent>/review.md` so the next person knows the departure was
-deliberate.
+**Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins**, and the departure is recorded (see Recording an override) so it reads as a decision, not drift.
 
----
+## References
+
+Under `.claude/skills/actio-brand-guard/references/`.
+
+| File | Holds | Read when |
+|---|---|---|
+| `common-failures.md` | The 13 failures that actually happen, why, and the fix beside each | A pre-flight line fails and you want the usual cause. An auditor never copies a fix from it into a finding |
+| `vendored-names.md` | Directory name to the `name:` inside each vendored `SKILL.md` | Before invoking a vendored skill with the Skill tool, or naming one in any `skills:` field |
 
 ## Pre-flight, before any surface ships
 
-Work through this. Every line is a yes or a finding. Do not ship on a maybe.
+Every line is a yes or a finding. Do not ship on a maybe.
 
 ### Colour
 
 - [ ] Every colour traced to a token in `BRAND.md` §1. No new hex anywhere.
-- [ ] Roughly 70% neutral surface, 20% ink text, 10% Vega. If Vega is doing more than
-      punctuation, cut it.
-- [ ] **One** accent element per view. It marks the single primary action. Two primaries
-      means neither is.
-- [ ] At most one inverted surface per view: Cosmos `#0C0C0C` ground, Halo `#EFEFEF`
-      primary text, Vega 200 `#6FE0E5` for the accent figure. The inverted surface and the
-      primary button are the same accent budget.
-- [ ] Routing lane and status are never merged into one colour. The lane is a 3px left
-      accent rule at radius 0 in the state colour. The status is a pill with a written label.
-- [ ] No white on Vega 400 anywhere. Measured 2.27:1, fails. Cosmos on Vega 400 is the
-      approved pairing at 8.62:1.
-- [ ] Vega 400 is never body text. Vega 600 or darker on a light ground.
-- [ ] Sirius appears only in the account switcher and the parent wordmark. Nowhere else.
-- [ ] No Lumofy sibling accent anywhere, including in a chart.
+- [ ] Roughly 70% neutral surface, 20% ink text, 10% Vega. If Vega is doing more than punctuation, cut it.
+- [ ] **One** accent element per view, marking the single primary action. Two primaries means neither is.
+- [ ] At most one inverted surface per view: Cosmos `#0C0C0C` ground, Halo `#EFEFEF` text, Vega 200 `#6FE0E5` for the accent figure. It shares one accent budget with the primary button.
+- [ ] Routing lane and status are never one colour. Lane is a 3px left accent rule at radius 0 in the state colour; status is a pill with a written label.
+- [ ] No white on Vega 400 (2.27:1, fails). Cosmos on Vega 400 is the approved pairing (8.62:1). Vega 400 is never body text: Vega 600 or darker on a light ground.
+- [ ] Sirius only in the account switcher and the parent wordmark. No Lumofy sibling accent anywhere, including a chart.
 - [ ] No opacity applied to text.
 
 ### Type
 
-- [ ] Source Sans 3 for headings, in 600 or 400. IBM Plex Sans for body and interface.
-- [ ] Every number in IBM Plex Mono with `font-variant-numeric: tabular-nums`. Response
-      rates, days to close, counts, dates, case identifiers, currency. All of them.
-- [ ] Sentence case everywhere, including buttons. No Title Case. No all caps except Plex
-      Mono labels at 12px with 0.02em tracking.
-- [ ] No weight 300 anywhere. It collapses on the handsets frontline users carry.
-- [ ] Measure at 68 characters maximum. Constrain the container, do not shrink the type.
-- [ ] Fonts self-hosted as WOFF2. No public CDN. A blocked request is an unreadable survey.
+- [ ] Source Sans 3 for headings (600, or 400), IBM Plex Sans for body and interface. No weight 300.
+- [ ] Every number in IBM Plex Mono with `font-variant-numeric: tabular-nums`: rates, days to close, counts, dates, case identifiers, currency.
+- [ ] Sentence case everywhere, buttons included. No Title Case; no all caps except Plex Mono labels at 12px, 0.02em.
+- [ ] Measure at most 68 characters: constrain the container, do not shrink the type.
+- [ ] Fonts self-hosted WOFF2. No public CDN: a blocked request is an unreadable survey.
 
 ### Space, radius, motion
 
-- [ ] Every spacing value is one of 4, 8, 12, 16, 24, 32, 48, 64. **14, 18, 20 and 30 do
-      not exist in this product.**
-- [ ] Radius: 8px controls, 12px cards, 999px pills, 0 on any element with a border on one
-      side only. A modal takes the card radius. There is no fourth radius token.
+- [ ] Every spacing value is 4, 8, 12, 16, 24, 32, 48 or 64. **14, 18, 20 and 30 do not exist** (R-04).
+- [ ] Radius: 8 controls, 12 cards (a modal takes it), 999 pills, 0 on any single-sided border. No fourth token.
 - [ ] Nothing in the document flow carries a shadow. Only overlays lift.
-- [ ] Surfaces separate by lightness and space, not by outline: a panel lifts off the Ink 50
-      page with the tint step. The Ink 150 hairline stays for repeated records, structural
-      chrome edges and dividers inside one surface, where it separates rather than lifts.
-      The `BRAND.md` amendment moving panel surfaces to a tint step is still open with
-      Shehab, so either treatment is legal on a panel while the choice is recorded as an
-      override. Mixing the two inside one view is not.
-- [ ] One motion curve, `cubic-bezier(.2, 0, .2, 1)`. 120ms micro, 200ms panel, 300ms
-      ceiling. Transform and opacity only.
-- [ ] Every transition is triggered by a reader action. **Nothing animates on load.** The
-      one exception is a progress indicator, which reports work rather than decorating an
-      entrance.
-- [ ] `prefers-reduced-motion` honoured on every transition without exception.
-- [ ] Nothing counts up, nothing shimmers, no chart draws itself. No spring, overshoot,
-      stagger or parallax.
+- [ ] Surfaces separate by lightness and space, not outline: a panel lifts off the Ink 50 page with the tint step (white), settled in `BRAND.md` v1.5 §1.1 and needing no override record. The Ink 150 hairline stays for repeated records, structural chrome edges and dividers inside one surface. A hairline doing the lifting, or a tint doing a row rule's job, is the defect. Surface, border and hover are three different values (R-06).
+- [ ] One curve `cubic-bezier(.2, 0, .2, 1)`: 120ms micro, 200ms panel, 300ms ceiling, `transform` and `opacity` only.
+- [ ] Every transition is reader-triggered. **Nothing animates on load** (a progress indicator reports work and is exempt). Nothing counts up, shimmers or draws itself; no spring, overshoot, stagger or parallax. `prefers-reduced-motion` honoured on every transition.
 
 ### Copy
 
-- [ ] Sentence case. No emoji. No exclamation marks in system copy.
-- [ ] Every percentage carries its sample size.
-- [ ] Every status carries a written label, not only a colour.
-- [ ] No banned vocabulary. See `BRAND.md` §5.
-- [ ] The one check: could a competitor publish this sentence unchanged? Then it carries
-      no information. Rewrite it.
+- [ ] Sentence case. No emoji. No exclamation marks in system copy. No banned vocabulary (`BRAND.md` §5).
+- [ ] Every percentage carries its sample size. Every status carries a written label, not only a colour.
+- [ ] A competitor could not publish the sentence unchanged. If they could, it carries no information: rewrite it.
 
 ### Reality
 
-- [ ] Designed at 360px first, desktop inheriting from it.
-- [ ] Touch targets 48 by 48 minimum, including inside tables.
-- [ ] All eight states covered: empty, loading, partial, error, dense, protected, below
-      threshold, offline.
-- [ ] Renders in both themes. A colour that works in only one mode is not part of the system.
-- [ ] Survives the longest locale, not the English one. Bahasa Indonesia runs 15 to 20%
-      longer, Tagalog further.
-- [ ] Mirrors for Arabic using logical properties, without a second stylesheet.
-- [ ] No clipping or overlap at 200% browser zoom.
-- [ ] Contrast measured by computing WCAG ratios from `BRAND.md` hex values in a node
-      script, not estimated, with both hex values recorded as evidence.
-
----
-
-## The failures that actually happen
-
-Ordered by how often they occur, with the fix beside each.
-
-| Failure | Why it happens | Fix |
-|---|---|---|
-| White text on a Vega fill | Teal reads darker than it measures, so it looks fine on a designer's screen | Cosmos on Vega. Always. |
-| Vega 400 used as link or body text on white | It is "the brand colour", so it feels correct | Vega 600 or darker |
-| A second accent creeps in for a chart series or a badge | Three categories, one accent, so someone reaches for a sibling hue | Vega 400 primary, Ink 500 comparison, Vega 200 secondary. Nothing else. |
-| A 20px or 18px gap | The eye wants a value between 16 and 24 | Pick 16 or 24. The gap between them is the point of a short scale. |
-| Numbers set in the body face | The component was built before anyone read the type rules | Plex Mono, tabular, every number |
-| A percentage with no sample size | It reads cleaner | It contradicts the product's own argument. Add `n=612`. |
-| Two primary buttons on one view | Both actions feel important | One is primary. The other is secondary, and if that is wrong the screen has two jobs. |
-| Rounded corners on a left accent rule | The component library rounds everything | Radius 0 on single-sided borders |
-| A shadow used to separate two cards | Depth is the habit | The tint step and space. Only overlays lift. A hairline separates repeated records; it does not lift a panel. |
-| Title Case on a button | Most design systems do it | Sentence case. Everywhere. |
-| An empty state that apologises | It feels polite | An empty state is an invitation. Never "nothing here yet", never an apology. |
-| A toast that congratulates | It feels friendly | A toast states a fact in the past tense with one undo. It does not congratulate. |
-| Layout built with `margin-left` | Nobody was thinking about Arabic | `margin-inline-start`. Logical properties throughout. |
-
----
+- [ ] Designed at 360px first, desktop inheriting. Touch targets 48 by 48 minimum, tables included.
+- [ ] All eight states covered: empty, loading, partial, error, dense, protected, below threshold, offline.
+- [ ] Renders in both themes. Survives the longest locale (Bahasa Indonesia 15 to 20% longer, Tagalog further), not English.
+- [ ] Mirrors for Arabic from logical properties alone. No clipping or overlap at 200% zoom.
+- [ ] Contrast measured: WCAG ratios computed from the `BRAND.md` hex values in a node script, never estimated, both hex values recorded as evidence.
 
 ## Vendored skill policy
 
-Twenty-two skills are vendored under `.claude/skills/`. They are unmodified from source and
-kept for their craft, not for their aesthetics. Actio's brand overrides all of them.
-
-The tables below name each skill by its directory. An agent's `skills:` frontmatter, and the
-Skill tool, use the `name:` inside its `SKILL.md`, which differs for most of them:
-`taste-skill` is `design-taste-frontend`, `taste-skill-v1` is `design-taste-frontend-v1`,
-`minimalist-skill` is `minimalist-ui`, `output-skill` is `full-output-enforcement`,
-`redesign-skill` is `redesign-existing-projects`, `soft-skill` is `high-end-visual-design`,
-`brutalist-skill` is `industrial-brutalist-ui`, `stitch-skill` is `stitch-design-taste`,
-`gpt-tasteskill` is `gpt-taste`, `image-to-code-skill` is `image-to-code`,
-`composition-patterns` is `vercel-composition-patterns`, `react-best-practices` is
-`vercel-react-best-practices`, `react-view-transitions` is `vercel-react-view-transitions` and
-`react-native-skills` is `vercel-react-native-skills`. The rest keep their directory name.
+Twenty-two skills are vendored under `.claude/skills/`, unmodified, kept for their craft and not their aesthetics. Actio's brand overrides all of them, and **no swarm agent preloads one**: an agent reads one by path, from its On-demand references table, when the trigger fires. The tables name each skill by directory; `references/vendored-names.md` maps directory to `name:`.
 
 ### Approved for Actio surfaces
 
 | Skill | Use it for | Watch for |
 |---|---|---|
-| `taste-skill` | Anti-generic layout, hierarchy, the audit-first method, the pre-flight discipline | Its decorative suggestions. Take the rigour, leave the polish. |
-| `minimalist-skill` | Editorial restraint, typographic contrast, flat surfaces | Its warm monochrome palette is not Actio's. Tokens come from `BRAND.md`. |
-| `web-design-guidelines` | Reviewing built UI against interface guidelines and accessibility | Nothing. This one aligns closely. |
-| `composition-patterns` | React component API design, compound components, avoiding boolean prop sprawl | Nothing. Structural, not visual. |
-| `react-best-practices` | React and Next.js performance, which is a user-safety concern on the target device | Nothing. |
-| `react-view-transitions` | Route and state transitions, within Actio's motion budget | One curve `cubic-bezier(.2, 0, .2, 1)`; a view transition is a panel transition, so 200ms, and 300ms is the ceiling nothing exceeds. Transform and opacity only, reader-triggered, nothing animating on load, reduced motion honoured. |
-| `writing-guidelines` | Prose and docs review | Actio's register is narrower. `BRAND.md` §5 wins on voice. |
-| `output-skill` | Preventing truncated or placeholder output on long generation tasks | Nothing. |
+| `taste-skill` | Anti-generic layout, hierarchy, the audit-first method, pre-flight discipline | Its decorative suggestions and dials. Take the rigour, leave the polish |
+| `minimalist-skill` | Editorial restraint, typographic contrast, flat surfaces | Its warm monochrome palette is not Actio's. Tokens come from `BRAND.md` |
+| `web-design-guidelines` | Reviewing built UI against interface and accessibility guidelines | Nothing. It aligns closely |
+| `composition-patterns` | React component API design, compound components, no boolean prop sprawl | Nothing. Structural, not visual |
+| `react-best-practices` | React and Next.js performance, a user-safety concern on the target device | Nothing |
+| `react-view-transitions` | Route and state transitions inside Actio's motion budget | One curve; a view transition is a panel transition, 200ms, 300ms ceiling; `transform` and `opacity` only, reader-triggered, nothing on load, reduced motion honoured |
+| `writing-guidelines` | Prose and docs review | Actio's register is narrower. `BRAND.md` §5 wins on voice |
+| `output-skill` | Preventing truncated or placeholder output on long generation | Nothing. It never lengthens a handoff or a final message |
 
 ### Conditional
 
 | Skill | Condition |
 |---|---|
-| `redesign-skill` | Use its **audit** method, which is genuinely good at catching generic AI patterns. Do not apply its "premium quality" remediation vocabulary, which is gradients, depth and gloss. |
-| `brandkit` | Only for internal brand boards and presentation artefacts. Never for product UI, and never to generate a mark. The seal is mathematically defined and is never redrawn. |
+| `redesign-skill` | Its **audit** method catches generic AI patterns. Never its "premium quality" remediation vocabulary (gradients, depth, gloss), and never its instruction to apply fixes |
+| `brandkit` | Internal brand boards and presentation artefacts only. Never product UI, never to generate a mark. The seal is mathematically defined and never redrawn |
 
 ### Reference only, never applied to an Actio surface
 
 | Skill | Why |
 |---|---|
-| `soft-skill` | Optimises for "expensive" via shadows, gradients and agency gloss. Actio bans all three. |
-| `brutalist-skill` | Analog degradation, extreme type contrast, military terminal. The opposite of a calm instrument. |
-| `stitch-skill` | Perpetual micro-motion and asymmetric premium layouts. Actio's motion budget forbids the first. |
-| `gpt-tasteskill` | GSAP scroll pinning, AIDA marketing structure, randomised layout variance. None of it belongs in a queue view. |
-| `imagegen-frontend-web`, `imagegen-frontend-mobile` | Image generation. Actio uses documentary photography and diagrams, never generated comps. |
-| `image-to-code-skill` | Depends on generated design images. See above. |
-| `taste-skill-v1` | Superseded by `taste-skill`. Kept for provenance only. |
-| `react-native-skills` | No native mobile app in scope. Actio is WhatsApp, SMS and web. |
-| `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Hosting deployment is out of scope until Shehab chooses a target. They stay in the repository as reference only, coupled to no agent, for when a deploy target is chosen. The back end reaches Supabase through the Supabase MCP, never the Supabase CLI. |
+| `soft-skill` | Optimises for "expensive" through shadows, gradients and agency gloss. Actio bans all three |
+| `brutalist-skill` | Analog degradation, extreme type contrast, military terminal. The opposite of a calm instrument |
+| `stitch-skill` | Perpetual micro-motion and asymmetric premium layouts. The motion budget forbids the first |
+| `gpt-tasteskill` | GSAP scroll pinning, AIDA marketing structure, randomised layout. None of it belongs in a queue |
+| `imagegen-frontend-web`, `imagegen-frontend-mobile`, `image-to-code-skill` | Generated design images. Actio uses documentary photography and diagrams |
+| `taste-skill-v1` | Superseded by `taste-skill`. Provenance only |
+| `react-native-skills` | No native app in scope. Actio is WhatsApp, SMS and web |
+| `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize` | Hosting is out of scope until Shehab chooses a target. Coupled to no agent. The back end reaches Supabase through the MCP, never the CLI |
 
-If you believe a reference-only skill is right for a task, that is an escalation to Shehab,
-not a judgement call. State which rule it would break and why the task needs it.
-
----
+A reference-only skill that seems right for a task is an escalation to Shehab, not a judgement call: state which rule it would break and why the task needs it.
 
 ## Recording an override
 
-When you depart from a vendored skill's advice, or from any default, write it in your
-`review.md`:
-
-```markdown
-## Overrides
+When you depart from a vendored skill's advice or from any default, record it. The designer adds a row to the `## Overrides` table at the end of `spec.md`; any other agent adds a `checks[]` entry whose criterion names the departure and whose evidence is the file or rule that forced it.
 
 | Departed from | What it advised | What I did | Why |
 |---|---|---|---|
-| taste-skill | Layered shadow on the card to lift it off the ground | The raised surface tint and space | BRAND.md: nothing in the document flow carries a shadow. Only overlays lift. |
-```
+| taste-skill | Layered shadow on the card to lift it off the ground | The raised surface tint and space | `BRAND.md` §1.5: `shadow-inflow` is none. Only overlays lift |
 
-An override that is recorded is a decision. An override that is quiet is drift, and drift
-is what makes a product look assembled rather than designed.
+A recorded override is a decision. A quiet one is drift, and drift makes a product look assembled rather than designed.

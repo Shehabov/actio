@@ -5,36 +5,32 @@ description: "Design and record Actio system architecture: domain model, system 
 
 # Architecture
 
-The architecture of record for Actio, and the two artefacts the architect produces: the
-ADR, which records a decision, and the task brief, which is what the implementing agents
-actually build from.
-
-A task brief that leaves the implementer guessing is a defect in this role, not a question
-for the implementer.
+The architecture of record, and the three artefacts the architect writes: the ADR (a
+decision), the contract (the API shape, written once) and the task brief (what the
+implementers build from). A brief that leaves the implementer guessing is a defect in this role.
 
 ---
 
 ## Domain model
 
-Use the product's own language. An implementation that talks about `Item` and `Status`
-instead of `Issue` and `Lane` has already started drifting.
+Use the product's own language: `Item` for `Issue` is already drift. This is the only copy.
 
 | Entity | Is | Invariants |
 |---|---|---|
-| `Organisation` | The customer | Owns sites, tenant configuration, the reporting threshold override if any |
-| `Site` | A physical or organisational unit: warehouse, contact centre, depot | Has a time zone. Deadlines are stated in the site's time zone, labelled, never the reader's. |
-| `Employee` | A person who answers | May have a single legal name. Never require a family name. Identified to the system, never to a manager. |
-| `Cycle` | One survey round | Has an open and close date. Answers submitted after close are not recorded, and the reader is told. |
-| `Response` | One employee's answers in one cycle | Pooled. Never individually retrievable by anyone in the customer organisation. |
-| `Cohort` | The group a response is pooled into | Reports only at or above the threshold. Its size is computed live for the reader. |
-| `Issue` | A thing that is wrong and can be fixed | Classified by lane. Has one named owner and one date. Cannot close without evidence. |
-| `Lane` | Who has the authority to change it | `team_lead`, `operations`, `leadership`, `protected`. Routing by lane is the product. |
-| `Owner` | The named person accountable | A person, never a team. "Operations" is a lane; Budi S. is an owner. |
-| `Evidence` | Proof the change happened | A file or a note, attached to the issue, timestamped, attributable |
-| `Closure` | The transition to closed | Guarded. Requires evidence. Records who closed it and when, and whether it closed late. |
-| `ProtectedCase` | Misconduct or safety | Leaves the engagement workflow entirely. No title, no detail, no assignee in the queue. The row exists so the count reconciles. |
-
-### Routing lanes and their authority
+| `Organisation` | The customer | Owns sites and tenant configuration. May raise the reporting threshold, never lower it |
+| `Site` | A physical or organisational unit | Has a time zone. Deadlines use it, labelled, never the reader's |
+| `Employee` | A person who answers | May have one legal name: never require a family name. Never identified to a manager |
+| `Cycle` | One survey round | Answers after close are not recorded and the reader is told. Rates always with n |
+| `Response` | One employee's answers in a cycle | Pooled. Never individually retrievable by anyone in the customer organisation |
+| `Cohort` | The group a response is pooled into | Reports only at or above the threshold. Size computed live for the reader |
+| `Issue` | A thing that is wrong and can be fixed | Exactly one lane, one named owner, one date. Cannot close without evidence |
+| `Status` | `open`, `in_progress`, `overdue`, `closed`, `protected` | Exactly these five, matching `BRAND.md` §1.4. A sixth needs an ADR |
+| `Lane` | Who has the authority to change it | `team_lead`, `operations`, `leadership`, `protected`. Derives from authority to change, never from severity |
+| `Owner` | The named person accountable | A person, never a team, and must hold authority for the lane |
+| `Evidence` | Proof the change happened | A file or a note, attached, timestamped, attributable, immutable once attached |
+| `Closure` | The transition to closed | Guarded. Requires evidence. Records who, when, and whether late |
+| `ProtectedCase` | Misconduct or safety | Leaves the engagement workflow. No title, detail or assignee in the queue; the row exists so the count reconciles |
+| `Update` | What the workforce is told | Written by ux-writer, sent per channel and locale |
 
 | Lane | Can change | Cannot change |
 |---|---|---|
@@ -50,222 +46,70 @@ product exists to prevent.** Enforce it as a constraint, not as a convention.
 
 ## System invariants
 
-These are not settings. They are the product's claim, expressed as code. A change that
-weakens one of them is an escalation to Shehab, never a trade-off made under delivery
-pressure.
+Not settings: the product's claim, expressed as code. Weakening one is an escalation to
+Shehab, never a trade-off under delivery pressure. This table is the invariants register,
+amended by ADR only.
 
 | # | Invariant | Enforced where |
 |---|---|---|
-| I1 | No cohort below the reporting threshold of 5 ever reports | Base tables revoked from `anon` and `authenticated`; a security-definer function applies the threshold before returning anything. RLS is row-level and the threshold is an aggregate property, so a row policy cannot express it. |
-| I2 | A manager cannot filter below the threshold | The same function and the same revoke. The filtered set is counted inside the function and refused below the floor, so a manager never reaches the rows to filter them. |
-| I3 | Free text is returned reworded, with names removed | The raw column has no grant to anyone. A `security_invoker` view rewords it, and only the security-definer read function selects from it, after the floor. No client role is granted the view (BUG-0029). |
-| I4 | A protected case never appears in the engagement queue | A separate schema with a separate grant, never a flag on `issues`. A flag can be forgotten in a `where` clause; a missing grant cannot. |
-| I5 | An issue cannot transition to closed without attached evidence | A `before update` trigger, security definer, `search_path` pinned. A trigger rather than a policy, because this is a rule about what a valid transition is, not about which rows are visible. |
-| I6 | An issue cannot be assigned to a lane that lacks authority for its category | The same trigger, on the lane change, so it holds on assignment and on reassignment alike. |
-| I7 | Every closure records who, when, and whether it was late | The same trigger writes the closure row. Insert only: no update or delete grant on `closures`. |
-| I8 | Deadlines are in the site time zone, labelled | `timestamptz` throughout, with the site time zone as its own labelled column. Never inferred from the reader. |
+| I1 | No cohort below the reporting threshold of 5 ever reports | Base tables revoked from `anon` and `authenticated`; a security-definer function applies the threshold before returning anything. RLS is row-level and the threshold is an aggregate property, so a row policy cannot express it |
+| I2 | A manager cannot filter below the threshold | The same function and revoke. The filtered set is counted inside the function and refused below the floor, so a manager never reaches the rows to filter them |
+| I3 | Free text is returned reworded, with names removed | The raw column has no grant to anyone. A `security_invoker` view rewords it; only the security-definer read function selects from it, after the floor. No client role is granted the view (BUG-0029) |
+| I4 | A protected case never appears in the engagement queue | A separate schema with a separate grant, never a flag on `issues`. A flag can be forgotten in a `where` clause; a missing grant cannot |
+| I5 | An issue cannot transition to closed without attached evidence | A `before update` trigger, security definer, `search_path` pinned. A trigger, not a policy: this is a rule about a valid transition, not about row visibility |
+| I6 | An issue cannot be assigned to a lane that lacks authority for its category | The same trigger, on the lane change, so it holds on assignment and reassignment |
+| I7 | Every closure records who, when, and whether it was late | The same trigger writes the closure row. Insert only: no update or delete grant on `closures` |
+| I8 | Deadlines are in the site time zone, labelled | `timestamptz` throughout, the site time zone a separate labelled column. Never inferred from the reader |
 
-Every one of these has a dedicated pgTAP test under `supabase/tests/`: I1 to I4 in
-`invariants.test.sql`, I5 to I7 in `state_machine.test.sql`, and I8 in whichever of the two
-owns the table that carries the deadline. Each runs offline under `node .actio/bin/db-test.mjs`
-(PGlite) and on the project through `execute_sql`. See `actio-supabase` for the file map and
-the mechanisms, and `actio-test-protocol` for the evidence.
+Each has a pgTAP test under `supabase/tests/`: I1 to I4 in `invariants.test.sql`, I5 to I7
+in `state_machine.test.sql`, I8 in whichever owns the deadline table. Mechanisms, file map
+and the offline and project runs are in `actio-supabase`; evidence is in `actio-test-protocol`.
 
 ---
 
-## Repository layout
+## Invariant and boundary checklist
 
-Where the product code lives. The architecture of record cites this section rather than
-copying it.
+One list, two uses. At contract lock it is the plan audit: answer every row against the
+brief and contract, then again against the finished artefacts. After a change (only when the
+orchestrator plans that pass) it is the review: give each boundary a written `holds` or
+`eroded` from the diff. A "can" answered yes is a finding. "The UI prevents it" and "they
+can ask" are bad answers.
 
-```
-web/                                    the Next.js App Router app, TypeScript, npm
-                                        scripts: dev, build, lint, typecheck (tsc --noEmit),
-                                        test (Vitest), e2e (Playwright)
-web/src/lib/database.types.ts           generated by generate_typescript_types, never hand-edited
-web/.env.local                          project URL and publishable key, gitignored
-extension/                              the Manifest V3 Chrome extension, React and TypeScript, Vite,
-                                        npm, owned by frontend-engineer (ADR-0003). scripts: build,
-                                        lint, typecheck (tsc --noEmit), test (Vitest), e2e (Playwright)
-supabase/migrations/<yyyymmddhhmmss>_<slug>.sql
-                                        the database source of record: hand-authored,
-                                        forward-only, one concern per file, each with a
-                                        written reverse recorded in the run's rollback notes
-supabase/tests/*.test.sql               pgTAP
-supabase/seed.sql                       seed
-supabase/functions/<name>/index.ts      Edge Functions
-content/strings/{en,ar}.json            the shipped string catalogue, written by ux-writer
-design/surfaces/<surface>.md            canonical design specs, written by ux-designer
-package.json                            private, npm workspaces ["web", "extension"], dev tooling;
-                                        script db:test runs node .actio/bin/db-test.mjs
-docs/architecture/                      architecture of record, ADRs, contracts, glossary
-```
-
-There is no declarative `supabase/schemas/` workflow: it needs `supabase db diff`, which needs
-the Supabase CLI and Docker, and neither is used. Schema files, if any exist, are not a source
-of record. `supabase/config.toml`, if it exists, is read only by the Supabase CLI, so it
-configures nothing.
-
-The database is worked through the Supabase MCP, from those migration files and never from SQL
-that is not in one. The full workflow is the Toolchain section of `actio-supabase`, and the
-toolchain itself is in `CLAUDE.md`. Front-end hosting is out of scope until Shehab chooses a
-target: the deployment shape in the architecture of record is the Supabase project, with the
-front end recorded as `deferred: no target chosen`. A task brief never tells an implementer to
-generate a migration from a schema diff, to edit a schema file, or to run a tool the toolchain
-does not have.
-
----
-
-## ADR template
-
-One file per decision. Numbered, immutable once accepted. Supersede rather than edit.
-
-Path: `docs/architecture/adr/ADR-NNNN-<slug>.md`, four digits, sequential, never reused.
-This is the only home. `.actio/runs/` is gitignored, so the run folder lists the ADR by that
-path in `produced` rather than holding a copy.
-
-```markdown
-# ADR-0004 · The reporting threshold is a system invariant, not a setting
-
-- **Status.** Accepted
-- **Date.** 2026-09-20
-- **Run.** 2026-09-20-privacy-preview
-- **Invariants touched.** I1, I2
-- **Supersedes.** none
-- **Superseded by.** none
-
-## Context
-
-The privacy preview screen has to state the smallest group the system will report on. A
-customer asked whether the threshold can be lowered for small sites, where a cohort of 5
-is rare and the data would otherwise be unusable.
-
-## Options considered
-
-| Option | Consequence |
-|---|---|
-| Per-tenant configurable threshold | Unblocks small sites. Also means the product cannot state a single number to an employee, and the privacy preview becomes a per-tenant promise the employee cannot verify. |
-| Fixed threshold of 5, no override | Small sites see less. The promise is the same everywhere and an employee can check it. |
-| Fixed floor of 5, tenant may raise it | Small sites see no more than today. A tenant that wants to be more protective can be. |
-
-## Decision
-
-Fixed floor of 5. A tenant may raise the threshold, never lower it. The floor is a
-constant in code, not a column.
-
-## Consequences
-
-- Small sites will have cycles where nothing reports. The empty state has to say so
-  plainly rather than look broken.
-- The privacy preview can state a number the employee can hold the system to.
-- Sales cannot offer a lower threshold as a concession, and that needs saying to them.
-
-## What would make us revisit
-
-A regulatory regime that requires a different floor, or evidence that sites below ~30
-people cannot use the product at all, measured rather than anecdotal.
-```
-
----
-
-## Task brief template
-
-This is the artefact `frontend-engineer` and `backend-engineer` build from. It must be
-implementable without a follow-up question. If the implementer has to ask, the brief was
-incomplete.
-
-Path: `.actio/runs/<run-id>/tech-architect/brief-<frontend|backend>.md`
-
-```markdown
-# Task brief · backend · 2026-09-20-privacy-preview
-
-**For.** backend-engineer
-**ADRs that bind this.** ADR-0004
-**Invariants that bind this.** I1, I2, I3
-
-## What to build
-
-One read endpoint that returns the four figures the privacy preview screen states, each
-computed for the requesting employee rather than illustrative.
-
-## Contract
-
-`GET /api/cycles/{cycle_id}/privacy-preview/`
-
-Auth: employee token. An employee may only request a cycle they are in.
-
-Both payloads below are returned to **the employee the cohort is about, on an employee
-token, and to no other reader**. `cohort_size` on a manager-facing endpoint is the leak
-I1 forbids. Do not copy these shapes onto a manager path.
-
-200, cohort at or above threshold:
-
-```json
-{
-  "cohort_size": 23,
-  "reporting_threshold": 5,
-  "manager_can_filter_by": ["site", "tenure_band"],
-  "free_text_treatment": "reworded_names_removed",
-  "below_threshold": false
-}
-```
-
-200, cohort below threshold:
-
-```json
-{
-  "cohort_size": 4,
-  "reporting_threshold": 5,
-  "manager_can_filter_by": ["site", "tenure_band"],
-  "free_text_treatment": "reworded_names_removed",
-  "below_threshold": true
-}
-```
-
-Returning 200 with a reduced payload rather than 403, because the screen must still
-render and must still tell the employee what will happen.
-
-| Error | Status | Body |
+| # | Boundary | What erosion looks like in a diff |
 |---|---|---|
-| Cycle not found, or employee not in it | 404 | `{"error": {"code": "not_found", "message_key": "error.not_found", "fields": {}, "trace_id": "…"}}` |
-| Cycle closed | 409 | `{"error": {"code": "cycle_closed", "message_key": "error.cycle_closed", "fields": {"closed_on": ["2026-03-14"]}, "trace_id": "…"}}` |
+| B1 | Survey ingest to issue store | Raw response text written into an issue field |
+| B2 | Issue store to reporting | A query that can return a group below the threshold, or a filter, export, sort or drilldown that reaches one |
+| B3 | Issue store to protected-case store | One table, view or RPC serving both. A join between them. A protected row in any count |
+| B4 | Free text to any reader | A verbatim comment field, or a name surviving into a payload, export, notification or log |
+| B5 | Evidence store to issue status | A write to closed that skips the guarded transition: admin action, bulk edit, migration, cycle rollover, owner deletion |
+| B6 | Service to service inside the API | A view reaching past its own service into another's models |
+| B7 | API to channel egress (WhatsApp, SMS, web) | A message body assembled client-side, a payload carrying more than the channel needs, a count concatenated into a string |
+| B8 | Identity and permission to everything | A permission checked in the view only, or derived from a role name rather than the lane's authority scope |
+| B9 | Trust boundary to third parties | Employee response data crossing to a processor with no ADR naming it |
 
-`manager_can_filter_by` is read from tenant configuration, never hardcoded.
+A genuinely new boundary is added to the architecture of record and to this table in the same run.
 
-## Invariants this must not break
+Questions asked of every change:
 
-- I1: `cohort_size` is the employee's own cohort. It is disclosed to that employee about
-  themselves, which is not a report about others, but it must never be reachable by a
-  manager through this or any other endpoint.
-- I2: the filter list is what a manager *may* select, not what would be permitted for this
-  cohort. Do not leak whether a particular filter would breach the threshold.
-- I3: `free_text_treatment` is an enum, not prose. Copy is the writer's job.
-
-## Acceptance criteria
-
-1. Every figure computed live for the requesting employee. No constant in the response
-   except `reporting_threshold`.
-2. A cohort of exactly 4 returns `below_threshold: true` and does not error.
-3. A manager token on this endpoint returns 403, tested.
-4. Privacy invariant tests cover 1 to 3.
-5. No N+1. One query for the cohort, one for tenant config, asserted in the test.
-6. Every function, view and grant this needs lands as a hand-authored migration in
-   `supabase/migrations/`, one concern per file, applied and proved through the Supabase MCP
-   as `actio-supabase` states. Evidence under `evidence/backend/`: `db-test-pglite.tap`,
-   `pgtap-project-invariants.tap`, `list-migrations.json`, `list-tables.json`,
-   `advisors-security.json` and `advisors-performance.json`.
-
-## Out of scope
-
-- The screen. The copy. The WhatsApp variant.
-- Changing the threshold or its configurability. See ADR-0004.
-
-## Open question, not a blocker
-
-Cohort size can change between the preview and submission. Raised with Shehab as a
-product decision. Build the live figure; the freeze behaviour lands in a later run if he
-picks it.
-```
+1. Which invariant could this quietly erode, lose its database enforcement point, or gain a
+   second enforcement point that can disagree with the first?
+2. Can a manager reach a group smaller than 5 through any path this opens: export, filter,
+   sort, drilldown, a count in a notification?
+3. Can an issue reach closed without evidence on any path: admin action, bulk edit, data
+   migration, cycle rollover, owner deletion?
+4. Does anything emit an affective number per person or team, a sentiment score by another name?
+5. Can free text reach a reader verbatim or carrying a name, through any field, export,
+   notification payload or log line?
+6. Is every enum defined in exactly one place, the client reading `_label_key`s rather than
+   mapping keys to English? Does every rate carry its `_n`?
+7. Is the contract identical in the frontend and backend briefs, field for field?
+8. Does it work on a mid-range Android on a weak connection, over WhatsApp, SMS and web, in
+   Bahasa Indonesia, English, Tagalog and Arabic (RTL, single-name users, counts)?
+9. Did a constant become a setting (or the reverse), or a second way appear to do what the
+   system already does once, without a decision?
+10. Did a boundary or the contract move without an ADR? Does the implementation match the brief?
+11. What will the implementers ask that the brief does not answer, and what will
+    engineering-lead, the four reviewers or qc-lead reject this for?
 
 ---
 
@@ -273,36 +117,41 @@ picks it.
 
 | Concern | Convention |
 |---|---|
-| Naming | Nouns, plural, the domain's language. `/issues/`, `/cycles/`, not `/items/`. |
-| Errors | One shape everywhere: `{"error": {"code": "<snake_case_code>", "message_key": "error.<code>", "fields": {}, "trace_id": ""}}`. A code, never a sentence, because copy is the writer's. Edge Functions return it directly; an RPC raises the code (see `actio-supabase`) and the front end's data client wraps PostgREST's error into this shape, so a component reads one shape only. |
-| Pagination | Cursor, not offset. Queues are long and rows move. |
-| Times | ISO 8601 UTC in the payload. The site time zone is a separate labelled field. The client never guesses. |
-| Numbers | Integers where the domain is integral. A rate is a fraction from 0 to 1 named `<name>_rate`, with `<name>_n` beside it, always. The client formats the percentage. |
-| Enums | Snake case strings, never integers. A wire format a human can read in a log is worth more than two bytes. Every enum field ships a `<field>_label_key` beside it; the client resolves the words from the string catalogue. |
-| Below threshold | A manager-facing report raises `below_threshold` and returns nothing (I1, I2). An employee's view of their own cohort, such as the privacy preview, returns 200 with `below_threshold: true`, because it discloses nothing about others and the screen must still render. No other endpoint uses the second form without an ADR. |
-| Nullability | Explicit. A field that can be absent is documented as such in the brief. |
-| Idempotency | Every write that a retry could duplicate takes an idempotency key. Messaging is billed per message. |
+| Naming | Nouns, plural, the domain's language. `/issues/`, `/cycles/`, not `/items/` |
+| Errors | One shape everywhere: `{"error": {"code": "<snake_case_code>", "message_key": "error.<code>", "fields": {}, "trace_id": ""}}`. A code, never a sentence: copy is the writer's, and a code with no message is rejected. Edge Functions return it directly; an RPC raises the code (`actio-supabase`) and the data client wraps PostgREST's error into this shape, so a component reads one shape |
+| Pagination | Cursor, not offset. Queues are long and rows move |
+| Times | ISO 8601 UTC in the payload. The site time zone is a separate labelled field. The client never guesses. The reader sees `14 Mar 2026` in tables and identifiers, `14 March` in running prose, never numeric-only (`BRAND.md` §8) |
+| Numbers | Integers where the domain is integral. A rate is a fraction from 0 to 1 named `<name>_rate` with `<name>_n` beside it, always. The client formats the percentage and never derives n |
+| Enums | Snake case strings, never integers. Every enum field ships a `<field>_label_key`; the client resolves words from the string catalogue. The label names the actual role, not a tier (`BRAND.md` §5). Lane and status keys are identifiers, never what a reader sees |
+| Below threshold | A manager-facing report raises `below_threshold` and returns nothing (I1, I2); `cohort_size` never appears on a manager path. An employee's view of their own cohort (the privacy preview) returns 200 with `below_threshold: true`, because it discloses nothing about others and the screen must still render. No other endpoint uses the second form without an ADR |
+| Nullability | Explicit. A field that can be absent is documented as such in the brief |
+| Idempotency | Every write a retry could duplicate takes an idempotency key, unique in the database. Messaging is billed per message |
 
 ---
 
-## The post-change architecture review
+## Briefs, ADRs and contracts
 
-Runs after **every** change, not only new features. This is what the Product Lead asked
-for: the architecture is re-examined each time.
+- A brief is implementable without a follow-up question. Banned in a brief: "as appropriate",
+  "handle correctly", "standard", "etc.". Every criterion is checkable by reading output or
+  running a command, none says "works", and a screen's criteria name English and Arabic.
+- A brief asks only for tools the toolchain has. A database change is a hand-authored
+  migration applied through the Supabase MCP, never a schema diff, never a `supabase/schemas/`
+  file, never a local Supabase stack.
+- A brief cites the ADR and the contract by path and section and does not restate them.
+  Where they seem to differ, the ADR wins and the implementer raises it.
+- Both briefs are diffed on every shared field: name, type, nullability, enum value, error code.
+- ADRs are sequential, never reused, immutable once accepted, superseded rather than edited.
+  The record is `docs/architecture/adr/ADR-NNNN-<slug>.md`; the run folder holds a byte copy.
+- If an implementer needs the contract different, the contract changes first, by ADR, then
+  both sides change together. An `eroded` boundary gets a remediation brief.
 
-Read the diff, then answer these in writing. A yes to any of the first five is a finding.
+---
 
-1. Did a boundary move without an ADR? Logic that was in a service now in a view, a model
-   now reaching across an app, a client now knowing something only the server should.
-2. Did the API contract change in a way the other side has not implemented?
-3. Did any invariant I1 to I8 lose its enforcement point, or gain a second enforcement
-   point that can disagree with the first?
-4. Did a constant become a setting, or a setting become a constant, without a decision?
-5. Did the change add a second way to do something the system already does once?
-6. Does the implementation match the task brief, or did it drift under delivery pressure?
-7. Is there anything here that would make the product contradict its own claim: a
-   sentiment score creeping in, a route that lets a manager filter below the threshold,
-   an issue that can close without evidence, a protected case leaking into the queue?
+## References
 
-Record the answers in `review.md`. Where the architecture eroded, issue the remediation
-task rather than noting it and moving on.
+| File | Holds | Read when |
+|---|---|---|
+| `references/adr.md` | The one ADR template, a worked example | Writing or superseding an ADR |
+| `references/brief.md` | The one task-brief template (also remediation), a worked example | Writing a task or remediation brief |
+| `references/contract.md` | The contract file template | Writing or amending a contract |
+| `references/repository-layout.md` | Where product code lives, what the toolchain cannot do | A brief names a path you have not confirmed, or a change adds a folder or workspace |

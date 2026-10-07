@@ -38,14 +38,7 @@ whole sweep runs on the resubmission.
 Every pass records the command or the Supabase MCP call and its output as evidence,
 including the passes that found nothing. A clean pass is evidence; an unrun pass is a gap.
 
-The toolchain is git, node 24, npm, npx, the Supabase MCP server (`supabase` in `.mcp.json`,
-scoped to one project) and the Playwright MCP server (`playwright` in `.mcp.json`, carried by
-qc-engineer and qc-lead). Nothing else may be assumed. No step, check or piece of
-evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python.
-Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of
-2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence
-source or an allowed dependency of any stage. Actio has no Python code, so there is no
-`pip audit`.
+Toolchain, a missing MCP and the evidence rules are in `actio-agent-protocol`. Do not restate them.
 
 Database passes run on the project through the MCP and only read or probe: `get_advisors`,
 `list_tables`, and `execute_sql` wrapped as `begin; ... rollback;`, with `set local role anon`
@@ -54,351 +47,41 @@ for every role check. One probe per call, because the first error aborts the tra
 The offline `npm run db:test` run (`node .actio/bin/db-test.mjs`, PGlite, no Docker) is
 evidence too, labelled as PGlite, and never stands in for a probe on the project.
 
-If the Supabase MCP is not connected (its tools are missing, or a call returns an auth
-error), nothing is faked. Run the offline PGlite proof with `npm run db:test`, set `status`
-to `blocked` with the reason `supabase MCP not authorised`, and the orchestrator escalates
-to Shehab, who authorises it with `/mcp`.
-
 ---
 
-## A. Authentication and authorisation
-
-### A1. Client-side authentication · Critical
-
-If the decision runs in the browser, the user can read it and skip it.
-
-| Hunt for | |
-|---|---|
-| A role, permission or tier check in client code that gates data rather than only the view | `if (user.role === 'admin')` deciding what is *fetched*, not what is *rendered* |
-| A password or token compared in the client | Any credential comparison outside the server |
-| A route guard that is the only thing protecting the data behind it | The API must refuse independently |
-| `getSession()` used to authorise | It reads a client-held token. `getUser()` or `getClaims()` verifies with the server. |
-
-**In Actio:** the client may hide a control the reader cannot use. It may never be the
-reason they cannot reach the data. RLS decides that.
-
-### A2. Missing authorisation checks, IDOR · Critical
-
-The single most common real-world breach in this class: an object id in a request, and
-nothing checking the caller owns it.
-
-- Every table reachable by PostgREST has a policy for **every** command, not only `select`.
-- Every `update` policy has both `using` and `with check`. Without `with check` a caller can
-  update a row into a state they could not have selected.
-- Test the negative: a valid session for site A requesting an id from site B must return
-  nothing, not a 403 that confirms the row exists.
-- An Edge Function taking an id from the body and trusting it is the same bug with extra
-  steps. Derive identity from the verified JWT, never from the payload.
-
-### A3. Broken access control · Critical
-
-- RLS enabled with no policy denies everything, which looks like a bug and gets "fixed" by
-  disabling RLS. **Check the fix, not just the symptom.** A commit that disables RLS is a
-  blocker regardless of its message.
-- A new table with no `enable row level security` is open the moment anything is granted.
-- `service_role` anywhere the browser can reach it bypasses every policy in the database.
-- Check `get_advisors` with type `security`, which names unprotected tables directly.
-
-### A4. Weak session handling · High
-
-| Check | Actio |
-|---|---|
-| Token generation | Cryptographically random. Supabase Auth handles this; a custom survey token must too. |
-| Expiry | The respondent session expires with the cycle, not in 30 days |
-| Invalidation | Sign out clears local storage completely. A shared handset is the normal case. |
-| Transport | Secure, `HttpOnly` and `SameSite` where cookies are used |
-| Fixation | A new session id after privilege changes |
-| Refresh | **No refresh token on a respondent session.** There is nothing to steal from a shared device. |
-
-### A5. Authentication bypass paths · Critical
-
-Enumerate every route into the data and confirm each one authenticates: the web app, a
-PostgREST call made directly, an Edge Function, a webhook endpoint, a Realtime
-subscription, a scheduled job, an export, the storage bucket. A single unauthenticated path
-makes the other seven irrelevant.
-
----
-
-## B. Secrets and keys
-
-### B1. Hard-coded credentials · Critical
-
-```bash
-git diff origin/main... | grep -nEi '(secret|token|password|passwd|api[_-]?key|private[_-]?key|bearer)\s*[=:]\s*["'\'']'
-git log -p --all | grep -nEi 'service_role|sk_live|-----BEGIN [A-Z ]*PRIVATE KEY'
-```
-
-Scan **history**, not only the working tree. A key committed once and removed later is a
-key that leaked, and the fix is rotation, not deletion.
-
-### B2. Exposed API keys in client-side code · Critical
-
-Supabase has a specific and much-misunderstood shape here.
-
-| Key | Where it may appear | What protects the data |
-|---|---|---|
-| `anon` / publishable | The browser bundle. **This is by design.** | RLS, and only RLS. An anon key with RLS off is a public database. |
-| `service_role` / secret | Edge Function secrets and server environment only | Nothing. It bypasses every policy. |
-
-```bash
-# service_role must never appear in anything the browser downloads
-git grep -n 'service_role' -- . ':!supabase/functions' ':!*.md'
-```
-
-Any hit outside `supabase/functions/` and documentation is a blocker and a rotation event.
-For any third-party key the client needs, proxy it through an Edge Function rather than
-shipping it.
-
----
-
-## C. Injection
-
-### C1. SQL injection · Critical
-
-In Postgres functions the risk is string building inside the body.
-
-```sql
--- Vulnerable: the identifier is concatenated
-execute 'select * from ' || tbl || ' where site = ''' || p_site || '''';
-
--- Correct: %I quotes an identifier, %L quotes a literal, and using passes a parameter
-execute format('select * from %I where site = $1', tbl) using p_site;
-```
-
-Also: the database role a caller runs as has the minimum privileges it needs, so an
-injection that succeeds still reaches nothing it should not.
-
-### C2. Cross-site scripting · High
-
-- Never `dangerouslySetInnerHTML` with anything that originated from a user. Free text from
-  a survey is user input even after rewording.
-- No `innerHTML`, no `document.write`, no template built by concatenation.
-- A Content Security Policy that actually restricts `script-src`, not one that allows
-  `unsafe-inline`.
-- Sanitise on output, not only on input, because storage is not the only path in.
-
-### C3. Command injection · Critical
-
-Any user value reaching a shell. In this product that is most likely in an Edge Function
-shelling out for file handling. Pass arguments as an array, never build a command string.
-
-### C4. Dangerous functions · Critical
-
-The class that exists because the shortest solution is often the unsafe one.
-
-| Never | Instead |
-|---|---|
-| `eval`, `new Function`, `setTimeout` with a string | Parse it, or use a real expression library |
-| `child_process.exec` with interpolation | `execFile` with an argument array |
-| A dynamic `import()` built from user input | An allowlist map |
-| Postgres `execute` on a concatenated string | `format` with `%I` and `%L`, plus `using` |
-
-A textbook case is `eval` used for arithmetic on user input. It is arbitrary code execution
-written to save four lines.
-
----
-
-## D. Data storage and handling
-
-### D1. Insecure client-side storage · High
-
-Nothing sensitive in `localStorage`, `sessionStorage` or IndexedDB: no tokens beyond the
-session Supabase manages, no personal data, no survey answers beyond the offline queue the
-design calls for, and that queue is cleared on submit and on sign out. **A shared handset
-is the normal case in this product**, so anything left behind is readable by the next
-worker on that shift.
-
-### D2. Weak password storage · Critical
-
-Actio does not store passwords. Supabase Auth does, correctly. **The finding here is any
-code that starts to.** A custom credential table, a hash written by hand, or anything using
-`md5` or `sha1` for a password is a blocker.
-
-### D3. Sensitive data in URLs and logs · Medium, but High in Actio
-
-URLs land in access logs, referrers, browser history and shared screenshots.
-
-- No phone number, employee identifier, name, free text or token in a query string or a
-  path segment. The survey token is single-use and short-lived precisely because it
-  travels in a URL.
-- No free text, name or phone number in any log line, error message, exception or trace.
-- Redact before writing, not after.
-
-### D4. Missing security headers · Medium
-
-Set centrally, so every route inherits them rather than each one remembering.
-
-| Header | Value |
-|---|---|
-| `Content-Security-Policy` | Restrictive, no `unsafe-inline` |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
-| `X-Content-Type-Options` | `nosniff` |
-| `X-Frame-Options` or CSP `frame-ancestors` | Deny, because the survey must not be framed |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | Deny what the product does not use |
-
-### D5. No CSRF protection · High
-
-Anywhere a cookie authenticates a state-changing request. Token-authenticated PostgREST
-calls are not vulnerable in the same way, but any cookie-based flow is, and so is any
-form that posts to an Edge Function.
-
-### D6. Missing rate limiting · High
-
-Applied per route, centrally. In Actio the two that matter most:
-
-- **Anything that sends a message.** Messaging is billed per message, so an unlimited
-  endpoint is a financial denial of service as well as a spam vector.
-- **Anything enumerable.** A token validation endpoint with no limit lets an attacker walk
-  the token space.
-
----
-
-## E. Dependencies and supply chain
-
-### E1. Hallucinated packages · High
-
-The slopsquatting risk. AI-assisted code routinely imports libraries that do not exist, and
-an attacker who registers that plausible name owns the build.
-
-**Every new dependency in a diff is verified to exist and to be the one intended**, by
-checking the registry, the repository link, the download count and the publish date. A
-package published last week with forty downloads and a name one character from a popular
-one is the attack, not a coincidence.
-
-```bash
-git diff origin/main... -- package.json | grep '^+' | grep -oE '"[^"]+":\s*"[^"]+"'
-```
-
-### E2. Outdated libraries with known CVEs · High
-
-```bash
-npm audit --audit-level=moderate
-npm audit fix --dry-run  # read what a fix would change and what it cannot; the author applies it
-```
-
-Actio has no Python code, so there is no `pip audit`.
-
-**Every critical and high finding is fixed or explicitly accepted in writing with a reason
-and a date.** "It is only a dev dependency" is an acceptance, and it gets written down like
-any other.
-
-### E3. Insecure deserialization · High
-
-Untrusted JSON written straight into a typed column, a webhook body parsed with no schema
-validation, or any structured input trusted because it arrived in the right shape. Validate
-against a schema at every boundary, including between your own services.
-
----
-
-## F. Exposure and configuration
-
-The class that produces the headline breaches, and the one most specific to this stack.
-
-### F1. Open database endpoints · Critical
-
-**A Supabase project with RLS off is a public database**, because PostgREST exposes every
-granted table and the anon key is in the browser by design. This is the single most common
-way a product of this shape leaks everything.
-
-Run each query on the project through `execute_sql`, and save the call and its returned rows.
-
-```sql
--- every table in a client-reachable schema must have RLS on
-select schemaname, tablename, rowsecurity
-  from pg_tables
- where schemaname in ('public')
-   and rowsecurity = false;
-
--- and RLS on with no policy is deny-all, which gets "fixed" the wrong way
-select c.relname
-  from pg_class c
- where c.relrowsecurity
-   and not exists (select 1 from pg_policy p where p.polrelid = c.oid);
-```
-
-Then prove it from the caller's side. A query that reads the catalogue shows the setting; a
-probe under the caller's role shows the effect. One probe per `execute_sql` call:
-
-```sql
-begin;
-set local role anon;
-select count(*) from public.responses;   -- expected: 42501, insufficient privilege
-rollback;
-
-begin;
-set local role authenticated;
-set local request.jwt.claims = '{"sub": "<team lead on site A>", "role": "authenticated"}';
-select count(*) from public.issues where site_id = '<site B>';   -- expected: 0
-rollback;
-```
-
-Run `get_advisors` for type `security` and type `performance` on every build and treat
-every finding as a defect.
-
-### F2. Misconfigured storage buckets · Critical
-
-The Firebase-bucket failure mode, in Supabase Storage form.
-
-- No bucket is public unless the content is genuinely public. Evidence attached to an issue
-  is never public.
-- Every bucket has storage policies, and they are tested the same way table policies are:
-  `select id, public from storage.buckets;` through `execute_sql`, then role-switched probes
-  on `storage.objects`.
-- Signed URLs are short-lived and scoped to one object.
-- A file name is not a secret. Never rely on an unguessable path.
-
-### F3. Environment and configuration · High
-
-- No secret in a client-side environment variable. Anything prefixed for the browser is
-  public: `NEXT_PUBLIC_*` is shipped to every visitor.
-- CORS is an allowlist, never `*`, on anything authenticated.
-- Debug and verbose error modes off in production, because a stack trace is a map.
-- Default credentials changed, sample data removed, seed accounts disabled.
-
----
-
-## G. Robustness and maintainability
-
-The user-visible half, and the reason a product feels fragile rather than merely insecure.
-
-### G1. Missing error handling · High
-
-AI-assisted code writes the happy path well and the rest not at all. Every one of these is
-a real failure that will occur on a frontline handset:
-
-| Path | Must |
-|---|---|
-| Network timeout | Retry with backoff, or fail with a stated next step |
-| Offline mid-survey | Hold on the device, state it plainly, send on reconnect, never double-send |
-| Empty form field | Validate on blur, message inline beside the field |
-| Wrong data type | Refuse at the boundary with a code, never coerce silently |
-| Upstream 5xx | Degrade to something usable, never a blank screen |
-| Partial failure | Render what resolved, label what did not |
-
-A swallowed exception is worse than a crash, because it produces a wrong state nobody sees.
-
-### G2. Logging · Medium
-
-Both directions are defects.
-
-- **Absent:** a failure path with nothing logged, no metric and no way to know at 2am.
-- **Excessive or unfiltered:** free text, names, phone numbers, tokens or whole request
-  bodies written to a log. Filter at the point of writing.
-
-Every log line carries a correlation id so a support conversation can find the run.
-
-### G3. Version control · Medium
-
-Everything in git, nothing generated committed by hand, no large binary without a reason,
-no secret in history, and a lockfile committed so a build is reproducible.
-
-### G4. Fragile architecture · Medium
-
-The finding `code-steward` and `peer-reviewer` also look for, from a security angle: a rule
-enforced in one place a future change can route around, two enforcement points that can
-disagree, a boundary that exists only by convention. In this product that is specifically
-any invariant enforced outside the database.
+## The catalogue
+
+One line per class. Full text, queries and probes are in the reference in the last column; read it when the diff touches what its trigger in the References table says. Severity here is the catalogue's own; the mapping to the handoff ladder is under Findings.
+
+| Class | Hunt for | Severity | File |
+|---|---|---|---|
+| A1 Client-side authentication | A client check gates what is fetched; `getSession()` authorises | Critical | auth |
+| A2 Missing authorisation, IDOR | No policy per command; update with no `with check`; an id trusted from the body | Critical | auth |
+| A3 Broken access control | RLS disabled to "fix" deny-all; a table with no RLS | Critical | auth |
+| A4 Weak session handling | Respondent session outlives the cycle; a refresh token; sign-out leaves storage | High | auth |
+| A5 Bypass paths | Any unauthenticated route into the data | Critical | auth |
+| B1 Hard-coded credentials | A secret literal in the tree or in history | Critical | secrets-injection |
+| B2 Exposed keys | `service_role` outside `supabase/functions/` | Critical | secrets-injection |
+| C1 SQL injection | `execute` on a concatenated string | Critical | secrets-injection |
+| C2 XSS | `dangerouslySetInnerHTML` or `innerHTML` on free text | High | secrets-injection |
+| C3 Command injection | A user value reaching a shell | Critical | secrets-injection |
+| C4 Dangerous functions | `eval`, `new Function`, `exec`, a dynamic `import()` | Critical | secrets-injection |
+| D1 Insecure client storage | A token, personal data or answers left on a shared handset | High | data-handling |
+| D2 Weak password storage | A custom credential table, `md5` or `sha1` | Critical | data-handling |
+| D3 Sensitive data in URLs and logs | A phone, name, free text or token | High in Actio | data-handling |
+| D4 Missing headers | CSP, HSTS, `nosniff`, `frame-ancestors` | Medium | data-handling |
+| D5 No CSRF protection | A cookie-authenticated state change | High | data-handling |
+| D6 Missing rate limiting | Message sends, token validation | High | data-handling |
+| E1 Hallucinated packages | A new dependency that is not real or not the one intended | High | dependencies |
+| E2 Known CVEs | `npm audit` critical or high | High | dependencies |
+| E3 Insecure deserialisation | Unvalidated JSON into a typed column or from a webhook | High | dependencies |
+| F1 Open database endpoints | RLS off; RLS on with no policy; probes that read what they must not | Critical | exposure |
+| F2 Storage buckets | A public evidence bucket, no policy, a long-lived signed URL | Critical | exposure |
+| F3 Environment and configuration | A secret in `NEXT_PUBLIC_*`, CORS `*`, debug on | High | exposure |
+| G1 Error paths | An error path that fails open or leaks internals | High | robustness |
+| G2 Logging | Security events unlogged; personal data logged | Medium | robustness |
+| G3 Version control | A secret in history, no lockfile | Medium | robustness |
+| G4 Fragile enforcement | An invariant enforced outside the database and bypassable | Medium | robustness |
 
 ---
 
@@ -420,74 +103,44 @@ Checked on every diff, in addition to everything above.
 
 ---
 
-## Findings
+## Findings and severity
 
-```markdown
-### S-03 · Critical · F1 · RLS disabled on public.responses
+One format: a `findings[]` entry in your handoff (`actio-agent-protocol`). `id` `SEC-n`; `where` file:line, or the project object (`public.responses`); `rule` the class (`F1`, `B2`); `what` the defect and why it matters, at most 240 characters; `fix` the concrete change, starting `ROTATE:` when a secret must be rotated (a deleted secret is still leaked); `evidence` a path under `evidence/security/` holding the command and output, query and rows, or request and response. Someone else must be able to reproduce it from what you wrote.
 
-**Where.** `supabase/migrations/20260921093000_add_export.sql:14`
-**Class.** Exposure and configuration, F1. Open database endpoint.
-
-**What.** The migration adds an export view and disables RLS on `public.responses` to make
-it work.
-
-**Why it is critical.** The anon key is in the browser by design and RLS is the only thing
-standing between it and every survey response ever submitted. This one line makes the
-entire response table world-readable to anyone who opens the bundle and reads the key.
-
-**Proof.**
-`select rowsecurity from pg_tables where tablename = 'responses';` returns `false`.
-
-**Fix.** Re-enable RLS in the same migration, and build the export as a security-definer
-function that applies the reporting threshold, per the pattern in `actio-supabase`.
-
-**Rotation required.** No, the key is public by design. Yes if the migration reached an
-environment with real data, in which case treat it as a disclosure.
+```json
+{"id":"SEC-1","severity":"blocker","where":"supabase/migrations/20260921093000_add_export.sql:14","rule":"F1","evidence":"evidence/security/rls-state.txt","what":"The migration disables RLS on public.responses so an export view works. pg_tables.rowsecurity is false: the anon key is in every browser, so every response is world-readable.","fix":"Re-enable RLS in the same migration; build the export as a security-definer function that applies the threshold. ROTATE: no, the anon key is public by design; treat as a disclosure if it reached an environment with real data.","status":"open"}
 ```
 
-| Severity | Means | Gate |
+| Catalogue severity | Handoff `severity` | Gate |
 |---|---|---|
-| **Critical** | Data reachable by someone who should not reach it, or code execution | Blocks. No exceptions, no "ship and patch". |
-| **High** | A clear path to critical, or a real failure in normal use | Blocks |
-| **Medium** | Weakens a defence without opening one | Blocks only if it accumulates. Logged and scheduled. |
-| **Low** | Hardening | Logged |
+| **Critical**: data reachable by someone who should not reach it, or code execution | `blocker` | Blocks. No exceptions, no "ship and patch" |
+| **High**: a clear path to critical, or a real failure in normal use | `major` | Blocks |
+| **Medium**: weakens a defence without opening one | `minor` | Never blocks alone. Logged with an owner and a date. Three in the same area become one `major` that names the pattern |
+| **Low**: hardening | `nit` | Logged |
+
+A finding on a path where a leak is unrecoverable (response data, free text, protected cases, a survey token) is at least `major`. Every critical and high is fixed or accepted in writing by Shehab with a reason and a date. You never accept: list it in `decisions_for_shehab`; `status` becomes `accepted` once his written acceptance exists.
 
 ---
 
 ## The sweep
 
-Run whole, every time, unless a critical in pass 1 or 2 stops it as described above. Record
-each command and its output to `.actio/runs/<run-id>/evidence/security/`. The base is the
-one in `run.json`; the commands write it as `origin/main`.
-
-```bash
-# B. secrets, working tree and history
-git diff origin/main... | grep -nEi '(secret|token|password|api[_-]?key|private[_-]?key)\s*[=:]\s*["'\'']'
-git grep -n 'service_role' -- . ':!supabase/functions' ':!*.md'
-
-# E. dependencies
-npm audit --audit-level=moderate
-git diff origin/main... -- package.json package-lock.json | grep '^+' | grep -E '"[^"]+":'
-
-# C4. dangerous functions
-git grep -nE '\beval\(|new Function\(|dangerouslySetInnerHTML|innerHTML\s*=|child_process\.exec\('
-
-# F3. client-exposed configuration
-git grep -nE 'NEXT_PUBLIC_[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD)' | grep -vE 'NEXT_PUBLIC_SUPABASE_(PUBLISHABLE|ANON)_KEY'   # the publishable key is public by design, see B2
-git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '\.env\.example$'   # must print nothing: web/.env.local is gitignored
-
-# D3. personal data in logs
-git grep -nE 'console\.(log|error)\(.*(phone|free_text|full_name|email)'
-
-# G1. swallowed errors
-git grep -nE 'catch\s*\([^)]*\)\s*\{\s*\}|exception when others then null'
-```
-
-Then the database passes, through the Supabase MCP: the F1 queries and probes through
-`execute_sql`, `get_advisors` for type `security` and type `performance`, `list_tables`, the
-F2 bucket check, and the role matrix in `actio-test-protocol`, each cell a role-switched
-probe inside `begin; ... rollback;`. Save every call and its output to `evidence/security/`.
+Run `references/sweep.md` whole on every pass, as the first step of Execute, unless a critical in pass 1 or 2 stops it: one Bash call for the greps, then the database passes through the Supabase MCP, every command and its output saved to `evidence/security/`.
 
 **A sweep with no findings is reported as a sweep with no findings, with the output
 attached.** Silence is not the same as a clean result, and the difference is the whole
 reason this role exists.
+
+## References
+
+All in `.claude/skills/actio-security/references/`.
+
+| File | Holds | Read when |
+|---|---|---|
+| `sweep.md` | The grep sweep as one Bash block (B, E, C4, F3, D3, G1), the database passes, and the history scan from the last clean point | Every pass, as the first step of Execute |
+| `auth.md` | A1 to A5: client-side authentication, IDOR, broken access control, sessions, bypass paths | The diff touches auth, sessions, a route guard, a policy, an Edge Function that takes an id, or any path into the data |
+| `secrets-injection.md` | B1 to B2 and C1 to C4: credentials, exposed keys, SQL, XSS, command injection, dangerous functions | The diff adds config, env or keys, or lets user input reach SQL, a shell, the DOM, `eval` or a dynamic import |
+| `data-handling.md` | D1 to D6: client storage, password storage, URLs and logs, headers, CSRF, rate limits | The diff touches client storage, logging, URLs, headers, cookies, forms, or anything that sends a message or validates a token |
+| `dependencies.md` | E1 to E3: hallucinated packages, CVEs, deserialisation | `package.json` or the lockfile changes, or a webhook or jsonb body is parsed |
+| `exposure.md` | F1 to F3: the RLS catalogue queries and role-switched probes, storage buckets, environment and configuration | Every pass (the F1 queries and probes are step 4 of the method), and before any release |
+| `robustness.md` | G1 to G4: error paths that fail open, logging, version control, fragile enforcement | The diff touches error handling, logging or where an invariant is enforced |
+| `code-level-security.md` | The security rows `code-analyst` used to carry: injection signatures, mass assignment, SSRF, open redirect, timing leaks, the RLS privilege rows, an I3 view | The diff has user input reaching a fetch, a redirect or a secret comparison, an RPC taking a whole row, or a view over free text |

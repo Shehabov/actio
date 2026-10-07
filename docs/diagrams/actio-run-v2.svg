@@ -1,0 +1,301 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1424" width="1440" height="1424" role="img" aria-label="How an Actio run moves in swarm v2: the stages left to right with the five checks in parallel, the loop inside every agent, the four lanes, and the measured change."><title>How an Actio run moves</title>
+<desc>How a run moves. Stage 1: bug-historian writes the regression brief by script (bugs.mjs brief), then tech-architect writes the ADR and task briefs and owns the design-authority gate. Stage 2, in parallel: backend-engineer, whose database track goes straight to review, and ux-designer. Stage 3, in parallel: ux-auditor owns the design gate and ux-writer owns the copy gate, writing from the string slots without waiting for the design gate. Stage 4: frontend-engineer. Stage 5, five in parallel: peer-reviewer (review-1of3), code-analyst (review-2of3), code-steward (review-3of3), security-analyst (security) and the bug-historian regression guard by script (bugs.mjs guard, regression-guard). When all five pass: stage 6 engineering-lead (engineering) runs verify.mjs once, and the bundle is reused by qc-engineer (stage 7), qc-lead (stage 8, quality) and release-engineer (stage 9, release) for the same tree key. Stage 10: bug-historian records new BUGS.md entries. Close: the orchestrator runs run.mjs close and owns run-closure. Between every stage the orchestrator makes at most four tool calls: run.mjs next, run.mjs dispatch, every due agent in one message, run.mjs next. A hook writes every dispatch and return to the ledger. Inside every agent: dispatch, checkpoint (handoff.json with status working and a plan with Risk lines), execute, self-check with evidence, validated handoff (run.mjs handoff), and a return of at most 8 lines. A resumed agent starts from the checkpoint. Lanes: micro for docs, agents, skills or config; standard-ui for the UI track only; standard-db for the database track only; full for both tracks or anything touching privacy, RLS, grants, auth, the state machine or evidence closure. Measured over 7 runs: 804M tokens and 52.5 of 75.5 hours locked out by spend limits. Preload per agent was 49 to 262 KB and is capped at 45 KB. Per pass, plan.md and review.md (medians 14 KB and 10 KB) give way to fields in one handoff.json.</desc>
+<rect width="1440" height="1424" fill="#0C0C0C"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#00BFC4"/></marker>
+<marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6E6E69"/></marker></defs>
+<g transform="translate(33.006 25.02) scale(0.7)"><path d="M 50.0000 21.4000 A 57.1577 57.1577 0 0 1 78.5788 70.9000 A 57.1577 57.1577 0 0 1 21.4212 70.9000 A 57.1577 57.1577 0 0 1 50.0000 21.4000 Z M 35 53.4 a 15 15 0 1 0 30 0 a 15 15 0 1 0 -30 0 Z" fill="#00BFC4" fill-rule="evenodd"/></g>
+<text x="112" y="60" font-family="'Source Sans 3','IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="30" font-weight="600" fill="#EFEFEF" letter-spacing="-0.6">The fast loop</text>
+<text x="112" y="86" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" fill="#A8A8A4">Swarm v<tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">2</tspan>. Scripts do the bookkeeping, agents do the judgement, and every gate keeps its one owner.</text>
+<text x="1392" y="48" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" letter-spacing="0.24">ACTIO</text>
+<text x="1392" y="70" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" letter-spacing="0.24">A LUMOFY PRODUCT</text>
+<rect x="48" y="108" width="1344" height="1" fill="#33332F"/>
+<text x="48" y="156" font-family="'Source Sans 3','IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="600" fill="#EFEFEF" letter-spacing="-0.33">How a run moves</text>
+<text x="48" y="180" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="13" fill="#A8A8A4">A stage starts when its upstream gates pass. Boxes stacked in one column run in parallel. A fix is re-checked as a diff, not a full re-review.</text>
+<text x="48" y="208" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 1</text>
+<text x="276" y="208" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 1</text>
+<text x="504" y="208" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 2 · in parallel</text>
+<text x="732" y="208" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 3 · in parallel</text>
+<text x="960" y="208" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 4</text>
+<text x="1188" y="208" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 5 · five in parallel</text>
+<g data-box="b1">
+<rect x="48" y="224" width="204" height="72" rx="12" fill="#022E33" stroke="#6E6E69" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="64" y="254" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#6FE0E5" data-in="b1">bug-historian</text>
+<text x="240" y="254" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="b1">script</text>
+<text x="64" y="272" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b1">bugs.mjs brief, a slice each</text>
+</g>
+<g data-box="b2">
+<rect x="276" y="224" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="277" y="246" width="3" height="28" fill="#00BFC4"/>
+<text x="292" y="248" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b2">tech-architect</text>
+<text x="292" y="266" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b2">ADR and task briefs</text>
+<text x="292" y="284" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b2">gate · design-authority</text>
+</g>
+<g data-box="b3">
+<rect x="504" y="224" width="204" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="520" y="254" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b3">backend-engineer</text>
+<text x="520" y="272" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b3">Supabase, RLS</text>
+</g>
+<g data-box="b4">
+<rect x="504" y="304" width="204" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="520" y="334" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b4">ux-designer</text>
+<text x="520" y="352" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b4">spec and string slots</text>
+</g>
+<g data-box="b5">
+<rect x="732" y="304" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="733" y="326" width="3" height="28" fill="#00BFC4"/>
+<text x="748" y="328" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b5">ux-auditor</text>
+<text x="748" y="346" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b5">audits the spec</text>
+<text x="748" y="364" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b5">gate · design</text>
+</g>
+<g data-box="b6">
+<rect x="732" y="384" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="733" y="406" width="3" height="28" fill="#00BFC4"/>
+<text x="748" y="408" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b6">ux-writer</text>
+<text x="748" y="426" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b6">from the slots, no wait</text>
+<text x="748" y="444" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b6">gate · copy</text>
+</g>
+<g data-box="b7">
+<rect x="960" y="304" width="204" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="976" y="334" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b7">frontend-engineer</text>
+<text x="976" y="352" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b7">web and extension</text>
+</g>
+<g data-box="b8">
+<rect x="1188" y="224" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="1189" y="246" width="3" height="28" fill="#00BFC4"/>
+<text x="1204" y="248" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b8">peer-reviewer</text>
+<text x="1204" y="266" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b8">judgement</text>
+<text x="1204" y="284" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b8">gate · review-1of3</text>
+</g>
+<g data-box="b9">
+<rect x="1188" y="304" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="1189" y="326" width="3" height="28" fill="#00BFC4"/>
+<text x="1204" y="328" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b9">code-analyst</text>
+<text x="1204" y="346" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b9">defects, line by line</text>
+<text x="1204" y="364" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b9">gate · review-2of3</text>
+</g>
+<g data-box="b10">
+<rect x="1188" y="384" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="1189" y="406" width="3" height="28" fill="#00BFC4"/>
+<text x="1204" y="408" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b10">code-steward</text>
+<text x="1204" y="426" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b10">readability</text>
+<text x="1204" y="444" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b10">gate · review-3of3</text>
+</g>
+<g data-box="b11">
+<rect x="1188" y="464" width="204" height="72" rx="12" fill="#1A1A18" stroke="#B4251F" stroke-width="2"/>
+<rect x="1189" y="486" width="3" height="28" fill="#B4251F"/>
+<text x="1204" y="488" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b11">security-analyst</text>
+<text x="1204" y="506" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b11">secrets, exposure, authz</text>
+<text x="1204" y="524" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b11">gate · security</text>
+</g>
+<g data-box="b12">
+<rect x="1188" y="544" width="204" height="72" rx="12" fill="#022E33" stroke="#6E6E69" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="1189" y="566" width="3" height="28" fill="#00BFC4"/>
+<text x="1204" y="568" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#6FE0E5" data-in="b12">bug-historian</text>
+<text x="1380" y="568" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="b12">script</text>
+<text x="1204" y="586" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b12">bugs.mjs guard, no wait</text>
+<text x="1204" y="604" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b12">gate · regression-guard</text>
+</g>
+<path d="M 256 260 H 270" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 484 260 H 498" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 491 260 V 340 H 498" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 712 340 H 726" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 719 340 V 420 H 726" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 940 340 H 954" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 940 420 H 947 V 340" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1164 340 H 1172" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 712 260 H 1172" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<text x="744" y="252" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">the database track goes straight to review</text>
+<path d="M 1172 260 V 580" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1172 260 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 1172 340 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 1172 420 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 1172 500 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 1172 580 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 1392 260 H 1408" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1392 340 H 1408" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1392 420 H 1408" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1392 500 H 1408" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1392 580 H 1408" stroke="#00BFC4" stroke-width="1.5" fill="none"/>
+<path d="M 1408 260 V 640 H 28 V 720 H 41" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<rect x="611" y="632" width="218" height="16" fill="#0C0C0C"/>
+<text x="720" y="644" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">all five pass, then stage 6</text>
+<g data-box="orch">
+<rect x="48" y="320" width="432" height="296" rx="12" fill="#022E33" stroke="#00BFC4" stroke-width="1"/>
+<text x="64" y="348" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="orch">orchestrator</text>
+<text x="64" y="368" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="orch">between every stage, at most four tool calls</text>
+<text x="64" y="408" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="orch">1</text>
+<text x="88" y="408" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="orch">run.mjs next</text>
+<text x="88" y="426" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="orch">gates, blocking findings, due stages</text>
+<text x="64" y="452" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="orch">2</text>
+<text x="88" y="452" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="orch">run.mjs dispatch</text>
+<text x="88" y="470" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="orch">one prompt per due stage, brief slice inlined</text>
+<text x="64" y="496" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="orch">3</text>
+<text x="88" y="496" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="orch">Agent calls</text>
+<text x="88" y="514" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="orch">every due agent in one message</text>
+<text x="64" y="540" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="orch">4</text>
+<text x="88" y="540" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="orch">run.mjs next</text>
+<text x="88" y="558" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="orch">on return; a handoff is read only to reject or escalate</text>
+<text x="64" y="596" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="orch">A hook writes every dispatch and return to the ledger.</text>
+</g>
+<text x="48" y="672" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 6</text>
+<text x="276" y="672" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 7</text>
+<text x="504" y="672" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 8</text>
+<text x="732" y="672" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 9</text>
+<text x="960" y="672" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">stage 10</text>
+<text x="1188" y="672" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">close</text>
+<g data-box="b13">
+<rect x="48" y="684" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="49" y="706" width="3" height="28" fill="#00BFC4"/>
+<text x="64" y="708" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b13">engineering-lead</text>
+<text x="64" y="726" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b13">integration, end to end</text>
+<text x="64" y="744" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b13">gate · engineering</text>
+</g>
+<g data-box="b14">
+<rect x="276" y="684" width="204" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="292" y="714" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b14">qc-engineer</text>
+<text x="292" y="732" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b14">API, privacy, flows, locales</text>
+</g>
+<g data-box="b15">
+<rect x="504" y="684" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="505" y="706" width="3" height="28" fill="#00BFC4"/>
+<text x="520" y="708" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b15">qc-lead</text>
+<text x="520" y="726" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b15">evidence audit, go or no-go</text>
+<text x="520" y="744" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b15">gate · quality</text>
+</g>
+<g data-box="b16">
+<rect x="732" y="684" width="204" height="72" rx="12" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="733" y="706" width="3" height="28" fill="#00BFC4"/>
+<text x="748" y="708" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b16">release-engineer</text>
+<text x="748" y="726" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b16">migrations, tag, push</text>
+<text x="748" y="744" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b16">gate · release</text>
+</g>
+<g data-box="b17">
+<rect x="960" y="684" width="204" height="72" rx="12" fill="#022E33" stroke="#03474D" stroke-width="2"/>
+<text x="976" y="714" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#6FE0E5" data-in="b17">bug-historian</text>
+<text x="976" y="732" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b17">records BUGS.md entries</text>
+</g>
+<g data-box="b18">
+<rect x="1188" y="684" width="204" height="72" rx="12" fill="#022E33" stroke="#00BFC4" stroke-width="2"/>
+<text x="1204" y="708" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b18">orchestrator</text>
+<text x="1204" y="726" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b18">run.mjs close</text>
+<text x="1204" y="744" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#6FE0E5" data-in="b18">gate · run-closure</text>
+</g>
+<path d="M 256 720 H 270" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 484 720 H 498" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 712 720 H 726" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 940 720 H 954" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 1168 720 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<g data-box="b19">
+<rect x="48" y="772" width="204" height="72" rx="12" fill="#1A1A18" stroke="#6E6E69" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="64" y="802" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="b19">verify.mjs</text>
+<text x="240" y="802" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="b19">script</text>
+<text x="64" y="820" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="b19">one bundle per tree key</text>
+</g>
+<path d="M 150 756 V 772" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 252 808 H 834" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+<path d="M 378 808 V 762" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
+<path d="M 606 808 V 762" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
+<path d="M 834 808 V 762" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
+<text x="268" y="828" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">same tree key: the bundle is reused, never rebuilt</text>
+<rect x="48" y="876" width="1344" height="1" fill="#33332F"/>
+<text x="48" y="924" font-family="'Source Sans 3','IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="600" fill="#EFEFEF" letter-spacing="-0.33">Inside every agent</text>
+<text x="48" y="948" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="13" fill="#A8A8A4">The five steps stay and the paperwork goes. Plan, checks and findings live in handoff.json. No plan.md, no review.md.</text>
+<g data-box="s1">
+<rect x="48" y="972" width="204" height="80" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="64" y="1000" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="s1">1</text>
+<text x="80" y="1000" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF" data-in="s1">dispatch</text>
+<text x="64" y="1022" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s1">inputs and required reads,</text>
+<text x="64" y="1038" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s1">the brief slice inlined</text>
+</g>
+<path d="M 256 1012 H 270" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<g data-box="s2">
+<rect x="276" y="972" width="204" height="80" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="292" y="1000" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="s2">2</text>
+<text x="308" y="1000" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF" data-in="s2">checkpoint</text>
+<text x="292" y="1022" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s2">handoff.json, status working</text>
+<text x="292" y="1038" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s2">plan with Risk: lines</text>
+</g>
+<path d="M 484 1012 H 498" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<g data-box="s3">
+<rect x="504" y="972" width="204" height="80" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="520" y="1000" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="s3">3</text>
+<text x="536" y="1000" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF" data-in="s3">execute</text>
+<text x="520" y="1022" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s3">deliverables to disk</text>
+<text x="520" y="1038" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s3">as you go</text>
+</g>
+<path d="M 712 1012 H 726" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<g data-box="s4">
+<rect x="732" y="972" width="204" height="80" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="748" y="1000" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="s4">4</text>
+<text x="764" y="1000" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF" data-in="s4">self-check</text>
+<text x="748" y="1022" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s4">every criterion checked,</text>
+<text x="748" y="1038" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s4">with evidence</text>
+</g>
+<path d="M 940 1012 H 954" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<g data-box="s5">
+<rect x="960" y="972" width="204" height="80" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="976" y="1000" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="s5">5</text>
+<text x="992" y="1000" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF" data-in="s5">validated handoff</text>
+<text x="976" y="1022" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s5">run.mjs handoff, exit <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">0</tspan></text>
+<text x="976" y="1038" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s5">or fix and run it again</text>
+</g>
+<path d="M 1168 1012 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<g data-box="s6">
+<rect x="1188" y="972" width="204" height="80" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="1204" y="1000" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4" data-in="s6">6</text>
+<text x="1220" y="1000" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF" data-in="s6"><tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">8</tspan>-line return</text>
+<text x="1204" y="1022" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s6">status, gate, next,</text>
+<text x="1204" y="1038" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="s6">blocker count, handoff path</text>
+</g>
+<path d="M 378 1080 V 1058" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
+<text x="378" y="1100" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">a resumed agent starts here</text>
+<path d="M 800 1052 V 1072 H 640 V 1058" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
+<text x="720" y="1100" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#A8A8A4">fix what fails</text>
+<text x="48" y="1160" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="#EFEFEF">Lanes</text>
+<text x="48" y="1180" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="13" fill="#A8A8A4">The orchestrator picks the lane from the files the change will touch and records why. Shehab can override.</text>
+<g data-box="l1">
+<rect x="48" y="1196" width="318" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="64" y="1220" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="l1">micro</text>
+<text x="64" y="1240" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l1">Docs, agents, skills or config only.</text>
+<text x="64" y="1256" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l1">No product code and no scripts.</text>
+</g>
+<g data-box="l2">
+<rect x="390" y="1196" width="318" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="406" y="1220" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="l2">standard-ui</text>
+<text x="406" y="1240" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l2">One product track: the UI only.</text>
+<text x="406" y="1256" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l2">Drops backend-engineer.</text>
+</g>
+<g data-box="l3">
+<rect x="732" y="1196" width="318" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="748" y="1220" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="l3">standard-db</text>
+<text x="748" y="1240" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l3">One product track: the database only.</text>
+<text x="748" y="1256" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l3">Drops ux-designer and ux-auditor.</text>
+</g>
+<g data-box="l4">
+<rect x="1074" y="1196" width="318" height="72" rx="12" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="1090" y="1220" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="500" fill="#EFEFEF" data-in="l4">full</text>
+<text x="1090" y="1240" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l4">Both tracks, or privacy, RLS, grants,</text>
+<text x="1090" y="1256" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4" data-in="l4">auth, the state machine or closure.</text>
+</g>
+<rect x="48" y="1300" width="1344" height="1" fill="#33332F"/>
+<rect x="48" y="1320" width="32" height="24" rx="8" fill="#022E33" stroke="#00BFC4" stroke-width="1.5"/>
+<text x="88" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">orchestrator</text>
+<rect x="191.2" y="1320" width="32" height="24" rx="8" fill="#022E33" stroke="#03474D" stroke-width="1.5"/>
+<text x="231.2" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">memory</text>
+<rect x="294.79999999999995" y="1320" width="32" height="24" rx="8" fill="#1A1A18" stroke="#03474D" stroke-width="1"/>
+<rect x="295.79999999999995" y="1326" width="3" height="12" fill="#00BFC4"/>
+<text x="334.79999999999995" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">gate owner</text>
+<rect x="424.79999999999995" y="1320" width="32" height="24" rx="8" fill="#1A1A18" stroke="#B4251F" stroke-width="1.5"/>
+<rect x="425.79999999999995" y="1326" width="3" height="12" fill="#B4251F"/>
+<text x="464.79999999999995" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">security</text>
+<rect x="541.5999999999999" y="1320" width="32" height="24" rx="8" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
+<text x="581.5999999999999" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">maker</text>
+<rect x="638.5999999999999" y="1320" width="32" height="24" rx="8" fill="#1A1A18" stroke="#6E6E69" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="678.5999999999999" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">script, not a model</text>
+<path d="M 827.9999999999999 1332 H 853.9999999999999" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<text x="867.9999999999999" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">flow</text>
+<path d="M 918.3999999999999 1332 H 944.3999999999999" stroke="#6E6E69" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#am)"/>
+<text x="958.3999999999999" y="1337" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">reuse or rework</text>
+<text x="48" y="1376" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="13" fill="#EFEFEF">Measured over <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">7</tspan> runs: <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">804</tspan>M tokens, and <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">52.5</tspan> of <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">75.5</tspan> hours locked out by spend limits.</text>
+<text x="48" y="1398" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="13" fill="#A8A8A4">Preload per agent: <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">49</tspan> to <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">262</tspan> KB before, capped at <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">45</tspan> KB. Per pass, plan.md and review.md (medians <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">14</tspan> KB and <tspan font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">10</tspan> KB) give way to fields in one handoff.json.</text>
+</svg>

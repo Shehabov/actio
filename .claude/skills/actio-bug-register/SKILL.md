@@ -5,205 +5,124 @@ description: Capture defects and agent mistakes in BUGS.md, turn each into a sta
 
 # The bug register
 
-`BUGS.md` at the repository root is the register. This skill is how it is kept and how it
-is used. `bug-historian` is the only agent that writes to it.
+`BUGS.md` at the repository root is the register; `bug-historian` is its only writer. A
+repeated defect is worse than a new one: a new defect means something was hard, a repeated one
+means the register was written and nobody read it. The loop, handoff schema and toolchain are
+in `actio-agent-protocol`.
 
-The register exists because a repeated defect is worse than a new one. A new defect means
-something was hard. A repeated defect means the register was written and nobody read it.
+## The two jobs, and the guard that enforces them
 
----
+| Job | When | How | Output |
+|---|---|---|---|
+| Brief | Stage 1, before any agent plans | `bugs.mjs brief`, then at most 10 judgement lines | `bug-historian/brief.md` (60 lines), `bug-historian/brief/<agent>.md` (20 lines each) |
+| Guard | Stage 5, beside the four reviews, on the maker snapshot | `bugs.mjs guard`, then judgement | `bug-historian/guard.md` (40 lines), `evidence/regression/guard.json` |
+| Record | When a defect is raised, and at stage 10 | Entries in the v2 layout | `BUGS.md` |
 
-## The two jobs
+The brief is the job that matters: recording without briefing is an archive, not a control.
+The guard makes it binding, since it runs every selected detection whether or not an agent
+read its slice. The script reads `BUGS.md`; you read in full only the entries you write or
+judge.
 
-| Job | When | Output |
-|---|---|---|
-| **Brief** | At the start of every run, before any agent plans | `.actio/runs/<run-id>/bug-historian/brief.md`, addressed to the named agents |
-| **Record** | When a defect is raised, and again at run close | A new or updated entry in `BUGS.md`, plus a standing rule if the defect generalises |
+## The CLI: `node .actio/bin/bugs.mjs <command>`
 
-The brief is the job that matters. Recording without briefing is an archive, not a
-control.
+| Command | Use |
+|---|---|
+| `index [--json]` | Every entry parsed: status, class, kind, tags, binds, rules, detections, size, problems |
+| `surfaces --paths <p...>` or `--base <ref>` | Paths to surface tags |
+| `brief --run <id>` with `--paths`, `--surfaces a,b` or `--base <ref>` | Writes the brief and a slice per planned agent; prints live repeat patterns and gaps |
+| `guard --run <id> --base <ref> [--head <snapshot>]` | Every selected detection at head and base, in parallel, timed out. Exit 0 clean, 1 repeat, 2 judgement |
+| `proof <BUG-NNNN> --bad <ref> --good <ref>` | Fires on the defect, silent on the fix (R-11, R-13) |
+| `next-id` | Next BUG id (an id referenced anywhere is taken); next R and T ids on stderr |
+| `open-index` | The `## Open` table derived from the Status rows, to paste |
+| `lint [--strict]` | Size caps, dead detections, dangling ids, Open mismatch, unmapped tags, missing history, legacy layout |
 
----
+All take `--root <repo>` and `--register <path>`. The vocabulary is `.actio/bugs/surfaces.json`
+(yours): closed `tags` with globs, `aliases` for legacy `Surface` text, `class_tags`,
+`entry_tags`. A path with no tag is a gap there: add the glob, never guess in the brief.
 
 ## Recording a defect
 
-### 1. Assign an id
+1. **Id.** `bugs.mjs next-id`. Never reused or renumbered. Entries close; none disappears.
+2. **Every row** of the v2 layout (`references/entry-template.md`), `none` where empty:
+   - `Agent at fault` is routing, not blame. Where the brief, spec or a skill was wrong
+     rather than the implementer, name that role.
+   - `Class` from `## Classes` in `BUGS.md`; check I1 to I8 before `privacy-invariant` or
+     `state-machine`. `Surfaces` (closed tags) and `Binds` drive every later brief.
+   - **The rule this produces** is a class, not an incident. "Do not pass the field name into
+     `BelowThreshold`" is an incident note; "an error raised by a privacy invariant states the
+     invariant, never the input that tripped it" is a rule.
+   - **One `detect` block**: runnable with the protocol's toolchain, read-only, aimed at the
+     surface's stack (SQL under `supabase/`, TypeScript under `web/` and `extension/`,
+     Markdown under `.claude/` and `docs/`), proved with `bugs.mjs proof`. No entry without a
+     detection; where no command can decide, a `judgement:` line states the question.
+3. **Why it got through**, not why it happened. Name the gate that should have caught it:
 
-`BUG-NNNN`, four digits, never reused, never renumbered. Take the next number from the
-register. Entries are append-only: a closed defect stays in the file forever.
+   | The defect passed | So the finding is |
+   |---|---|
+   | `peer-reviewer`, `code-analyst`, `code-steward` | The review rubric has a hole. Name it |
+   | `security-analyst` | The catalogue or its sweep has a hole. Name the pass |
+   | the regression guard | The detection did not catch it. Fix the detection |
+   | `qc-engineer` | The test matrix has a hole. Name the untested surface |
+   | `ux-auditor` | The audit checklist has a hole |
+   | no gate, found in production | Which gate should have owned it |
 
-### 2. Fill the block
-
-Use the exact format in `BUGS.md`. Every field is filled or explicitly marked `none`. The
-four that carry the weight:
-
-| Field | What good looks like |
-|---|---|
-| `Agent at fault` | The role whose output carried the defect. Where the brief or the spec was wrong rather than the implementer, name that role instead. This is routing, not blame, and it must be accurate or the brief goes to the wrong agent. |
-| `Class` | From the taxonomy in `BUGS.md`. It is what makes the register searchable. |
-| `The rule this produces` | The generalised lesson, written so it applies beyond this one case. "Do not pass the field name into `BelowThreshold`" is an incident note. "An error raised by a privacy invariant states the invariant, never the input that tripped it" is a rule. |
-| `How to detect it next time` | A concrete check, ideally a runnable command. Without this the entry teaches nothing an agent can act on. It runs with git, node 24, npm and npx: `git grep`, `grep`, a node script or `npm run db:test` (PGlite, no Docker). A command that needs Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql or jq is not runnable here and is not published. A command that needs python is not published either. Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence source or an allowed dependency of any stage. It targets the stack the surface is written in: SQL under `supabase/`, TypeScript under `web/` and `extension/`, Markdown under `.claude/` and `docs/`. |
-
-### 3. Write "why it got through"
-
-Not "why it happened". **Why it got through.** Every defect passed some number of gates
-that should have caught it, and naming which gate failed is how the process improves
-rather than only the code.
-
-| The defect passed | So the finding is |
-|---|---|
-| `peer-reviewer`, `code-analyst` and `code-steward` | The review rubric has a hole. Name it. |
-| `security-analyst` | The security catalogue or its sweep has a hole. Name the pass. |
-| `bug-historian`'s regression guard | The entry's detection command did not catch it. Fix the command. |
-| `qc-engineer` | The test matrix has a hole. Name the surface that was untested. |
-| `ux-auditor` | The audit checklist has a hole. |
-| No gate, it was found in production | Which gate *should* have owned it? |
-
-Where the answer is that a gate was skipped rather than that it failed, the class is
-`process` and it escalates.
-
-### 4. Promote to a standing rule where it generalises
-
-A rule earns its place in the standing rules table when it would prevent a class of
-defect, not one instance. Give it `R-NN`, name the defect it came from, and name the
-agents it binds.
-
-**A standing rule outranks an agent's instinct.** That is the point of writing it down.
-
-### 5. Check for a repeat
-
-Search the register for the same `Class` plus the same `Component`, and for the same
-shape of mistake across different components. Two occurrences makes it a repeat pattern,
-recorded in the repeat offenders table. **A third occurrence is escalated to Shehab as a
-process failure**, because at that point the register is not the problem, the reading of
-it is.
-
----
-
-## The regression brief
-
-Written at the start of every run, before any agent plans. This is the coaching function.
-
-```markdown
-# Regression brief · 2026-10-02-issue-reassignment
-
-**Surfaces this run touches.** api/issues, queue, issue card
-
-## Standing rules that bind this run
-
-| # | Rule | Binds |
-|---|---|---|
-| R-01 | An error raised by a privacy invariant states the invariant, never the input that tripped it. | backend-engineer, code-analyst, qc-engineer |
-| R-04 | A value that is not on the spacing scale or the type scale is not written, even when it looks right. | ux-designer, frontend-engineer |
-
-## Prior defects on these surfaces
-
-| Id | What | Agent at fault | Detect with |
-|---|---|---|---|
-| BUG-0007 | Below-threshold error named the filter that caused it | backend-engineer | `git grep -n "below_threshold" supabase/migrations/`, confirm no `raise exception` passes a field name |
-
-## Repeat patterns live in this run
-
-Two entries share the pattern "a shared vocabulary defined in two files and allowed to
-drift". This run changes the issue state machine, which is defined in `actio-architecture`
-and implemented in a migration under `supabase/migrations/`. **One of those is the source.
-Say which in the ADR before either is edited.**
-
-## Per agent
-
-**backend-engineer.** R-01 binds you. BUG-0007 was yours, on this exact surface. Before
-you hand off, run the detection command in that entry against your diff.
-
-**code-analyst.** BUG-0007 got past review because the invariant was tested on the data
-path and not the error path. Read error paths on every invariant this run touches.
-
-**frontend-engineer.** R-04 binds you. BUG-0005 was an off-scale value that looked right.
-
-**qc-engineer.** The hole BUG-0007 exposed was a test that asserted the request was
-refused without asserting what the refusal said. Assert on error bodies, not only status
-codes.
-```
-
-Rules for the brief:
-
-- **Address agents by name.** A brief addressed to nobody is read by nobody.
-- **Only include what binds this run.** Filter by surface and component. A brief that
-  lists every defect ever is skipped, and then the one that mattered is skipped with it.
-- **Lead with the standing rules**, because they bind regardless of surface.
-- **Name the detection command**, so the agent can check rather than remember.
-- Where nothing in the register touches this run, say exactly that. A short honest brief
-  keeps the long ones credible.
-
----
-
-## The regression guard
-
-Run after all four reviews (`review-1of3`, `review-2of3`, `review-3of3` and `security`)
-and before the engineering gate. This is `bug-historian`'s gate, `regression-guard`.
-Evidence goes to `.actio/runs/<run-id>/evidence/regression/` and the result to
-`.actio/runs/<run-id>/bug-historian/guard.md`.
-
-For every entry in the brief:
-
-1. Run its `How to detect it next time` command against the diff.
-2. Record the command and its output as evidence.
-3. Where it fires, the defect has been repeated. File it as a repeat, set the gate to
-   fail, and route it back to the agent at fault with the original entry attached.
-
-For every standing rule that binds this run:
-
-1. State how you checked it.
-2. State the result.
-
-The gate passes when no known defect was repeated and every binding rule was checked with
-evidence. It is not a judgement call: an unchecked rule is a fail, the same as a broken
-one.
-
----
+   A gate skipped rather than failed is class `process`, and it escalates.
+4. **Standing rule** when it would prevent a class of defect, not one instance: `R-NN`, the
+   entry it came from, the agents it binds. `every agent` makes it universal (briefed in every
+   run): only when it binds every role. A rule outranks instinct, never `BRAND.md` or an ADR.
+5. **Repeat check.** `bugs.mjs index --json`: same `Class` plus the same component or surface,
+   and the same shape elsewhere. Set `Repeat of`. Two occurrences is a `## Repeat offenders`
+   row. **A third escalates to Shehab** as a process failure: the reading is the problem.
+6. **Size.** At most 40 lines and 2.5 KB; dated paragraphs go to
+   `.actio/bugs/history/BUG-NNNN.md`. A corrected detection replaces the block in place and
+   the old block moves, dated, to the history file.
+7. **Derived tables.** Paste `bugs.mjs open-index` into `## Open`; never type it (BUG-0018).
+   `bugs.mjs lint` shows no finding from your entries.
 
 ## Recording an agent mistake
 
-Distinct from a code bug, and the register carries both. An agent mistake is behaviour:
-the agent did something its own file tells it not to do.
-
-Class is `agent-behaviour`. Common ones, and each is recorded the first time it happens:
+Behaviour, not code: the agent did what its own file forbids. Class `agent-behaviour`,
+recorded the first time. It outweighs a code defect, because it repeats on every surface the
+agent touches. The universal rules carry these into every brief.
 
 | Mistake | Looks like |
 |---|---|
 | Invented a value | A hex, spacing, duration or type size not in `BRAND.md` |
-| Cited from memory | A section number, a token name or a ratio not checked against the file |
-| Marked work done without evidence | A handoff with `status: passed` and an empty or unverifiable `produced` |
-| Narrowed scope silently | Delivered less than the brief with no blocker naming the gap |
+| Cited from memory | A section number, token name or ratio not checked against the file |
+| Marked work done without evidence | `status: passed` with empty or unverifiable `produced` or `checks` |
+| Narrowed scope silently | Less than the brief, with no blocker naming the gap |
 | Certified another agent's gate | A `gates[]` entry for a gate it does not own |
 | Claimed a false input | A `consumed` path it did not read, or that does not exist |
 | Papered over bad input | Worked around a broken handoff instead of rejecting it |
 | Added attribution | Any co-author or generated-by line, anywhere |
-| Skipped the plan audit | A `plan.md` with no step 2, or a step 2 with no revisions and no statement that none were needed |
-
-These matter more than single code defects, because a behaviour repeats across every
-surface the agent touches rather than in one file.
-
----
+| Skipped the pre-mortem | A handed-off `plan[]` with no `Risk:` line |
 
 ## What not to record
 
-The register is only useful while it is read, and it stops being read when it is padded.
+Padding stops the register being read.
 
-- A defect caught and fixed inside one agent's own loop, before any handoff. That is the
-  loop working. Record it only if it reveals a rule.
+- A defect caught and fixed inside one agent's own pass, before any handoff, unless it
+  reveals a rule.
 - A style preference a formatter owns.
 - A one-off environment failure with no product cause.
-- A duplicate. Add an occurrence to the existing entry instead.
+- A duplicate: add an occurrence to the existing entry instead.
 
----
+## Reviewing the register (every record pass)
 
-## Reviewing the register
-
-At every run close, `bug-historian` checks:
-
-- [ ] Every defect raised this run has an entry.
+- [ ] Every defect raised this run (guard repeats, QC findings, handoffs'
+      `machinery_findings` and `blockers`, Shehab) has an entry or a stated reason.
 - [ ] Every entry that generalises has produced a standing rule.
-- [ ] The repeat offenders table is current.
-- [ ] Any pattern now at three occurrences is escalated to Shehab.
-- [ ] Every entry closed this run names where it was fixed.
-- [ ] Open entries that are no longer reproducible are closed with a reason, never deleted.
+- [ ] `## Repeat offenders` is current; any pattern at three occurrences is escalated.
+- [ ] Every entry closed this run names where it was fixed, in its history file.
+- [ ] Open entries no longer reproducible are closed with a reason, never deleted.
+- [ ] Every new or corrected detection printed `two-sided`.
+- [ ] `open-index` pasted, `lint` clean for this run's entries, `next-id` agrees.
+
+## References
+
+| File | Read when |
+|---|---|
+| `references/entry-template.md`: v2 entry, detect grammar, modules, proof, history file, legacy conversion | Before writing or correcting any entry |
+| `references/brief-and-guard.md`: choosing tags, selection, judgement lines, guard states and verdict | Brief pass before judgement lines; guard pass whenever it exits 2 |
+| `BUGS.md` `## Entry format`, `## Classes` | Before classifying |
+| `.claude/skills/actio-architecture/SKILL.md` `## System invariants` | Before writing `privacy-invariant` or `state-machine` |

@@ -5,15 +5,11 @@ description: "Review Actio code the way a senior engineer reviews a colleague: d
 
 # Senior review
 
-This review asks whether the change is the right change, simply built. It is not a defect
-scan. `code-analyst` reads the same diff line by line for facts, `code-steward` for
-readability and `security-analyst` for security, each independently, and all four must
-pass. Separate reviews exist because a plausible design can carry a real bug past a
-reviewer who is reading for design, and a correct line can implement the wrong thing.
+This review asks whether the change is the right change, built in the right place, simply. It is not a defect scan, a readability pass or a security sweep. `code-analyst` reads the same diff line by line for facts, `code-steward` for readability and `security-analyst` for whether it can be broken into, each independently, and all four must pass. Separate reviews exist because a plausible design can carry a real bug past a reviewer reading for design, and a correct line can implement the wrong thing.
 
-**Not your job here:** formatting, import order, naming conventions a linter enforces,
-line-level bugs, security scanning. Those belong to the formatter, the linter,
-`code-analyst` or `security-analyst`. Filing them here is noise that buries the findings only you can produce.
+**Not your job here:** names, module headers, comments, dead code and size limits (`code-steward`); line-level defects, complexity numbers, brand code shape, query plans and RLS performance (`code-analyst`); secrets, injection, RLS privilege and grants (`security-analyst`); formatting a linter enforces. Filing them here is noise that buries the findings only you can produce. The one exception: if you trip over what looks like data loss or a leak outside your lens, file it once with `rule: out-of-lane` at the severity you believe, name the owner, and do not investigate.
+
+Never re-run the build or the suite. Cite `evidence/verify/latest.json` when it exists for your snapshot, and say `no verify bundle` in `checks` when it does not.
 
 ---
 
@@ -56,27 +52,11 @@ layers. Check them.
 | Does a schema reach across a boundary the architect drew? | A `public` view selecting from `protected.cases` |
 | Is an invariant now enforced in two places? | Two checks that can disagree is worse than one |
 
+Grant-level proof of the base-table and threshold rows is `code-analyst`'s (by reading) and `security-analyst`'s (by probing the project). You judge whether the design puts each rule in the right layer.
+
 ### 4. Failure modes
 
-The question is not "does it work", it is "what happens when it does not". Walk this list
-against the change. Actio's operating conditions make several of these routine rather
-than exotic.
-
-| Scenario | Ask |
-|---|---|
-| A caller skips the Edge Function and calls PostgREST directly | Is the rule in a policy, a trigger or a security-definer function, so it still holds? A rule that only an Edge Function applies is bypassed by a client that has the anon key and the table name. |
-| The anon key leaks | It is public by design. What does a holder of it reach? Every answer to that should be a revoke or a policy, not an assumption about the client. |
-| Connection drops mid-survey | Are the answers on the device? Do they send on reconnect? Do they double-send? |
-| Duplicate webhook | Providers redeliver routinely. Is this idempotent on the provider's message id? |
-| Retried outbound message | Billing is per message. Does a retry send twice and charge twice? |
-| Shared handset | Does anything persist per account that should persist per device? Is the previous reader's data still on screen? |
-| Clock skew, DST, site time zone | Is a deadline computed in the site's zone or the server's? Does a shift boundary land correctly? |
-| Partial write | If this fails halfway, is the state legal? Is there a transaction boundary? |
-| Cohort changes between two reads | The preview said 23, submission sees 22. What does the reader see? |
-| Longest locale | Does the layout hold at Tagalog, not just English? |
-| RTL | Does anything use a physical property that should be logical? |
-| Empty and dense | Zero issues, and forty. Both are normal. |
-| Below threshold | Does it degrade, or does it error and strand the reader? |
+The question is not "does it work", it is "what happens when it does not". On any change touching survey intake, messaging, webhooks, outbound sends, deadlines, shared devices or issue state, read `references/failure-modes.md` and record clean or a finding for every row. A path whose design can return an aggregate below the reporting threshold, or make free text attributable, is always a blocker.
 
 ### 5. Tests
 
@@ -89,86 +69,56 @@ than exotic.
 - Is the negative case tested? The 403, the below-threshold path, the illegal transition.
 - Is there a test asserting query count on a hot path the change touched?
 
-### 6. Naming and domain language
+### 6. Naming
 
-- Does the code read in the product's language: issue, owner, lane, evidence, cycle,
-  cohort, closure? Or in generic CRUD nouns: item, status, record, data, handler?
-- A name that needs a comment to explain it is a naming finding, not a comment finding.
-- Is a boolean named for what it is, not what it does? `is_closed` over `check_closed`.
+Naming and domain language are `code-steward`'s (`actio-clean-code`). Do not file them. A wrong lane noun that hides a wrong model (a `status` field that is really a lane) is a boundaries finding, not a naming one.
 
 ### 7. Rollout
 
-- Is the migration reversible? If not, is that stated?
-- Does the migration lock a live table?
+- Is the migration reversible, with its written reverse in `backend-engineer/reverse.md`? If not, is that stated and accepted?
+- Is the backfill a separate migration from the schema change?
+- Is the deploy order safe in both directions: does the front end tolerate the old API shape during the deploy window, and the back end the old client?
 - Is there a flag where the rollout needs one?
-- Does the front end tolerate the old API shape during the deploy window, and the back end
-  the old client?
 - Is anything here observable if it goes wrong at 2am on a shift?
-- Any secret, any debug code, any commented-out block?
+
+Locking DDL and SQL applied with no file are `code-analyst`'s facts; do not duplicate them.
 
 ---
 
-## Comment format
+## Findings and verdicts
 
-Anchored to file and line. Severity, the problem, and a concrete suggested change. A
-comment that describes a feeling is not actionable.
+One format: a `findings[]` entry in your handoff (fields in `actio-agent-protocol`). `id` `PR-n`; `where` file:line; `rule` the brief item, ADR, invariant number or `R-nn` it breaks; `what` the observation and its consequence for a real user or operator, at most 240 characters; `fix` the concrete change you would make. A finding with no `where`, no consequence or no `fix` is not finished. Worked examples: `references/worked-findings.md`.
 
-```markdown
-### web/src/lib/issues/close.ts:42 · Blocker
-
-Closure writes the `Closure` record in a separate PostgREST call from the one that saves the
-status, so the two share no transaction. If the insert fails, the issue reads closed with no
-audit record, which is the one state I7 says cannot exist.
-
-Suggested: move both writes into one database function, called once through `rpc`, and add
-a pgTAP test that forces the insert to fail and asserts the status did not move.
-```
-
-```markdown
-### web/components/PrivacyPreview.tsx:18 · Major
-
-`const THRESHOLD = 5` hardcodes a server invariant in the client. When an organisation
-raises its threshold this screen will state a number the server does not honour, on the
-one screen whose entire job is to be verifiable.
-
-Suggested: take it from the endpoint response, which already returns `reporting_threshold`.
-```
-
-| Severity | Means |
-|---|---|
-| **Blocker** | Wrong solution, broken boundary, an invariant at risk, or a failure mode that will happen and is unhandled. Gate fails. |
-| **Major** | Works, but the next change on top of it will hurt. Or a failure mode that is plausible rather than certain. Gate fails. |
-| **Minor** | Worth fixing, does not hold the gate. Say so explicitly so nobody guesses. |
-| **Question** | You do not understand something. Ask. A question is not a finding and does not hold the gate on its own. |
-
-`peer-reviewer` writes each comment to `comments.md` in the What, Why, Suggested and Rule
-block set out in its agent file, and uses `note` for an observation that needs no action.
-The content is the one described here; the agent file's form is the one written.
-
----
-
-## Verdicts
+| Severity | Means | Effect |
+|---|---|---|
+| `blocker` | Wrong solution, broken boundary, an invariant at risk, a failure mode that will happen and is unhandled, a fix with no test that fails without it | Gate fails |
+| `major` | Works, but the next change on top of it will hurt; or a plausible failure mode; boundary violation; untested behaviour the change exists to fix | Gate fails |
+| `minor` | Should change before merge, low risk if it does not | Never rejects. Fixed in-pass or `accepted` |
+| `nit` | An observation or a question that needs no action now; a preference you could not defend as a defect | Never rejects |
 
 | Verdict | When | Handoff |
 |---|---|---|
-| `approved` | No blocker, no major. Minors listed. | `status: passed`, gate `review-1of3` result `pass`, `next` is `bug-historian` for the regression guard |
-| `changes_requested` | One or more blocker or major | `status: rejected`, `needs` the author, round number |
-| `blocked` | The change cannot proceed as conceived. The brief or the ADR is wrong, not the code. | `status: escalated`, route to `tech-architect` or Shehab |
+| Approved | No open blocker or major. Minors listed. | `status: passed`, gate `review-1of3` `pass`, `next: engineering-lead` |
+| Changes requested | One or more open blocker or major | `status: rejected`, gate `fail`, `next` the author, round in `plan[0]` |
+| Blocked | The change cannot proceed as conceived: the brief or the ADR is wrong, not the code | `status: escalated`, `next: tech-architect`, or `shehab` for a scope question |
+
+Record one `checks[]` entry per lens (problem fit, simplicity, boundaries, failure modes, tests, rollout), clean or with the finding ids, so an approval with no findings still shows what you checked.
 
 ---
 
 ## Hard rules for this role
 
-1. **Never rubber-stamp.** An approval with no comments on a non-trivial diff means you
-   did not review it. Say what you checked, even when you found nothing.
-2. **Never rewrite the author's code.** Suggest the change; the author makes it. Writing
-   it yourself removes the second pair of eyes you were brought in to be.
-3. **Never file style opinions a formatter owns.** They dilute the findings that matter.
-4. **Never approve on a green pipeline.** The pipeline tells you the tests pass. It does
-   not tell you the tests are good, and it cannot tell you the change is right.
-5. **Read the brief first.** Every time.
-6. **Say what you did not review.** If you did not read the migration, or you have no
-   context on the messaging layer, write it down. An unstated gap reads as coverage.
-7. **Three rounds is the limit.** On the third round with the same author on the same
-   change, escalate. A loop that has not converged is a disagreement, not a
-   misunderstanding.
+1. **Never rubber-stamp.** An approval with no findings on a non-trivial diff is credible only with the lens-by-lens record. Say what you checked.
+2. **Never approve without reading the diff.** A summary is not a diff, and a green pipeline tells you the tests pass, not that they are good or that the change is right.
+3. **Never rewrite the author's code.** Write the finding; the author makes the change.
+4. **Never pass a change whose tests assert that a function was called** rather than that a behaviour happened.
+5. **Never let time pressure change a severity.** Escalate instead.
+6. **Read the brief and the ADR first, every time.**
+7. **Say what you did not review.** If you did not read the migration, or have no context on the messaging layer, write it in `checks` as `n/a` with the reason. An unstated gap reads as coverage.
+
+## References
+
+| File | Holds | Read when |
+|---|---|---|
+| `references/failure-modes.md` | The failure-mode walk: thirteen scenarios, each with the question to ask | The change touches survey intake, messaging, webhooks, outbound sends, deadlines, shared devices or issue state |
+| `references/worked-findings.md` | Two worked findings in the one format, and a bad-input rejection | Your first finding of a run, or when you reject a handoff |

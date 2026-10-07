@@ -144,5 +144,27 @@
   },
   "env": {
     "ACTIO_RUNS_DIR": ".actio/runs"
+  },
+  "hooks": {
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.actio/bin/ledger-hook.mjs\" start"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.actio/bin/ledger-hook.mjs\" stop"
+          }
+        ]
+      }
+    ]
   }
 }

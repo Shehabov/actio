@@ -84,12 +84,12 @@
 <path d="M 256 300 H 270" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 484 300 H 498" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 712 300 H 726" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
-<path d="M 940 300 H 954" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 719 300 V 258 H 1100 V 266" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 1168 300 H 1182" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 218 332 V 348" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 218 412 V 428" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 446 332 V 348" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
-<path d="M 446 412 V 428" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<path d="M 264 300 V 460 H 270" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 902 332 V 348" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 902 412 V 428" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 <path d="M 902 492 V 508" stroke="#00BFC4" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
@@ -119,6 +119,6 @@
 <text x="466.20000000000005" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">security</text>
 <rect x="541.4000000000001" y="670" width="14" height="14" rx="3" fill="#1A1A18" stroke="#33332F" stroke-width="1"/>
 <text x="563.4000000000001" y="681" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#A8A8A4">maker</text>
-<text x="1392" y="681" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#6E6E69" letter-spacing="1.1">EVERY AGENT: PLAN → AUDIT THE PLAN → EXECUTE → REVIEW → HAND OFF</text>
+<text x="1392" y="681" text-anchor="end" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#6E6E69" letter-spacing="1.1">EVERY AGENT: PLAN → AUDIT THE PLAN → EXECUTE → SELF-CHECK → HAND OFF</text>
 <text x="1392" y="704" text-anchor="end" font-family="'IBM Plex Sans','Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6E6E69">Nothing closes without evidence. A skipped gate is a defect, not a shortcut. A repeated defect is worse than a new one.</text>
 </svg>

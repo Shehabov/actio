@@ -3,7 +3,7 @@
 Actio is built by a swarm of autonomous agents under one human Product Lead. This file is
 the org: who reports to whom, who owns what, who can block, and who decides.
 
-The delivery flow and the gates are in [`WORKFLOW.md`](./WORKFLOW.md). The agent
+The delivery flow, the lanes and the gates are in [`WORKFLOW.md`](./WORKFLOW.md). The agent
 definitions themselves are in [`../.claude/agents/`](../.claude/agents/).
 
 ---
@@ -14,11 +14,11 @@ definitions themselves are in [`../.claude/agents/`](../.claude/agents/).
 flowchart TD
   SHEHAB["Shehab Beram<br/><b>Product Lead</b><br/><i>human</i>"]:::human
 
-  ORC["orchestrator<br/><i>owns the run</i>"]:::lead
-  BH["bug-historian<br/><i>institutional memory</i>"]:::mem
+  ORC["orchestrator<br/><i>owns the run · opens it with run.mjs</i>"]:::lead
+  BH["bug-historian<br/><i>institutional memory<br/>brief and guard are scripts</i>"]:::mem
 
   ARCH["tech-architect<br/><i>design authority</i>"]:::l2
-  ENGL["engineering-lead<br/><i>code gate</i>"]:::l2
+  ENGL["engineering-lead<br/><i>code gate · runs verify.mjs</i>"]:::l2
   QCL["qc-lead<br/><i>quality gate</i>"]:::l2
 
   UXD["ux-designer"]:::design
@@ -71,6 +71,14 @@ different shape and lives in [`WORKFLOW.md`](./WORKFLOW.md).
 
 ## The roster
 
+Model and effort come from each agent's frontmatter. The orchestrator can override the model
+for one plan entry with the entry's `model` field. Every agent also has a `maxTurns` limit
+as a runaway guard; an agent that hits it is resumed by the orchestrator, not re-run. An
+agent preloads `actio-agent-protocol` and the core skill or skills listed here. Everything
+else, the vendored packs included, is read on demand by path, with its trigger named in the
+agent file, and `actio-brand-guard` overrides a vendored skill wherever it disagrees with
+[`BRAND.md`](../BRAND.md).
+
 ### L0 · Product Lead
 
 **Shehab Beram.** Human. Sets the brief. The only role that can change scope, accept a
@@ -84,75 +92,79 @@ agent stops and states the decision needed, the options, and its recommendation.
 | **Agent** | [`orchestrator`](../.claude/agents/orchestrator.md) |
 | **Owns** | The run, end to end |
 | **Gate** | Run closure |
-| **Skills** | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard` |
+| **Model, effort** | `opus`, medium. The main thread of the session, so it has no turn limit |
+| **Preloaded skills** | `actio-agent-protocol`, `actio-orchestration`. `actio-brand-guard` is read on demand |
 
-Opens every run with the toolchain pre-flight (node, npm, the Supabase MCP and the
-Playwright MCP answer, or Shehab is told before any stage that needs the missing one runs), decomposes a brief into a run plan,
-dispatches agents, enforces gates, maintains the ledger, and runs the **utilisation check**: did every agent that should have run actually
-run, and was every agent that ran actually used. An agent whose output nobody consumed is a
-utilisation failure and gets reported, not hidden. Does not design, code, review or test.
+Opens every run with `run.mjs open`, which creates the run from a lane template and runs the
+scriptable toolchain pre-flight (node, npm, the Playwright line of `claude mcp list`). It adds
+one Supabase `list_tables` call, so Shehab is told before any stage that needs a missing
+tool runs. It decomposes the brief into a run plan, dispatches agents, enforces gates,
+maintains the ledger, and runs the **utilisation check**: did every agent that should have
+run actually run, and was every agent that ran actually used. An agent whose output nobody
+consumed is a utilisation finding and gets reported, not hidden. Does not design, code,
+review or test.
 
 ### L2 · Chapter leads
 
-| Agent | Owns | Gate | Skills |
-|---|---|---|---|
-| [`tech-architect`](../.claude/agents/tech-architect.md) | Architecture of record, ADRs, task briefs | Design authority | `actio-architecture`, `actio-brand-guard` |
-| [`engineering-lead`](../.claude/agents/engineering-lead.md) | Integration. Does it work end to end. | Engineering gate | `actio-code-review`, `actio-architecture` |
-| [`qc-lead`](../.claude/agents/qc-lead.md) | Evidence audit, final independent pass | Quality gate | `actio-test-protocol` |
+| Agent | Owns | Gate | Model | Effort | Preloaded skills |
+|---|---|---|---|---|---|
+| [`tech-architect`](../.claude/agents/tech-architect.md) | Architecture of record, ADRs, task briefs | Design authority | `opus` | high | `actio-architecture` |
+| [`engineering-lead`](../.claude/agents/engineering-lead.md) | Integration. Does it work end to end. Runs `verify.mjs` once per tree | Engineering gate | `opus` | medium | the protocol only |
+| [`qc-lead`](../.claude/agents/qc-lead.md) | Evidence audit, final independent pass | Quality gate | `opus` | medium | `actio-test-protocol` |
 
 ### L3 · Makers and checkers
 
 **Design chapter**
 
-| Agent | Owns | Gate | Skills beyond the protocol |
-|---|---|---|---|
-| [`ux-designer`](../.claude/agents/ux-designer.md) | Design specs for every surface | – | `actio-design-system`, `actio-brand-guard`, `taste-skill`, `minimalist-skill`, `brandkit`, `output-skill`, `web-design-guidelines`, `composition-patterns` |
-| [`ux-auditor`](../.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design gate | `actio-design-system`, `actio-ux-audit`, `actio-brand-guard`, `redesign-skill`, `web-design-guidelines`, `taste-skill` |
-| [`ux-writer`](../.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy gate | `actio-bilingual-copy`, `actio-brand-guard`, `writing-guidelines` |
+| Agent | Owns | Gate | Model | Effort | Preloaded skills |
+|---|---|---|---|---|---|
+| [`ux-designer`](../.claude/agents/ux-designer.md) | Design specs and string slots for every surface | – | `opus` | medium | `actio-design-system`, `actio-brand-guard` |
+| [`ux-auditor`](../.claude/agents/ux-auditor.md) | Independent audit of design and shipped UI | Design gate | `opus` | medium | `actio-ux-audit`, `actio-brand-guard` |
+| [`ux-writer`](../.claude/agents/ux-writer.md) | Every string, English and Arabic | Copy gate | `opus` | medium | `actio-bilingual-copy` |
 
 **Engineering chapter**
 
-| Agent | Owns | Gate | Skills beyond the protocol |
-|---|---|---|---|
-| [`frontend-engineer`](../.claude/agents/frontend-engineer.md) | React and Next.js implementation in `web/`, and the Chrome extension in `extension/` | – | `actio-design-system`, `actio-brand-guard`, `react-best-practices`, `composition-patterns`, `react-view-transitions`, `web-design-guidelines` |
-| [`backend-engineer`](../.claude/agents/backend-engineer.md) | Supabase: schema, RLS, functions, Edge Functions | – | `actio-supabase`, `supabase`, `supabase-postgres-best-practices` |
-| [`peer-reviewer`](../.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review gate, 1 of 3 | `actio-code-review` |
-| [`code-analyst`](../.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review gate, 2 of 3 | `actio-code-analysis` |
-| [`code-steward`](../.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review gate, 3 of 3 | `actio-clean-code`, `actio-architecture`, `actio-supabase` |
-| [`security-analyst`](../.claude/agents/security-analyst.md) | Secrets, exposure, authorisation, injection, dependencies, robustness | Security | `actio-security`, `actio-supabase`, `supabase-postgres-best-practices`, `actio-architecture` |
+| Agent | Owns | Gate | Model | Effort | Preloaded skills |
+|---|---|---|---|---|---|
+| [`frontend-engineer`](../.claude/agents/frontend-engineer.md) | React and Next.js implementation in `web/`, and the Chrome extension in `extension/` | – | `opus` | medium | `actio-design-system` |
+| [`backend-engineer`](../.claude/agents/backend-engineer.md) | Supabase: schema, RLS, functions, Edge Functions | – | `opus` | high | `actio-supabase` |
+| [`peer-reviewer`](../.claude/agents/peer-reviewer.md) | Design judgement, boundaries, failure modes | Review gate, 1 of 3 | `opus` | medium | `actio-code-review` |
+| [`code-analyst`](../.claude/agents/code-analyst.md) | Line-by-line defects, security, structural rot | Review gate, 2 of 3 | `opus` | medium | `actio-code-analysis` |
+| [`code-steward`](../.claude/agents/code-steward.md) | Readability, naming, comments, maintainability | Review gate, 3 of 3 | `sonnet` | medium | `actio-clean-code` |
+| [`security-analyst`](../.claude/agents/security-analyst.md) | Secrets, exposure, authorisation, injection, dependencies, robustness | Security | `opus` | high | `actio-security` |
 
 **Memory**
 
-| Agent | Owns | Gate | Skills beyond the protocol |
-|---|---|---|---|
-| [`bug-historian`](../.claude/agents/bug-historian.md) | [`BUGS.md`](../BUGS.md), the standing rules, the regression brief | Regression guard | `actio-bug-register`, `actio-architecture` |
+| Agent | Owns | Gate | Model | Effort | Preloaded skills |
+|---|---|---|---|---|---|
+| [`bug-historian`](../.claude/agents/bug-historian.md) | [`BUGS.md`](../BUGS.md), the standing rules, the regression brief | Regression guard | `sonnet` | medium | `actio-bug-register` |
 
 `bug-historian` bookends every run. It opens by briefing every agent on what has already
 broken on the surfaces this change touches, and it closes by recording what broke this
-time and the standing rule that follows. Its gate in the middle is where the brief is
-enforced rather than merely published. It is the only agent that writes to `BUGS.md`.
+time and the standing rule that follows. The brief (`bugs.mjs brief`) and the guard
+(`bugs.mjs guard`) are scripts it runs and then judges, so it does not read the whole
+register. Its gate in the middle is where the brief is enforced rather than merely
+published. It is the only agent that writes to `BUGS.md`.
 
 **Quality and release**
 
-| Agent | Owns | Gate | Skills beyond the protocol |
-|---|---|---|---|
-| [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – | `actio-test-protocol`, `actio-brand-guard`, `actio-design-system` |
-| [`release-engineer`](../.claude/agents/release-engineer.md) | Release to the Supabase project, commit, tag, push, verify, roll back | Release gate | `actio-release` |
+| Agent | Owns | Gate | Model | Effort | Preloaded skills |
+|---|---|---|---|---|---|
+| [`qc-engineer`](../.claude/agents/qc-engineer.md) | Testing APIs, code and product, with evidence | – | `sonnet` | high | `actio-test-protocol` |
+| [`release-engineer`](../.claude/agents/release-engineer.md) | Release to the Supabase project, commit, tag, push, verify, roll back | Release gate | `opus` | medium | `actio-release` |
 
-`deploy-to-vercel`, `vercel-cli-with-tokens` and `vercel-optimize` stay in the repository but
-are coupled to no agent: reference only, for when a deploy target is chosen. Until then
-`release-engineer` releases the back end to the Supabase project through the MCP, tags and
-pushes, and records front-end hosting as `deferred: no target chosen`.
+`release-engineer` is `opus` because its actions cannot be undone. `deploy-to-vercel`,
+`vercel-cli-with-tokens` and `vercel-optimize` stay in the repository but are coupled to no
+agent: reference only, for when a deploy target is chosen. Until then `release-engineer`
+releases the back end to the Supabase project through the MCP, tags and pushes, and records
+front-end hosting as `deferred: no target chosen`.
 
 ### Tools
 
 Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
 `.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
-`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed. The swarm does not depend
-on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. Python 3.14.7
-and Django 6.1.1 are installed on the machine by the Product Lead's decision of 2026-09-27.
-They are not part of the stack, and are not a step, a gate criterion, an evidence source or an
-allowed dependency of any stage. The full statement is in
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed. The full
+statement, including what the swarm does not depend on, is in
 [`CLAUDE.md`](../CLAUDE.md#toolchain).
 
 An agent that touches the database carries `mcp__supabase` in the `tools` line of its
@@ -178,37 +190,45 @@ of the one it checks.
 | `code-analyst` | The diff, for facts | Reads line by line for defects and rot. Runs independently of `peer-reviewer` so that a plausible design does not carry a real bug past both. |
 | `code-steward` | The diff, for the next reader | Reads for naming, shape, module headers and comments that say why. Correct code nobody can safely change is a cost that arrives later, and no other role is looking for it. |
 | `security-analyst` | The diff, for what can be broken into | Reads for exposure, authorisation and supply chain. The other reviewers read for whether the code is right; this one reads for whether it can be taken. A leak here costs the product its claim, not a password reset. |
-| `bug-historian` | The diff, against history | Reads for whether a defect already recorded on this surface has been committed again. The other four read the change on its own terms and cannot see a repeat. |
+| `bug-historian` | The diff, against history | Reads for whether a defect already recorded on this surface has been committed again. The other four read the change on its own terms and cannot see a repeat. Runs as a script on the same snapshot, so it costs no wait. |
 | `qc-lead` | `qc-engineer` | Audits whether the evidence exists and what was **not** tested. Untested surface is the finding this role exists to catch. |
 
-All three review gates must pass, and so must the security gate and the regression guard. `engineering-lead`
-refuses to proceed if any did not run, and treats that as a utilisation failure rather than
-an oversight.
+All three review gates must pass, and so must the security gate and the regression guard.
+`engineering-lead` refuses to proceed if any did not run, or if one judged an older
+snapshot than the latest maker's (`GATE_STALE`), and treats that as a utilisation finding
+rather than an oversight.
 
-The three reviewers and the security-analyst run in parallel and none sees another's
-verdict first, so no reviewer anchors on another's conclusion.
+The three reviewers, the security-analyst and the guard run in parallel and none sees
+another's verdict first, so no reviewer anchors on another's conclusion. After a fix, each
+owner re-reads the delta, not the whole change.
 
 ---
 
 ## RACI by stage
 
-**R** responsible · **A** accountable · **C** consulted · **I** informed
+**R** responsible · **A** accountable · **C** consulted · **I** informed. Stage numbers match
+the flow in [`WORKFLOW.md`](./WORKFLOW.md).
 
 | Stage | Shehab | orc | bh | arch | uxd | uxa | uxw | fe | be | pr | ca | cs | sec | engl | qce | qcl | rel |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Brief | **A/R** | C | C | C | I | I | I | I | I | I | I | I | I | I | I | I | I 
-| Run plan | A | **R** | C | C | I | I | I | I | I | I | I | I | I | C | I | C | I 
-| Architecture | I | A | C | **R** | C | I | I | C | C | I | I | I | I | C | I | I | I 
-| Design | I | A | C | C | **R** | **R** | C | C | I | I | I | I | I | I | I | I | I 
-| Copy | I | A | C | I | C | C | **R** | C | C | I | I | I | I | I | I | I | I 
-| Build | I | A | C | C | C | I | C | **R** | **R** | I | I | I | I | C | I | I | I 
-| Review | I | A | **R** | C | I | I | I | C | C | **R** | **R** | **R** | **R** | C | I | I | I 
-| Integration | I | A | C | C | I | I | I | C | C | C | C | C | C | **R** | I | C | I 
-| Test | I | A | C | I | I | C | I | C | C | I | I | I | I | C | **R** | C | I 
-| Release readiness | **A** | C | C | I | I | I | I | I | I | I | I | C | I | C | C | **R** | C 
-| Release | A | C | I | I | I | I | I | I | I | I | I | I | I | I | I | C | **R** 
-| Run closure | I | **R/A** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I 
-| Acceptance | **A/R** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I | I 
+| Brief | **A/R** | C | C | C | I | I | I | I | I | I | I | I | I | I | I | I | I |
+| Run plan and lane | A | **R** | C | C | I | I | I | I | I | I | I | I | I | C | I | C | I |
+| 1 Regression brief | I | A | **R** | C | I | I | I | I | I | I | I | I | I | I | I | I | I |
+| 1 Architecture | I | A | C | **R** | C | I | I | C | C | I | I | I | I | C | I | I | I |
+| 2 to 3 Design | I | A | C | C | **R** | **R** | C | C | I | I | I | I | I | I | I | I | I |
+| 3 Copy | I | A | C | I | C | C | **R** | C | C | I | I | I | I | I | I | I | I |
+| 2 and 4 Build | I | A | C | C | C | I | C | **R** | **R** | I | I | I | I | C | I | I | I |
+| 5 Review and guard | I | A | **R** | C | I | I | I | C | C | **R** | **R** | **R** | **R** | C | I | I | I |
+| 6 Integration | I | A | C | C | I | I | I | C | C | C | C | C | C | **R** | I | C | I |
+| 7 Test | I | A | C | I | I | C | I | C | C | I | I | I | I | C | **R** | C | I |
+| 8 Release readiness | **A** | C | C | I | I | I | I | I | I | I | I | C | I | C | C | **R** | C |
+| 9 Release | A | C | I | I | I | I | I | I | I | I | I | I | I | I | I | C | **R** |
+| 10 Record | I | A | **R** | I | I | I | I | I | I | I | I | I | I | I | C | C | I |
+| Run closure | I | **R/A** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I |
+| Acceptance | **A/R** | C | I | I | I | I | I | I | I | I | I | I | I | I | I | I | I |
+
+A lane removes the rows it does not touch. The removal is a recorded planning decision in
+`out_of_scope`, never a silent omission.
 
 ---
 
@@ -225,9 +245,11 @@ verdict first, so no reviewer anchors on another's conclusion.
 | `engineering-lead` | Anything reaching QC | Shehab |
 | `qc-lead` | The release outright | Shehab only, and the override is recorded in the ledger |
 | `release-engineer` | Its own release, on a failed pre-flight | Shehab |
-| `orchestrator` | Any stage whose upstream gate has not passed | Shehab |
+| `orchestrator` | Any stage whose upstream gate is unresolved, meaning not `pass` and not `n/a` with a written reason | Shehab |
 
-No agent relaxes a gate to hit a date. It escalates instead.
+Only a `blocker` or a `major` finding blocks. A `minor` or a `nit` is fixed in the same pass
+or marked `accepted`, and never rejects a handoff. No agent relaxes a gate to hit a date. It
+escalates instead.
 
 ---
 
@@ -236,7 +258,7 @@ No agent relaxes a gate to hit a date. It escalates instead.
 ```mermaid
 flowchart LR
   A["agent hits a<br/>problem"] --> B{"can I fix it<br/>in my own lane?"}
-  B -- yes --> C["fix it,<br/>record it in review.md"]
+  B -- yes --> C["fix it,<br/>note it in the handoff"]
   B -- no --> D{"is it another<br/>agent's input?"}
   D -- yes --> E["reject upstream<br/>with a specific reason"]
   E --> F{"third time<br/>round the loop?"}
@@ -254,35 +276,46 @@ flowchart LR
 ```
 
 An escalation to Shehab always carries three things: the decision needed, the options with
-their consequences, and the agent's recommendation. Never a bare question.
+their consequences, and the agent's recommendation. Never a bare question. In a handoff it
+is a `decisions_for_shehab` entry.
 
 ---
 
 ## The utilisation check
 
 The Product Lead asked for an orchestrator that verifies the swarm is actually being used,
-not merely that it exists. After every stage, `orchestrator` runs this against the run plan.
+not merely that it exists. `run.mjs next` runs it after every stage, in compact form, and
+`run.mjs close` runs it once more at closure. The full code table, with what to do for each,
+is in [`actio-orchestration`](../.claude/skills/actio-orchestration/SKILL.md).
 
-| Failure | Detection |
-|---|---|
-| Agent never ran | No `handoff.json` at the expected path |
-| Agent ran but produced nothing | `produced` is empty, or the listed paths are absent on disk |
-| Agent's output nobody consumed | No later handoff lists this agent's outputs in `consumed` |
-| Gate skipped | A stage started while its upstream gate is unresolved |
-| Gate self-certified | The gate's `result` was written by an agent that does not own that gate |
-| Rejection loop | The same reject between the same two agents three times |
-| Idle agent | Work queued for an agent that has no handoff and no blocker |
+| Failure | Code | Class | Detection |
+|---|---|---|---|
+| Agent never ran | `NEVER_RAN` | blocking | No handoff for a plan entry the run has moved past |
+| Agent ran but produced nothing | `PHANTOM_OUTPUT` | blocking | A `produced` path is missing or empty |
+| Gate skipped | `GATE_SKIPPED` | blocking | A stage ran while a gate it depends on was unresolved |
+| Gate self-certified | `GATE_SELF_CERTIFIED` | blocking | A gate result written by an agent that does not own that gate |
+| Gate stale | `GATE_STALE` | blocking | A code gate judged an older snapshot than the latest maker's |
+| Output nobody consumed | `UNUSED_OUTPUT` | advisory | No later handoff cites a planned output |
+| Rejection loop | `REJECTION_LOOP` | judged | The same reject between the same two agents three times |
+| Idle agent | `IDLE_AGENT` | judged | Work due for an agent that has no dispatch and no recorded reason |
 
-Any one of these blocks the run. The orchestrator reports the finding as a table and routes
-the fix. It never marks a gate pass on another agent's behalf.
+Also blocking: `MALFORMED_HANDOFF`, `GATE_UNRESOLVED`, `UNKNOWN_GATE`. Also advisory:
+`FALSE_CONSUMPTION`, `LOOP_SKIPPED`, `NO_TIMING`. The orchestrator judges `STALLED`,
+`REJECTION_LOOP`, `IDLE_AGENT` and `ORPHAN_EVIDENCE` itself, from the ledger and the tree.
+
+A blocking finding stops the run, and the orchestrator reports it as a table and routes the
+fix. An advisory finding goes into the run report in plain words and never on its own
+justifies a dispatch. It never marks a gate pass on another agent's behalf.
 
 ---
 
 ## Autonomy
 
-Every agent runs its own five-step loop without asking permission: plan, audit the plan,
-execute, review, hand off. They ask only for decisions that are genuinely the Product
-Lead's, and they never assume his approval.
+Every agent runs its own loop without asking permission: read the dispatch, checkpoint a
+`working` handoff with a plan and a `Risk:` line, execute, self-check against its acceptance
+criteria, hand off a validated `handoff.json`, and return in at most eight lines. They ask
+only for decisions that are genuinely the Product Lead's, and they never assume his approval.
 
-The full loop, the run artefact layout and the handoff schema are in
+The loop, the handoff schema and the evidence rules are in
 [`../.claude/skills/actio-agent-protocol/SKILL.md`](../.claude/skills/actio-agent-protocol/SKILL.md).
+The run artefact layout is in [`WORKFLOW.md`](./WORKFLOW.md#run-artefacts).

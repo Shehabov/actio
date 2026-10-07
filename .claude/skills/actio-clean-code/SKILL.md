@@ -13,6 +13,8 @@ cannot.
 
 This standard is enforced by `code-steward` at the `review-3of3` gate. It is not advice.
 
+Not this lens: whether the change is right or layered correctly (`peer-reviewer`); whether it is correct, complexity and nesting numbers and circular imports included (`code-analyst`); security, secrets included (`security-analyst`); anything a formatter or linter owns.
+
 ---
 
 ## The test
@@ -40,6 +42,18 @@ If the answer needs a conversation, the code is not finished.
 **A name that needs a comment to explain it is a naming defect, not a comment defect.**
 Rename first, then see whether the comment is still needed. Usually it is not.
 
+Actio's nouns, used exactly as `actio-architecture` defines them. Generic CRUD naming is a **major**, not a nitpick, because it is how the model drifts away from the product.
+
+| Use | Not |
+|---|---|
+| issue | item, ticket, record, entry |
+| owner | assignee, user, responsible_party |
+| lane (open, in progress, overdue, closed, protected) | status, state, stage, phase |
+| evidence | attachment, proof, file, upload |
+| cycle | period, round, wave, sprint |
+| response, respondent | submission, answer, entry, participant |
+| route, routing | assign, dispatch, escalate (escalate means something else here) |
+
 ---
 
 ## Functions
@@ -58,38 +72,10 @@ Two patterns that do most of the work:
 **Guard clauses over nesting.** Handle the exceptional cases first and return, so the
 happy path is flat and reads last.
 
-```ts
-// Nested: the reader carries three conditions to reach the point
-function close(issue: Issue, by: UserId, at: Date) {
-  if (issue.status !== 'closed') {
-    if (issue.evidence.length > 0) {
-      if (issue.owner !== null) {
-        // ...
-      }
-    }
-  }
-}
-
-// Guarded: each rule is stated once and the point is at the left margin
-function close(issue: Issue, by: UserId, at: Date) {
-  if (issue.status === 'closed') throw new AlreadyClosed()
-  if (issue.evidence.length === 0) throw new EvidenceRequired()
-  if (issue.owner === null) throw new OwnerRequired()
-  // ...
-}
-```
-
 **No flag arguments.** A boolean that forks the whole body is two functions wearing a
 coat.
 
-```ts
-// The call site reads close(issue, true) and tells the reader nothing
-function close(issue: Issue, force = false) { /* ... */ }
-
-// Two honest names
-function close(issue: Issue) { /* ... */ }
-function forceClose(issue: Issue, overrideReason: string) { /* ... */ }
-```
+Examples of both: `references/examples.md`. Complexity and nesting numbers are `code-analyst`'s; you file function length, parameters, flag arguments, and guard-clause style below the nesting threshold.
 
 ---
 
@@ -106,6 +92,8 @@ function forceClose(issue: Issue, overrideReason: string) { /* ... */ }
 Order inside a file, consistently: imports, constants, types, public API, private helpers.
 A reader scanning top to bottom should meet the important things first.
 
+Circular imports are `code-analyst`'s (measured) and layer violations `peer-reviewer`'s: do not file them.
+
 ---
 
 ## Comments
@@ -117,18 +105,6 @@ code, and none where the reasoning lived only in someone's head.
 
 **Code says what. Comments say why.** A comment that says what the code says is noise that
 will go stale and then lie.
-
-```ts
-// Noise. Delete it.
-// increment the counter
-counter += 1
-
-// Worth its space. Nothing in the code can carry this.
-// Cohort size is recomputed here rather than cached, because the privacy preview
-// promises the reader a live figure. A stale number would be a claim rather than
-// a disclosure, which is the thing this screen exists to avoid.
-const size = await countResponses(cohortId)
-```
 
 ### Always comment these
 
@@ -157,74 +133,15 @@ Every module opens with a short header saying what it is for and what it must no
 This is the single highest-value comment in the repository for a model that will be handed
 this file alone.
 
-```sql
--- 05_functions.sql · the reporting surface for survey cohorts.
---
--- I1 and I2. RLS is row-level and the threshold is a property of the SET, so no
--- row policy can express it. The base tables are revoked from anon and
--- authenticated in 07_grants.sql, and every callable here is the only granted
--- path to response data. Each one applies the floor before it returns anything.
---
--- Every function here is security definer with search_path pinned to ''. An
--- unpinned search_path lets a caller shadow an object and run their own code as
--- the definer, which on this surface is the whole database.
---
--- Never add a function here that takes a pre-built query or a raw table name
--- from outside this file.
-```
-
 Every function that is not self-evident gets a comment saying what it returns, what it
 raises, and which invariant it upholds, by number. Private helpers usually need only a good
 name.
-
-```sql
--- Cohorts large enough to report on for this organisation.
---
--- The organisation may raise its threshold, never lower it: greatest(5, ...) is
--- the floor and it is deliberate. Returns an empty set rather than raising when
--- nothing qualifies, because a caller rendering a report needs a page, not an
--- exception. Raising is reserved for I2, where the refusal is the answer.
-create or replace function public.reportable_cohorts(p_org uuid)
-returns setof public.cohorts
-language sql
-stable
-security definer
-set search_path = ''
-as $$ ... $$;
-```
 
 A policy is code and gets the same treatment. Every policy carries a comment naming the
 invariant it upholds and why it is written the way it is, because a policy that reads as
 arbitrary is the one a future change relaxes.
 
-```sql
--- I4. Protected cases live in their own schema with their own grant rather than
--- behind a flag on issues, because a flag can be forgotten in a where clause and
--- a missing grant cannot.
-create policy case_handler_only on protected.cases
-  for select to protected_handler
-  using ( exists (
-    select 1 from protected.handlers h
-     where h.user_id = (select auth.uid())
-       and h.organisation_id = protected.cases.organisation_id ) );
-```
-
----
-
-## Structure that helps the next model
-
-Specific to this repository, and the reason `code-steward` exists rather than leaving this
-to `peer-reviewer`.
-
-| Practice | Why it matters here |
-|---|---|
-| Module header states the invariants the module upholds | A model handed one file has no repository context. The header supplies it. |
-| Domain terms used exactly as the architecture defines them | `issue`, `lane`, `owner`, `evidence`, `cohort`, `closure`. Consistent vocabulary lets a reader match code to the ADR without a translation step. |
-| The dangerous path is loud, not documented | A default manager returning `none()` beats a comment saying "remember to filter". Make the wrong thing fail rather than warning against it. |
-| Invariants cited by number in the code | `-- I5` next to the evidence check ties the line to `actio-architecture` |
-| One way to do each thing | Two patterns for one job forces every reader to work out which is current |
-| Tests read as specifications | `test_cohort_of_four_never_reports` tells a reader the rule. `test_reporting_1` tells them nothing. |
-| No cleverness without a comment earning it | A clever line that saves four lines and costs ten minutes of reading is a bad trade |
+Examples of a module header, a docstring and a policy comment, in SQL: `references/examples.md`.
 
 ---
 
@@ -239,6 +156,8 @@ to `peer-reviewer`.
   `BelowThreshold`. `ValueError("bad")` tells nobody anything.
 - An exception raised by a privacy invariant states the invariant, never the input that
   tripped it. See `BUGS.md` R-01.
+
+Swallowed exceptions and unhandled rejections are `code-analyst`'s defects; you file how an error is worded and which domain it carries.
 
 ---
 
@@ -260,25 +179,39 @@ concept.
 
 ## The review
 
-`code-steward` works this list against the diff at `review-3of3`.
+`code-steward` works this list at `review-3of3`. Each line is a `checks[]` entry: `pass` with its evidence (command output or `file:line`), or `fail` with the finding ids.
 
 - [ ] Every name says what the thing is, in the domain's language
-- [ ] No function over 50 lines, complexity 10, nesting 3, or 4 parameters
+- [ ] No function over 50 lines or 4 parameters (complexity and nesting numbers are `code-analyst`'s)
 - [ ] No flag argument that forks the body
-- [ ] No file over 400 lines, no circular import, no layer violation
+- [ ] No file over 400 lines or class over 15 methods
 - [ ] Guard clauses used instead of nesting on the exceptional paths
 - [ ] Every module has a header stating its purpose and the invariants it upholds
 - [ ] Every non-obvious public function has a docstring giving returns, raises, invariants
+- [ ] Every policy carries a comment naming the invariant it upholds and why it is written that way
 - [ ] Every comment says why, not what
-- [ ] No commented-out code, no stale comment, no ownerless TODO
+- [ ] No commented-out code, no stale or contradicting comment, no ownerless TODO
 - [ ] Invariants cited by number where they are enforced
-- [ ] Custom exceptions carry the domain
+- [ ] Custom exceptions carry the domain, and an invariant error states the invariant, never the input (`R-01`)
 - [ ] Tests read as specifications
 - [ ] No third duplication of the same concept left unextracted
 - [ ] No second way to do something the codebase already does once
 
-Findings carry file, line, what, why it costs the next reader, and the concrete change.
-Severity uses the same ladder as the other review gates. A readability finding is a
-**major** when it will make the next change riskier, and a **minor** when it is only
-untidy. `code-steward` blocks on blockers and majors like any other gate owner, and does
-not rewrite the author's code.
+## Findings and severity
+
+One format: a `findings[]` entry in your handoff (`actio-agent-protocol`). `id` `CS-n`; `where` file:line; `rule` the checklist line; `what` what it costs the **next reader**, at most 240 characters ("this is hard to read" is not a finding; "this function does three things and the third is only visible on line 61, so a reader changing the first will not know it exists" is); `fix` the concrete change. Do not rewrite the author's code.
+
+| Severity | Means | Effect |
+|---|---|---|
+| `blocker` | A comment, name or header on an invariant-enforcing path that states the opposite of what the code does | Gate fails |
+| `major` | Makes the next change riskier: no header or invariant comment on a module or policy enforcing I1 to I8, a comment that contradicts the code, a domain noun that hides a wrong model, a function whose third job is invisible, a file past 400 lines that this diff grows | Gate fails |
+| `minor` | Only untidy: a name that needs a comment, a vague test name, a missing docstring on low-risk code | Never rejects |
+| `nit` | A preference you cannot defend as a cost to the next reader | Never rejects |
+
+Do not inflate: a steward who blocks on tidiness gets overruled, and the real findings go with it.
+
+## References
+
+| File | Holds | Read when |
+|---|---|---|
+| `references/examples.md` | Guard clauses against nesting, flag arguments, a comment that is noise against one that earns its space, a module header, a docstring and a policy comment; and why the standard is shaped this way in this repository (structure that helps the next model) | You write your first header, docstring or policy finding of a run and need the bar, or an author disputes a finding and you need the reason |

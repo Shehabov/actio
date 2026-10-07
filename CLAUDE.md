@@ -1,312 +1,86 @@
 # CLAUDE.md
 
-Operating manual for the Actio repository. This file is loaded into every session in this
-project. Read it before doing anything else.
-
----
+Operating manual for the Actio repository, loaded into every session.
 
 ## What Actio is
 
-Actio is the accountability layer for engagement and culture surveys. A Lumofy product.
-
-> **Feedback that closes.**
-
-Organisations collect feedback well and act on it badly. Around two thirds of employees
-believe nothing happens after a survey, so participation falls and each round is worth
-less than the last. Actio classifies every issue by who has the authority to change it,
-assigns it to a named owner with a date, and holds it open until evidence of the change is
-attached.
-
-Measured on first-90-day attrition, closure rate and median days to close. Never a
-sentiment score.
+The accountability layer for engagement and culture surveys, a Lumofy product. **Feedback that closes.** About two thirds of employees believe nothing happens after a survey. Actio classifies every issue by who has the authority to change it, assigns a named owner and a date, and holds it open until evidence of the change is attached. Measured on first-90-day attrition, closure rate and median days to close. Never a sentiment score.
 
 | | |
 |---|---|
-| Users | Frontline employee, team lead, operations, site director or COO |
-| Buyer | Operations. The buyer is not the user. |
-| Stack | React and Next.js (App Router, TypeScript, npm) in `web/`. A Manifest V3 Chrome extension in React and TypeScript, built with Vite, in `extension/`, for the desktop roles only (ADR-0003). Supabase on the back end: Postgres, Row Level Security, PostgREST, Edge Functions, Auth and Storage, worked through the Supabase MCP from migration files in `supabase/` |
-| Channels | WhatsApp, SMS, web |
-| Locales | Bahasa Indonesia, English, Tagalog, Arabic (RTL) |
-| Target device | A low-cost Android handset, mid-shift, on a constrained connection |
-
----
+| Users | Frontline employee, team lead, operations, site director or COO. The buyer is operations, not the user |
+| Stack | Next.js App Router, React, TypeScript, npm in `web/`. Manifest V3 Chrome extension (Vite) in `extension/`, desktop roles only (ADR-0003). Supabase (Postgres, RLS, Edge Functions, Auth, Storage) through the Supabase MCP, from migration files in `supabase/` |
+| Reach | WhatsApp, SMS, web. Bahasa Indonesia, English, Tagalog, Arabic (RTL). A low-cost Android handset, mid-shift, on a constrained connection |
 
 ## The files that bind everything
 
 | File | Authority |
 |---|---|
-| [`BRAND.md`](./BRAND.md) | The machine-readable brand spec. Tokens, contrast, type, components, copy rules. **Binding on every role.** Where it conflicts with a design instinct or a vendored skill, it wins. |
-| [`Actio-Brand-Guidelines-v1.pdf`](./Actio-Brand-Guidelines-v1.pdf) | The same rules for people, with the reasoning. Versioned with `BRAND.md`. The four v1.5 amendments are in `BRAND.md` and not yet in this document. |
-| [`BUGS.md`](./BUGS.md) | The defect register. Every bug found, and every mistake an agent has made, with the standing rule it produced. **Read the entries for the surface you are about to change, before you plan.** Owned by `bug-historian`, which is the only agent that writes to it. |
-
-Never invent a colour, spacing value, radius, duration or type size. Every value is in
-`BRAND.md`. If the value you want is not there, the design is wrong, not the scale.
-
----
+| `BRAND.md` | The brand spec: tokens, contrast, type, components, copy rules. **Binding on every role**; it wins over any design instinct or vendored skill. |
+| `Actio-Brand-Guidelines-v1.pdf` | The same rules for people, with the reasoning. The four v1.5 amendments are in `BRAND.md`, not yet here. |
+| `BUGS.md` | The defect register and standing rules. Written only by `bug-historian`; each agent gets the entries for its surfaces as a brief slice. |
 
 ## The team
 
-Shehab Beram is the Product Lead. He is the only role that can change scope, accept a
-release, or overrule a gate. Everything else is an agent in `.claude/agents/`.
+Shehab Beram, Product Lead, alone changes scope, accepts a release or overrules a gate. Sixteen agents in `.claude/agents/`, twelve gates with one owner each. Charters, models, RACI: `docs/TEAM.md`.
 
-```
-L0  Shehab Beram · Product Lead (human)
-L1  orchestrator
-L2  tech-architect · engineering-lead · qc-lead
-L3  ux-designer · ux-auditor · ux-writer · frontend-engineer · backend-engineer
-    peer-reviewer · code-analyst · code-steward · security-analyst · qc-engineer
-    release-engineer
-Mem bug-historian, bookending every run
-```
-
-Full charters, the org chart and the RACI are in [`docs/TEAM.md`](./docs/TEAM.md). The
-delivery flow and every gate are in [`docs/WORKFLOW.md`](./docs/WORKFLOW.md).
-
-| Agent | Owns | Gate |
-|---|---|---|
-| `orchestrator` | The run. Routing, gate enforcement, the utilisation check. | Run closure |
-| `tech-architect` | Architecture of record, ADRs, task briefs for FE and BE | Design authority |
-| `ux-designer` | Design specs for every surface | – |
-| `ux-auditor` | Independent audit of design and shipped UI | Design gate |
-| `ux-writer` | Every string, English and Arabic | Copy gate |
-| `frontend-engineer` | React and Next.js implementation in `web/`, and the Chrome extension in `extension/` | – |
-| `backend-engineer` | Supabase: schema, RLS, functions, Edge Functions | – |
-| `peer-reviewer` | Senior engineering review: judgement and design | Review gate (1 of 3) |
-| `code-analyst` | Line-by-line defects, security, structural rot | Review gate (2 of 3) |
-| `code-steward` | Readability, naming, comments, maintainability | Review gate (3 of 3) |
-| `security-analyst` | Secrets, exposure, authorisation, injection, dependencies, robustness | Security gate |
-| `bug-historian` | BUGS.md, the standing rules, the regression brief | Regression guard |
-| `engineering-lead` | Integration. Does it actually work end to end. | Engineering gate |
-| `qc-engineer` | Testing APIs, code and product, with evidence | – |
-| `qc-lead` | Evidence audit, independent final pass, go or no-go | Quality gate |
-| `release-engineer` | Release to the Supabase project, commit, tag, push, verify, roll back | Release gate |
-
----
+| Level | Agents (gate) |
+|---|---|
+| L1 | orchestrator (`run-closure`) |
+| L2 | tech-architect (`design-authority`), engineering-lead (`engineering`), qc-lead (`quality`) |
+| L3 | ux-designer, ux-auditor (`design`), ux-writer (`copy`), frontend-engineer, backend-engineer, peer-reviewer (`review-1of3`), code-analyst (`review-2of3`), code-steward (`review-3of3`), security-analyst (`security`), qc-engineer, release-engineer (`release`) |
+| Memory | bug-historian (`regression-guard`) |
 
 ## The delivery flow
 
-```
-brief (Shehab)
-  → orchestrator          run plan, assignments, gate list
-  → bug-historian        regression brief: what has already broken here
-  → tech-architect        ADR + task briefs
-  → ux-designer ⇄ ux-auditor        (loop until clean)   ┐ parallel with
-    ux-writer             EN + AR strings                ┘ the engineering track
-  → frontend-engineer / backend-engineer
-  → peer-reviewer AND code-analyst AND code-steward AND security-analyst
-                          (independent, all four must pass)
-  → bug-historian        regression guard: was a known defect repeated
-  → engineering-lead      integration gate
-  → qc-engineer           test + evidence
-  → qc-lead               evidence audit + independent pass + go/no-go
-  → release-engineer      migrations, build, tag, push, verify
-  → orchestrator          utilisation check, run report
-  → Shehab                accept
-```
+Stages: 1 regression brief (script) and ADR · 2 design ∥ database · 3 audit ∥ copy · 4 front end · 5 four reviews ∥ regression guard (script) · 6 engineering (`verify.mjs`) · 7 QC · 8 qc-lead · 9 release · 10 record, then the orchestrator's report and Shehab's acceptance.
 
-A stage does not start until its upstream gate reads pass. Skipping a gate is a defect,
-and the orchestrator is the role that catches it.
+A stage starts when its upstream gates read pass, or n/a with a reason. A lane (`micro`, `standard-ui`, `standard-db`, `full`) drops the stages a change does not touch, each recorded in `out_of_scope`. Skipping a gate is a defect. Diagrams and gate criteria: `docs/WORKFLOW.md`.
 
----
+## The loop and the run artefacts
 
-## The five-step loop
+Every agent, every task: read the dispatch, checkpoint (`handoff.json`, `status: working`, a `plan[]` with a `Risk:` line), execute, self-check (`checks[]` with evidence), validated handoff (`run.mjs handoff`), a final message of at most 8 lines. The one copy, with the handoff schema, is `actio-agent-protocol`.
 
-Every agent, every task, no exceptions. Defined in full in
-[`.claude/skills/actio-agent-protocol/SKILL.md`](./.claude/skills/actio-agent-protocol/SKILL.md).
-
-1. **Plan:** inputs, assumptions, acceptance criteria, out of scope, the rules that constrain it.
-2. **Audit the plan:** adversarially, before executing. What is missing, what did I assume without checking, which Actio rule could this break, what would the downstream agent reject. Revise, and record what changed.
-3. **Execute:** against the audited plan.
-4. **Review:** your own output, against your own acceptance criteria, against `BRAND.md`, and against your role's definition of done. Fix it, or state plainly what you could not fix and why.
-5. **Hand off:** write the handoff record so the next agent and the orchestrator can verify you ran and what you produced.
-
----
-
-## Run artefacts
-
-The filesystem is the swarm's shared memory. Everything is inspectable after the fact.
-
-```
-.actio/runs/<run-id>/
-├── run.json                 orchestrator: plan, assignments, gates
-├── ledger.md                orchestrator: append-only event log
-├── <agent>/plan.md          step 1 and the step 2 audit
-├── <agent>/review.md        step 4
-├── <agent>/handoff.json     step 5
-└── evidence/                screenshots, logs, test output, traces
-```
-
-Run id is `<yyyy-mm-dd>-<short-slug>`. Timestamps come from the shell, never invented.
-
----
+Each run lives in `.actio/runs/<yyyy-mm-dd>-<slug>/`: `run.json`, `ledger.md` (the hook writes `dispatched` and `returned`), `report.md`, `<agent>/handoff.json` (a later pass: `handoff-stage<N>.json`) beside its deliverables, and `evidence/`. Timestamps come from the shell.
 
 ## Toolchain
 
-Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
-`.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
-`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed.
+Present: git, node 24, npm, npx, the Supabase MCP (`supabase` in `.mcp.json`, one project) and the Playwright MCP (carried by qc-engineer and qc-lead). Nothing else may be assumed: the swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql or jq. Python 3.14.7 and Django 6.1.1 are installed on the machine by the Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a gate criterion, an evidence source or an allowed dependency of any stage. A missing tool is reported as blocked, never faked.
 
-The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
-or python. None of them is a required step, a gate criterion, an evidence source or an
-allowed permission. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
-Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a
-gate criterion, an evidence source or an allowed dependency of any stage. A tool that is
-missing is reported as blocked, never faked.
+- **Database:** migration files in the repo, applied and proved through the Supabase MCP; iterate offline with `npm run db:test` (PGlite, no Docker). No `supabase/schemas/` workflow: it needs the Supabase CLI and Docker.
+- **Front end:** `build`, `lint`, `typecheck`, `test`, `e2e` in `web/` and `extension/`, run once per tree by `.actio/bin/verify.mjs`. Screenshots (rule 9 widths, both themes, English and Arabic) come from the committed suite; the Playwright MCP is for exploration. Contrast is computed from `BRAND.md` hex values in a node script, never estimated.
+- **Release:** release-engineer only: pre-flight, migrations through the MCP checked with `list_migrations`, `get_advisors` clean, build green, tag, push to origin main. Hosting waits for Shehab: `deferred: no target chosen`, not a gate failure.
+- **MCP silent:** the agent runs the PGlite proof or the suite and hands off `blocked` with `supabase MCP not authorised` or `playwright MCP not answering`. The orchestrator escalates; Shehab restores it with `/mcp`.
 
-| Work | How |
-|---|---|
-| Database | Through the Supabase MCP, from migration files in the repo, never from SQL that is not in one. Iterate offline with `npm run db:test` (PGlite, no Docker). The full workflow is in [`actio-supabase`](./.claude/skills/actio-supabase/SKILL.md). |
-| Front end | `npm install`, `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` in `web/`, and the same in `extension/`, which has no `dev` script and whose one smoke loads the unpacked build in Playwright's chromium (ADR-0003). Screenshots with Playwright (`npx playwright install chromium` once) at 320, 360, 768, 1024 and 1440, both themes, English and Arabic: the committed suite, `npm run e2e` in `web/`, for every regression check and every piece of gate evidence, and the Playwright MCP for exploration, reproduction and live capture, as [`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md) sets out. Contrast is computed as WCAG ratios from the `BRAND.md` hex values in a node script, never estimated. |
-| Release | Pre-flight; migrations applied to the Supabase project through the MCP and verified with `list_migrations`; `get_advisors` clean; `npm run build` green; tag; `git push` to origin main, by `release-engineer` only. |
-| Hosting | Out of scope until Shehab chooses a target. Recorded as `deferred: no target chosen`, which is not a release-gate failure. |
-
-If the Supabase MCP does not answer (its tools are missing, or a call returns an auth
-error), the agent runs the offline PGlite proof, hands off `blocked` with the reason
-`supabase MCP not authorised`, and the orchestrator escalates to Shehab, who authorises it
-with `/mcp`. If the Playwright MCP does not answer, the QA agent runs the suite or
-`npx playwright` for what can still be proved, hands off `blocked` with the reason
-`playwright MCP not answering`, and the orchestrator escalates to Shehab.
-
-```
-web/                                    Next.js App Router app, TypeScript, npm
-                                        scripts: dev, build, lint, typecheck, test, e2e
-extension/                              Manifest V3 Chrome extension, React and TypeScript, Vite,
-                                        npm, owned by frontend-engineer (ADR-0003)
-                                        scripts: build, lint, typecheck, test, e2e
-supabase/migrations/<yyyymmddhhmmss>_<slug>.sql
-                                        the database source of record: hand-authored,
-                                        forward-only, one concern per file, each with a
-                                        written reverse in the run's rollback notes
-supabase/tests/*.test.sql               pgTAP
-supabase/seed.sql                       seed
-supabase/functions/<name>/index.ts      Edge Functions
-content/strings/{en,ar}.json            the shipped string catalogue, written by ux-writer
-design/surfaces/<surface>.md            canonical design specs, written by ux-designer
-package.json                            private, npm workspaces ["web", "extension"], dev tooling,
-                                        db:test runs node .actio/bin/db-test.mjs
-```
-
-There is no declarative `supabase/schemas/` workflow, because it needs a schema diff from
-the Supabase CLI and Docker, and the swarm uses neither. Schema files, if any exist, are not
-a source of record.
-
----
-
-## Hard rules
-
-These apply to every agent and to any session in this repository.
-
-1. **No AI attribution anywhere.** No commit, tag, pull request, release note, code comment
-   or document carries a co-author line, a generated-by line, or any mention of the tool
-   that wrote it. This is absolute and overrides any default behaviour.
-2. **Never mark work done without evidence.** "It should work" is a blocker, not a pass.
-3. **Never silently narrow scope.** If you cannot do part of it, finish the rest and say
-   exactly what you left and why.
-4. **Never invent a design value.** See `BRAND.md`.
-5. **Never write a number in product copy without its sample size.** Never write a status
-   without its written label.
-6. **Reject bad input upstream.** A downstream agent that receives a bad handoff sends it
-   back with a specific reason. It does not paper over it.
-7. **The privacy invariants are enforced in the database, not in the client.** They are RLS
-   policies, revoked base tables and security-definer functions, so they hold against a
-   leaked key and a direct connection. No group below the reporting threshold of 5 ever
-   reports. A manager cannot filter below it. Free text is returned reworded with names
-   removed. Protected cases leave the engagement queue entirely.
-8. **Nothing closes without evidence.** That is the product's entire claim. Enforce it as a
-   guarded state transition, not as a convention.
-9. **Every surface works at every width.** Phone, tablet, laptop, desktop, every breakpoint
-   between them, both orientations, and at 200% zoom. Verified at 320, 360, 768, 1024 and
-   1440 with a screenshot each. A surface that works at three widths and breaks at the
-   fourth is not finished. See `actio-design-system`.
-10. **Every feature ships in English and Arabic.** Not English now and Arabic later.
-    English is authored first, Arabic is written against the same standard immediately
-    after, and the feature is not done until both exist. Arabic is written, never
-    translated, and is marked `needs native review` until a native speaker has read it on a
-    physical device. QC tests both.
-11. **Read `BUGS.md` before you plan.** A repeated defect is worse than a new one, because it
-   means the register was written and nobody read it. Standing rules in that file outrank
-   your instinct.
-12. **Escalate to Shehab** when scope would change, a brand rule must be broken, two gates
-    disagree, the same rejection loop runs three times, or a defect pattern reaches its
-    third occurrence.
-
----
+Layout: `web/`, `extension/` (npm workspaces); `supabase/` (forward-only migrations, one concern per file, each with a written reverse); `content/strings/{en,ar}.json`; `design/surfaces/`.
 
 ## Skills
 
-`.claude/skills/` holds fifteen house skills prefixed `actio-` and twenty-two vendored
-skills. Each agent declares the skills it is coupled with in the `skills:` field of its
-frontmatter, which is what preloads them. A skill named only in the body is not loaded.
+Fifteen house skills (`actio-*`) and twenty-two vendored ones live in `.claude/skills/`. An agent preloads `actio-agent-protocol` and its core role skills; everything else, vendored included, is read on demand by path.
 
-| House skill | For |
-|---|---|
-| `actio-agent-protocol` | Every agent. The five-step loop, artefacts, handoff schema. |
-| `actio-orchestration` | Run planning, gate enforcement, the utilisation check |
-| `actio-brand-guard` | Brand pre-flight, and the vendored skill policy |
-| `actio-bug-register` | The defect register, standing rules, the regression brief and guard |
-| `actio-clean-code` | Clean code and commenting standards |
-| `actio-design-system` | The platform: shell anatomy, the inversion rule, components, density |
-| `actio-ux-audit` | The UX audit rubric |
-| `actio-bilingual-copy` | English and Arabic product copy |
-| `actio-architecture` | Domain model, invariants, ADRs, task briefs |
-| `actio-supabase` | Supabase: schema, RLS, functions, Edge Functions, pgTAP |
-| `actio-code-review` | Senior review rubric |
-| `actio-code-analysis` | Line-by-line defect and complexity rubric |
-| `actio-test-protocol` | Test planning, evidence, release readiness |
-| `actio-security` | The security catalogue: secrets, exposure, authz, injection, dependencies, robustness |
-| `actio-release` | Pre-flight, migrations through the MCP, verify, roll back |
+## Design references
 
-Vendored packs, unmodified from source:
+Seven approved references in `docs/design-reference/` set the platform shape. `ref-06-insights-panel.webp` is **the primary reference**, for anatomy as well as feel. `ref-02-ops-dashboard.png` supports; its six-tile metric row and filled sidebar are not adopted. Where they disagree, `ref-06` wins, with one written exception: the issue queue is deliberately denser. `ref-04-category-dashboard.png` is a **counter-example**, kept to be recognised and refused: a red to green sentiment heatmap, a score per cohort presented as a thing to defend.
 
-| Pack | Source | Used by |
-|---|---|---|
-| taste skills (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
-| Vercel agent skills (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`. `deploy-to-vercel`, `vercel-cli-with-tokens` and `vercel-optimize` are coupled to no agent: reference only, for when a deploy target is chosen. |
+References give anatomy, density, hierarchy and interaction; **they never define colour**. Vega `#00BFC4` is the accent and `BRAND.md` its only source; citing a reference image as the reason for a colour is a defect (BUG-0006). Their lime accent, gradients, tinted callouts, multi-hue chart ramps and Title Case are banned. Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins and the override is recorded: taste skills serve composition, never decoration.
 
-### Design references
+## Hard rules
 
-Seven approved references in [`docs/design-reference/`](./docs/design-reference/) set the
-platform shape. `ref-06-insights-panel.webp` is **the primary reference**, for anatomy as
-well as feel. `ref-02-ops-dashboard.png` is supporting, and its six-tile metric row and
-filled sidebar are explicitly not adopted. **Where the two disagree on anything, `ref-06`
-wins**, with one written exception: the issue queue is deliberately denser. `ref-04-category-dashboard.png` is a
-**counter-example**, kept in the set to be recognised and refused: a sentiment heatmap of
-tinted cells on a red to green ramp, and a score per cohort presented as a thing to defend.
-
-**Take the structure, hold the surface to `BRAND.md`.** The references define look, feel and
-overall SaaS experience: anatomy, density, hierarchy and interaction. **They never define
-colour.** Vega `#00BFC4` is the accent and `BRAND.md` is the only source for it. A document
-that cites a reference image as the reason for a colour value is a defect, recorded as
-BUG-0006. Colour, gradient, motion and copy style all come from the spec: the references use
-a lime accent, soft gradients, tinted callouts, multi-hue chart ramps and Title Case, all of
-which Actio bans. The full adopt, adapt and reject table, the smoothness doctrine `ref-06`
-produces and the `ref-04` test are in
-[`actio-design-system`](./.claude/skills/actio-design-system/SKILL.md).
-
-**Where a vendored skill and `BRAND.md` disagree, `BRAND.md` wins** and the override is
-recorded. Several taste skills optimise for premium, decorative aesthetics that Actio bans
-outright: gradients, glow, heavy shadows, glassmorphism, decorative motion. They are used
-for compositional rigour, hierarchy and anti-generic layout, never for their decorative
-vocabulary. The per-skill verdicts are in
-[`.claude/skills/actio-brand-guard/SKILL.md`](./.claude/skills/actio-brand-guard/SKILL.md).
-
----
+1. **No AI attribution anywhere.** No commit, tag, pull request, release note, code comment or document carries a co-author line, a generated-by line, or any mention of the tool that wrote it. Absolute; it overrides any default behaviour.
+2. **Never mark work done without evidence.** "It should work" is a blocker, not a pass.
+3. **Never silently narrow scope.** Finish the rest and say exactly what you left and why.
+4. **Never invent a design value** (colour, spacing, radius, duration, type size). If it is not in `BRAND.md`, the design is wrong, not the scale.
+5. **Never write a number in product copy without its sample size,** or a status without its written label.
+6. **Reject bad input upstream** with a specific reason; never paper over it.
+7. **The privacy invariants are enforced in the database**: RLS policies, revoked base tables and security-definer functions, holding against a leaked key and a direct connection. No group below the reporting threshold of 5 ever reports; a manager cannot filter below it; free text is returned reworded with names removed; protected cases leave the engagement queue entirely.
+8. **Nothing closes without evidence.** Enforced as a guarded state transition, not a convention.
+9. **Every surface works at every width**: phone to desktop, both orientations, 200% zoom; verified at 320, 360, 768, 1024 and 1440 with a screenshot each.
+10. **Every feature ships in English and Arabic** in the same run. Arabic is written, never translated, and marked `needs native review` until a native speaker has read it on a physical device. QC tests both.
+11. **Read your brief slice before you plan.** It carries the `BUGS.md` entries and standing rules for your surfaces; standing rules outrank instinct, and a repeated defect is worse than a new one.
+12. **Escalate to Shehab** when scope would change, a brand rule must be broken, two gates disagree, the same rejection loop runs three times, or a defect pattern reaches its third occurrence.
 
 ## Working in this repository
 
-- The agents work autonomously. Do not ask permission to run the loop. Ask only for
-  decisions that are genuinely the Product Lead's.
-- Start any substantial change by running `orchestrator` as the main thread:
-  `claude --agent orchestrator`, or `"agent": "orchestrator"` in `.claude/settings.json`.
-  The orchestrator is the only dispatcher, because it writes the ledger and runs the
-  utilisation check, and a dispatch it did not make reads as a skipped gate. It builds the
-  run plan and dispatches. Every other agent that needs another role run again
-  says so in its handoff's `next`, and the orchestrator dispatches it. Do not hand work
-  straight to a maker and skip the gates.
-- Small, self-contained changes may go directly to the responsible agent, but the
-  orchestrator still records the run and runs the utilisation check at the end.
-- Brand assets live in `logo/`. Never redraw the seal. The arcs are mathematically defined
-  and an eyeballed version reads as wrong beside a correct one.
-- Product code starts in `web/`, `extension/` and `supabase/` as runs land. The specification, the brand
-  and the team are the ground it is built on, and the layout it lands in is under
-  [Toolchain](#toolchain).
+- Agents work autonomously; ask only for decisions that are the Product Lead's.
+- Start any change with the orchestrator as the main thread (`claude --agent orchestrator`; `.claude/settings.json` sets it). It runs `node .actio/bin/run.mjs open`, picks the lane and is the only dispatcher: a dispatch it did not make reads as a skipped gate. An agent that needs another role says so in `next`. Small changes take the `micro` lane.
+- Brand assets live in `logo/`. Never redraw the seal: the arcs are mathematically defined.

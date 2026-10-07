@@ -1,0 +1,102 @@
+{
+  "$comment": "Lane micro: no file under web/, extension/, supabase/ or .actio/bin/, and no package*.json: docs, agent definitions, skills, config. No product code (design-v2 section 4, actio-orchestration Lanes). The maker defaults to tech-architect with design-authority; when the surface is another role's (strings: ux-writer and copy), swap the agent, its gate, and the gate name in the blocked_by lists. security-analyst stays only when .claude/settings.json, .mcp.json, an agent's tools: line, permissions, hooks or secrets are touched; otherwise delete its entry, the security gate, security from release-engineer's blocked_by and security-analyst/handoff.json from its consumes, and record it in out_of_scope.",
+  "version": 2,
+  "run": "<set by run.mjs open>",
+  "lane": "micro",
+  "lane_reason": "<orchestrator: why this lane, from the files the change touches>",
+  "brief": "",
+  "opened": "<set by run.mjs open>",
+  "ships": true,
+  "done_means": [],
+  "out_of_scope": [
+    "ux-designer, ux-auditor: lane micro, no product surface to design or audit",
+    "ux-writer: lane micro, no product string changes (swap it in as the maker if one does)",
+    "frontend-engineer, backend-engineer: lane micro, nothing under web/, extension/ or supabase/",
+    "code-analyst, code-steward: lane micro, no code; peer-reviewer judges the doctrine",
+    "engineering-lead: lane micro, nothing to build, migrate or integrate",
+    "qc-engineer, qc-lead: lane micro, no product behaviour to test",
+    "gate design: its owner ux-auditor is not in the micro plan",
+    "gate copy: its owner ux-writer is not in the micro plan",
+    "gate review-2of3: its owner code-analyst is not in the micro plan",
+    "gate review-3of3: its owner code-steward is not in the micro plan",
+    "gate engineering: its owner engineering-lead is not in the micro plan",
+    "gate quality: its owner qc-lead is not in the micro plan"
+  ],
+  "plan": [
+    {
+      "stage": 1, "agent": "bug-historian",
+      "task": "Regression brief: node .actio/bin/bugs.mjs brief for this run's surfaces, then judgement lines for patterns the tag maps missed. One slice per agent in the plan.",
+      "consumes": ["run.json"],
+      "produces": ["bug-historian/brief.md", "bug-historian/brief/<agent>.md"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-bug-register/references/brief-and-guard.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 1, "agent": "tech-architect",
+      "task": "<orchestrator: the maker's task, the files it edits, and the maker role if not tech-architect> Make the change and certify its gate.",
+      "consumes": ["run.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["<repository paths the maker edits>"],
+      "blocked_by": [],
+      "read": [],
+      "brand": [],
+      "accept": ["No file under web/, extension/, supabase/ or .actio/bin/ and no package*.json changes, or the run moves to another lane"],
+      "model": null
+    },
+    {
+      "stage": 5, "agent": "peer-reviewer",
+      "task": "Doctrine review of the maker's change at the latest snapshot: does it say what the brief asks, contradict no other agent, skill or rule, and leave no stale reference behind.",
+      "consumes": ["tech-architect/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": [],
+      "blocked_by": ["design-authority"],
+      "read": [".claude/skills/actio-code-review/references/worked-findings.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 5, "agent": "security-analyst",
+      "task": "Security sweep of the configuration change at the latest snapshot: permissions, hooks, MCP servers, tools lines, secrets in tree and history. Delete this entry when no such file is touched.",
+      "consumes": ["tech-architect/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["evidence/security/"],
+      "blocked_by": ["design-authority"],
+      "read": [".claude/skills/actio-security/references/sweep.md", ".claude/skills/actio-security/references/exposure.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 5, "agent": "bug-historian",
+      "task": "Regression guard: node .actio/bin/bugs.mjs guard for this run on the maker's snapshot. Runs beside the reviews, not after them; re-run on each new snapshot.",
+      "consumes": ["bug-historian/brief.md", "tech-architect/handoff.json"],
+      "produces": ["bug-historian/guard.md", "evidence/regression/guard.json"],
+      "blocked_by": ["design-authority"],
+      "read": [".claude/skills/actio-bug-register/references/brief-and-guard.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 9, "agent": "release-engineer",
+      "task": "Release: pre-flight, commit, tag and push to origin main, verify. Migrations n/a (no supabase/ change); hosting recorded as deferred: no target chosen.",
+      "consumes": ["peer-reviewer/handoff.json", "security-analyst/handoff.json", "bug-historian/handoff-stage5.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["release-engineer/release-note.md", "evidence/release/"],
+      "blocked_by": ["review-1of3", "security", "regression-guard"],
+      "read": [".claude/skills/actio-release/references/commits-and-notes.md"],
+      "brand": ["§9", "§4"], "accept": [], "model": null
+    },
+    {
+      "stage": 10, "agent": "bug-historian",
+      "task": "Record pass: every defect and agent mistake from this run into BUGS.md with its standing rule; ids from bugs.mjs next-id, the Open index from bugs.mjs open-index.",
+      "consumes": ["peer-reviewer/handoff.json", "bug-historian/guard.md"],
+      "produces": ["BUGS.md"],
+      "blocked_by": ["release"],
+      "read": [".claude/skills/actio-bug-register/references/entry-template.md"],
+      "brand": [], "accept": [], "model": null
+    }
+  ],
+  "gates": [
+    { "name": "design-authority", "owner": "tech-architect", "blocks": ["peer-reviewer", "security-analyst", "bug-historian"], "result": "pending" },
+    { "name": "review-1of3", "owner": "peer-reviewer", "blocks": ["release-engineer"], "result": "pending" },
+    { "name": "security", "owner": "security-analyst", "blocks": ["release-engineer"], "result": "pending" },
+    { "name": "regression-guard", "owner": "bug-historian", "blocks": ["release-engineer"], "result": "pending" },
+    { "name": "release", "owner": "release-engineer", "blocks": ["bug-historian"], "result": "pending" },
+    { "name": "run-closure", "owner": "orchestrator", "blocks": [], "result": "pending" }
+  ],
+  "amendments": [],
+  "utilisation": []
+}

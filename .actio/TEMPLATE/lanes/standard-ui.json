@@ -1,0 +1,184 @@
+{
+  "$comment": "Lane standard-ui: files under web/ or extension/, nothing under supabase/, and nothing touching the privacy invariants, RLS, grants, auth, the issue state machine or evidence closure (those are full). The full plan without backend-engineer (design-v2 sections 4 and 13). Fill brief, lane_reason, done_means and every task placeholder before the first dispatch.",
+  "version": 2,
+  "run": "<set by run.mjs open>",
+  "lane": "standard-ui",
+  "lane_reason": "<orchestrator: why this lane, from the files the change touches>",
+  "brief": "",
+  "opened": "<set by run.mjs open>",
+  "ships": true,
+  "done_means": [],
+  "out_of_scope": [
+    "backend-engineer: lane standard-ui, nothing under supabase/ changes. tech-architect writes no brief-backend.md, the reviewers and the guard read only frontend-engineer's handoff, and release-engineer has no migration to apply (migrations n/a)"
+  ],
+  "plan": [
+    {
+      "stage": 1, "agent": "bug-historian",
+      "task": "Regression brief: node .actio/bin/bugs.mjs brief for this run's surfaces, then judgement lines for patterns the tag maps missed. One slice per agent in the plan.",
+      "consumes": ["run.json"],
+      "produces": ["bug-historian/brief.md", "bug-historian/brief/<agent>.md"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-bug-register/references/brief-and-guard.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 1, "agent": "tech-architect",
+      "task": "<orchestrator: this run's architecture task> Write the ADR and brief-frontend.md (no back-end brief in this lane).",
+      "consumes": ["run.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["tech-architect/adr-NNNN-<slug>.md", "tech-architect/brief-frontend.md"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-architecture/references/adr.md", ".claude/skills/actio-architecture/references/brief.md"],
+      "brand": [],
+      "accept": ["The brief names its inputs, outputs and acceptance criteria", "The ADR confirms no file under supabase/ and no privacy invariant is touched, or sends the run to lane full"],
+      "model": null
+    },
+    {
+      "stage": 2, "agent": "ux-designer",
+      "task": "<orchestrator: the surfaces this run designs> Write spec.md (every state, every width, both themes, LTR and RTL) and string-slots.json for ux-writer.",
+      "consumes": ["tech-architect/brief-frontend.md", "bug-historian/brief/<agent>.md"],
+      "produces": ["ux-designer/spec.md", "ux-designer/string-slots.json"],
+      "blocked_by": ["design-authority"],
+      "read": [".claude/skills/actio-design-system/references/empty-state.md", ".claude/skills/actio-design-system/references/responsive.md"],
+      "brand": ["§1", "§2", "§3", "§6"],
+      "accept": ["Every state specified at 320, 360, 768, 1024 and 1440, both themes, English and Arabic", "Every colour, spacing, radius, duration and type size traced to a BRAND.md token"],
+      "model": null
+    },
+    {
+      "stage": 3, "agent": "ux-auditor",
+      "task": "Independent audit of ux-designer/spec.md against BRAND.md, WCAG 2.2 AA and the ux-audit rubric, contrast computed not estimated. Findings in the handoff; no fixes proposed.",
+      "consumes": ["ux-designer/spec.md", "bug-historian/brief/<agent>.md"],
+      "produces": ["evidence/ux-auditor/"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-ux-audit/references/structural-checks.md"],
+      "brand": ["§1", "§2", "§3", "§6"], "accept": [], "model": null
+    },
+    {
+      "stage": 3, "agent": "ux-writer",
+      "task": "English and Arabic strings for every slot in string-slots.json, written beside the audit without waiting for the design gate; a slot change from the audit is a delta pass. Arabic marked needs native review. The copy gate certifies the final catalogue (shipped as content/strings/{en,ar}.json) against the final slots.",
+      "consumes": ["ux-designer/spec.md", "ux-designer/string-slots.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["ux-writer/strings-en.json", "ux-writer/strings-ar.json"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-bilingual-copy/references/worked-strings.md", ".claude/skills/actio-bilingual-copy/references/code-checks.md"],
+      "brand": ["§5", "§7", "§8"],
+      "accept": ["Every slot has English and Arabic, Arabic marked needs native review", "No number without its sample size, no status without its written label"],
+      "model": null
+    },
+    {
+      "stage": 4, "agent": "frontend-engineer",
+      "task": "<orchestrator: the screens and components to build> Implement the approved spec in web/ or extension/ with ux-writer's strings.",
+      "consumes": ["tech-architect/brief-frontend.md", "ux-designer/spec.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["web/", "extension/", "evidence/frontend/"],
+      "blocked_by": ["design", "copy"],
+      "read": [".claude/skills/actio-architecture/references/contract.md", ".claude/skills/actio-brand-guard/SKILL.md", ".claude/skills/actio-clean-code/SKILL.md"],
+      "brand": ["§1", "§2", "§3", "§7.3", "§9"],
+      "accept": ["Screenshots at 320, 360, 768, 1024 and 1440, both themes, English and Arabic, under evidence/frontend/", "lint, typecheck, test and build green in every touched workspace"],
+      "model": null
+    },
+    {
+      "stage": 5, "agent": "peer-reviewer",
+      "task": "Senior review of frontend-engineer's change at the latest snapshot: problem fit, layer boundaries, failure modes, test quality, rollout safety. Independent of the other three reviews.",
+      "consumes": ["tech-architect/brief-frontend.md", "frontend-engineer/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": [],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-code-review/references/worked-findings.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 5, "agent": "code-analyst",
+      "task": "Line-by-line defect and structural scan of frontend-engineer's change at the latest snapshot: React state and effects, async, dates, reporting thresholds. Independent of the other three reviews.",
+      "consumes": ["tech-architect/brief-frontend.md", "frontend-engineer/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": [],
+      "blocked_by": [],
+      "read": [],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 5, "agent": "code-steward",
+      "task": "Readability and maintainability review of frontend-engineer's change at the latest snapshot: names, size, module headers, comments that say why. Independent of the other three reviews.",
+      "consumes": ["tech-architect/brief-frontend.md", "frontend-engineer/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": [],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-clean-code/references/examples.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 5, "agent": "security-analyst",
+      "task": "Security sweep of frontend-engineer's change at the latest snapshot per actio-security: client-side storage, XSS, headers, exposed keys, npm audit. Independent of the three reviews.",
+      "consumes": ["tech-architect/brief-frontend.md", "frontend-engineer/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["evidence/security/"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-security/references/sweep.md", ".claude/skills/actio-security/references/exposure.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 5, "agent": "bug-historian",
+      "task": "Regression guard: node .actio/bin/bugs.mjs guard for this run on the maker's snapshot. Runs beside the four reviews, not after them; re-run on each new snapshot.",
+      "consumes": ["bug-historian/brief.md", "frontend-engineer/handoff.json"],
+      "produces": ["bug-historian/guard.md", "evidence/regression/guard.json"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-bug-register/references/brief-and-guard.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 6, "agent": "engineering-lead",
+      "task": "Integration gate: node .actio/bin/verify.mjs once for the snapshot, conformance to the ADR, exercise the change end to end against the existing back end.",
+      "consumes": ["tech-architect/adr-NNNN-<slug>.md", "peer-reviewer/handoff.json", "code-analyst/handoff.json", "code-steward/handoff.json", "security-analyst/handoff.json", "bug-historian/handoff-stage5.json", "bug-historian/guard.md", "bug-historian/brief/<agent>.md"],
+      "produces": ["evidence/verify/latest.json"],
+      "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"],
+      "read": [".claude/skills/actio-architecture/references/adr.md", ".claude/skills/actio-architecture/references/contract.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 7, "agent": "qc-engineer",
+      "task": "Test the change: flows, accessibility, four locales, both themes, every width, e2e. Reuse the verify bundle for the same tree. Evidence under evidence/qc/.",
+      "consumes": ["engineering-lead/handoff.json", "evidence/verify/latest.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["evidence/qc/"],
+      "blocked_by": ["engineering"],
+      "read": [".claude/skills/actio-test-protocol/references/ui-pass.md", ".claude/skills/actio-test-protocol/references/playwright-suite.md", ".claude/skills/actio-test-protocol/references/playwright-mcp.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 8, "agent": "qc-lead",
+      "task": "Audit qc-engineer's evidence, name the untested surface, probe the highest blast-radius path yourself, and issue go or no-go as the quality gate.",
+      "consumes": ["qc-engineer/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["evidence/qc-lead/"],
+      "blocked_by": [],
+      "read": [".claude/skills/actio-test-protocol/references/qc-lead-audit.md", ".claude/skills/actio-test-protocol/references/ui-pass.md"],
+      "brand": [], "accept": [], "model": null
+    },
+    {
+      "stage": 9, "agent": "release-engineer",
+      "task": "Release: pre-flight, build green, tag, push to origin main, post-release smoke. No migration in this lane (n/a). Hosting recorded as deferred: no target chosen.",
+      "consumes": ["qc-lead/handoff.json", "bug-historian/brief/<agent>.md"],
+      "produces": ["release-engineer/release-note.md", "evidence/release/"],
+      "blocked_by": ["quality"],
+      "read": [".claude/skills/actio-release/references/commits-and-notes.md"],
+      "brand": ["§9", "§4"], "accept": [], "model": null
+    },
+    {
+      "stage": 10, "agent": "bug-historian",
+      "task": "Record pass: every defect and agent mistake from this run into BUGS.md with its standing rule; ids from bugs.mjs next-id, the Open index from bugs.mjs open-index.",
+      "consumes": ["qc-engineer/handoff.json", "qc-lead/handoff.json", "bug-historian/guard.md"],
+      "produces": ["BUGS.md"],
+      "blocked_by": ["release"],
+      "read": [".claude/skills/actio-bug-register/references/entry-template.md"],
+      "brand": [], "accept": [], "model": null
+    }
+  ],
+  "gates": [
+    { "name": "design-authority", "owner": "tech-architect", "blocks": ["ux-designer"], "result": "pending" },
+    { "name": "design", "owner": "ux-auditor", "blocks": ["frontend-engineer"], "result": "pending" },
+    { "name": "copy", "owner": "ux-writer", "blocks": ["frontend-engineer"], "result": "pending" },
+    { "name": "review-1of3", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "review-2of3", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "review-3of3", "owner": "code-steward", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "security", "owner": "security-analyst", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "regression-guard", "owner": "bug-historian", "blocks": ["engineering-lead"], "result": "pending" },
+    { "name": "engineering", "owner": "engineering-lead", "blocks": ["qc-engineer"], "result": "pending" },
+    { "name": "quality", "owner": "qc-lead", "blocks": ["release-engineer"], "result": "pending" },
+    { "name": "release", "owner": "release-engineer", "blocks": ["bug-historian"], "result": "pending" },
+    { "name": "run-closure", "owner": "orchestrator", "blocks": [], "result": "pending" }
+  ],
+  "amendments": [],
+  "utilisation": []
+}

@@ -1,73 +1,29 @@
-# Plan · <agent> · <run-id>
+# Checklist · <agent> · <run-id> · stage <N>
 
-Steps 1 and 2 of the loop. Write this before touching anything. Append the audit below the
-plan rather than editing the plan in place, so the revision is visible.
+Optional. Only a maker whose task will clearly run past about 30 minutes keeps this file, as
+a working checklist. Nothing checks it and it never stands in for the handoff: the plan and
+its `Risk:` lines live in `plan[]`, the self-check in `checks[]` (`actio-agent-protocol`).
+At most 40 lines. Tick items as you go so a resumed pass knows where to pick up.
 
----
+## Task
 
-## 1. Plan
+<one sentence, from the dispatch>
 
-**Task, in one sentence.**
+## Steps
 
-**Inputs I am working from**
+- [ ] 1.
+- [ ] 2.
+- [ ] 3.
 
-| Path or handoff | What I am taking from it |
-|---|---|
-| | |
+## Acceptance criteria (each becomes a `checks[]` entry)
 
-**Tools this needs**: from the toolchain in `CLAUDE.md` only, and whether each answered
-when you checked. A tool that is missing is a blocker, never faked.
+- [ ] <from the dispatch's acceptance criteria, or your own when it named none>
+- [ ] <every surface at 320, 360, 768, 1024 and 1440, both themes, English and Arabic, when UI>
 
-| Tool | Answered? | How checked |
-|---|---|---|
-| | | |
+## Open questions and blockers
 
-**Assumptions**
+- <what you could not check; it goes into plan[] as an assumption or into blockers[]>
 
-| Assumption | Checked? | How |
-|---|---|---|
-| | | |
+## Resume note
 
-**Acceptance criteria**: how I will know this is done, stated so someone else could verify it.
-
-1.
-2.
-
-**Out of scope**: named so nobody mistakes it for an oversight.
-
--
-
-**Rules that constrain this**: cite the file and section, not the value.
-
-| Rule | Source |
-|---|---|
-| | `BRAND.md` § |
-
-**Steps**
-
-1.
-2.
-
----
-
-## 2. Audit of the plan
-
-Run before executing. Answer all five, in writing, even where the answer is "nothing".
-
-**What is missing from the plan above?**
-
-**What did I assume without checking?**
-
-**Which Actio rule could this break?**
-
-**What would the downstream agent reject?**
-
-**What is the failure mode nobody has named yet?**
-
-### Revisions made
-
-| # | What changed | Why |
-|---|---|---|
-| 1 | | |
-
-**Verdict:** sound, proceeding to execute · revised and re-audited · blocked, see handoff
+<last thing finished, next thing to do, files already on disk>

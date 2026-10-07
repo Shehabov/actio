@@ -5,414 +5,147 @@ description: Run planning, gate enforcement and the agent utilisation check for 
 
 # Orchestration
 
-The orchestrator's toolkit. Its job is not to do the work. Its job is to prove the work was
-done by the right agents, in the right order, with every gate resolved.
+The question, after every stage: **did every agent that should have run actually run, and was every agent that ran actually used?** Scripts do the bookkeeping (`.actio/bin/run.mjs`, `sync-gates.mjs`, `utilisation-check.mjs`, the ledger hook); the orchestrator does the judgement. The loop, handoff schema and toolchain are in `actio-agent-protocol`.
 
-The question this skill exists to answer, asked after every stage: **did every agent that
-should have run actually run, and was every agent that ran actually used?**
+The orchestrator is the main thread (`.claude/settings.json` sets `"agent": "orchestrator"`) and the only dispatcher: a dispatch it did not make never reaches the ledger or the check. Everyone else hands off with `next` and `blockers[].needs`. One run per session. Its context is the scarcest resource in a run: never read a full artefact when a script line or a handoff field will do, never paste a report.
 
-**The orchestrator runs as the main thread and is the only dispatcher.** Every dispatch
-has to land in the ledger and in the utilisation check, and one made by any other role
-would not. `.claude/settings.json` sets
-`"agent": "orchestrator"`, and `claude --agent orchestrator` does the same explicitly.
-Every other agent is a subagent of the orchestrator: it hands off with `next` and
-`blockers[].needs`, and the orchestrator does the routing.
+## Lanes
 
----
+Pick the lane from the files the change will touch and write why in `lane_reason`; Shehab can override. A lane is the rule "delete the stages this change does not touch and record each in `out_of_scope`", pre-written in `.actio/TEMPLATE/lanes/<lane>.json`. A gate whose owner is not in the plan is absent from `gates` and named in `out_of_scope`.
 
-## Toolchain pre-flight, at run open
-
-Run it before the first dispatch, after the `run opened` ledger line. The toolchain is git,
-node 24, npm, npx, the Supabase MCP server (`supabase` in `.mcp.json`, scoped to one
-project) and the Playwright MCP server (`playwright` in `.mcp.json`, carried by qc-engineer
-and qc-lead). Nothing else may be assumed, and the swarm does not depend on Docker, the
-Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq or python. Python 3.14.7 and Django 6.1.1
-are installed on the machine by the Product Lead's decision of 2026-09-27. They are not part
-of the stack, and are not a step, a gate criterion, an evidence source or an allowed
-dependency of any stage. The full statement is in `CLAUDE.md`, the database workflow is in
-`actio-supabase`, and the Playwright doctrine is in `actio-test-protocol`.
-
-| Check | How | Answered means |
+| Lane | When | Plan |
 |---|---|---|
-| node | `node --version` | A version string, 24 or later |
-| npm | `npm --version` | A version string |
-| Supabase MCP | One `list_tables` call, the cheapest read the server has | A table list, even an empty one. A missing tool or an auth error is a no. |
-| Playwright MCP | The command below, through Bash | It prints the `playwright:` line ending `Connected`. No line, or any other status, is a no. |
+| `micro` | No file under `web/`, `extension/`, `supabase/`, `.actio/bin/`, no `package*.json`: docs, agent definitions, skills, config | brief → maker (tech-architect) → peer-reviewer ∥ security-analyst ∥ guard → release-engineer (commit, push; migrations n/a) → record |
+| `standard-ui` | `web/` or `extension/`, nothing under `supabase/` | All roles but backend-engineer |
+| `standard-db` | `supabase/`, nothing under `web/` or `extension/` | All roles but ux-designer, ux-auditor, frontend-engineer. ux-writer runs beside backend-engineer and `copy` blocks engineering-lead |
+| `full` | Both tracks, or anything touching the privacy invariants (I1 to I4), RLS, grants, auth, the issue state machine or evidence closure | All 16 roles |
 
-```bash
-claude mcp list 2>&1 | grep -E '^playwright: .* Connected$'
-```
+Tailor before the first dispatch and record each change in `out_of_scope` or `lane_reason`:
+- micro keeps security-analyst only when `.claude/settings.json`, `.mcp.json`, an agent's `tools:` line, permissions, hooks or secrets are touched. Otherwise delete its entry, the `security` gate, and both from release-engineer's `blocked_by` and `consumes`.
+- micro's maker is tech-architect; when the surface is another role's (strings: ux-writer; a design spec: ux-designer), swap the agent and its gate.
+- standard-db: delete ux-writer and `copy` when no user-visible string (error, template) changes.
+- A run that ships nothing: `open ... --no-ships`.
 
-The orchestrator carries `mcp__supabase__list_tables` in its tools line for the Supabase
-check only. It never applies, queries or changes the database. The Playwright check needs no
-MCP tool: `claude mcp list` starts each configured server and reports whether it answered.
-It matches the word `Connected`, because the mark printed before it has differed between
-runs. It proves the server starts, not that a session loaded its tools, so a QA agent still
-confirms its own tools before it plans on them (`actio-test-protocol`, Automation with
-Playwright).
+A leftover reference fails loudly (`UNKNOWN_GATE`, or a stage that never comes due).
 
-Write the four results with the shell timestamp to `evidence/toolchain-preflight.log`, cite
-it in the orchestrator's handoff, and log a `toolchain pre-flight` ledger line.
+## Flow v2
 
-| Result | Do this |
+| Stage | Agents (∥ parallel) | Starts when |
+|---|---|---|
+| 1 | bug-historian brief (script, `bugs.mjs brief`) | run open |
+| 1 | tech-architect | its brief slice exists |
+| 2 | ux-designer ∥ backend-engineer | `design-authority` |
+| 3 | ux-auditor ∥ ux-writer | the designer's handoff. The writer works from `string-slots.json` without waiting for `design`; a slot change from the audit is a delta pass |
+| 4 | frontend-engineer | `design`, `copy` (optional scaffold pass after `design-authority`) |
+| 5 | peer-reviewer ∥ code-analyst ∥ code-steward ∥ security-analyst ∥ bug-historian guard (script, `bugs.mjs guard`) | the makers' handoffs; the guard re-runs on each new snapshot |
+| 6 | engineering-lead, runs `verify.mjs` once | the five stage-5 gates |
+| 7 | qc-engineer, reuses the verify bundle | `engineering` |
+| 8 | qc-lead | qc-engineer's handoff |
+| 9 | release-engineer | `quality` |
+| 10 | bug-historian record (`bugs.mjs next-id`, `open-index`) | `release` |
+| close | orchestrator: `report.md`, `run-closure` | the record |
+
+Paths per stage are fixed in the lane templates. Gate names never change; the canonical table is `docs/WORKFLOW.md`.
+
+## run.json v2
+
+`version: 2`, `run`, `lane`, `lane_reason`, `brief`, `opened`, `ships`, `done_means`, `out_of_scope`, `plan`, `gates` (`name`, `owner`, `blocks`, `result`), `amendments`, `utilisation`. A plan entry is one pass of one agent:
+
+| Field | Holds |
 |---|---|
-| All four answer | Dispatch as planned. |
-| node or npm missing | Stop and escalate to Shehab. No stage can run. |
-| The Supabase MCP does not answer | Record `supabase MCP not authorised` in the ledger and in the orchestrator's `blockers`, escalate to Shehab, who authorises it with `/mcp`, and dispatch no database stage until a re-run of the check answers. Still dispatch every stage that does not need it. |
-| The Playwright MCP does not answer | Record `playwright MCP not answering` in the ledger and in the orchestrator's `blockers`, escalate to Shehab, who restores it with `/mcp` or a new session so the tools load, and still dispatch every stage, because gate evidence comes from the suite. A QA stage that needed the MCP runs the suite and `npx playwright` for what it can prove and hands off `blocked` with the same reason, and that routes to Shehab the same way. |
+| `stage`, `agent`, `task` | Flow v2 stage; the agent; what this pass must do for this run |
+| `consumes`, `produces` | Run-relative paths (repo paths for source); `<...>` and `NNNN` are patterns until known |
+| `blocked_by` | Gate names, never agents |
+| `read`, `brand`, `accept` | Files to read first; `BRAND.md` sections (`"§1"`); acceptance criteria from `done_means` |
+| `model` | `null` uses the agent's frontmatter; a name overrides it |
 
-A database stage is any plan entry whose task needs the Supabase MCP to apply, prove, type or
-inspect something on the project. `backend-engineer` and `release-engineer` always are. Any
-other agent that carries `mcp__supabase` in its tools line is one when its task needs the
-project rather than the offline proof; decide which at planning time and write it in the
-orchestrator's `plan.md`. An agent that finds the MCP missing mid-run runs
-the offline PGlite proof (`npm run db:test`) and hands off `blocked` with the same reason,
-and that routes to Shehab the same way. A missing tool is reported as blocked, never faked.
+An entry is due when every `blocked_by` gate reads `pass` or `n/a` and every `consumes` path is on disk (a handoff counts once it leaves `working`). Only `sync-gates.mjs` writes `gates[].result` (BUG-0027). After the first dispatch, amend only by appending an entry and a ledger row; never edit one in place. Skipping an agent is a planning decision in `out_of_scope`, never a silent omission.
 
----
+## run.mjs
 
-## run.json
+| Command | Does |
+|---|---|
+| `open <slug> --lane <lane> [--no-ships]` | Creates the run from the lane template, sets `.actio/runs/.active`, runs the scriptable pre-flight, lists what to fill |
+| `next [<run>]` | Gate sync, the compact check, gates, findings, due stages with their model; appends a `utilisation check` row |
+| `dispatch <run> <agent> [--stage N]` | Prints the dispatch prompt from the plan entry, the brief slice inlined. Never writes the ledger |
+| `ledger <run> <event> <agent> <detail...>` | Appends one clock-stamped row |
+| `handoff <path>` | Validates a handoff; exit 0 valid |
+| `snapshot <run>` | Commits the whole tree to `refs/actio/snapshots/<run>/<n>`, never touching index, tree or stash; prints the sha |
+| `close <run> [--confirm]` | Whether `run-closure` can pass and what is missing; `--confirm` appends `run closed`, clears `.active` |
 
-Written once at the start of a run, amended only by appending to `amendments`. The one
-exception is `gates[].result` and `gates[].evidence`, which only `.actio/bin/sync-gates.mjs`
-writes, copying each owner's own record out of its handoff (BUG-0027).
+## Opening a run
 
-```json
-{
-  "run": "2026-09-20-privacy-preview",
-  "brief": "Add the privacy preview screen ahead of the first response in a cycle. It must show the real group size, the reporting threshold, the fields a manager can filter by, and what happens to free text.",
-  "opened": "2026-09-20T08:02:11Z",
-  "ships": true,
-  "done_means": [
-    "The screen renders at 360px in all four locales, both themes",
-    "Every figure is computed for the reader, never illustrative",
-    "A cohort below threshold degrades without leaking its size",
-    "Privacy invariant tests cover all three above",
-    "qc-lead has issued a go"
-  ],
-  "out_of_scope": [
-    "The WhatsApp variant of this message",
-    "Changing the threshold itself"
-  ],
-  "plan": [
-    { "stage": 1, "agent": "bug-historian", "task": "Regression brief: what has already broken on these surfaces", "consumes": ["run.json"], "produces": ["bug-historian/brief.md"], "blocked_by": [] },
-    { "stage": 1, "agent": "tech-architect", "task": "ADR and task briefs for this change", "consumes": ["run.json", "bug-historian/brief.md"], "produces": ["tech-architect/adr-NNNN-<slug>.md", "tech-architect/brief-frontend.md", "tech-architect/brief-backend.md"], "blocked_by": [] },
-    { "stage": 2, "agent": "ux-designer", "task": "Design spec, every surface and every state", "consumes": ["tech-architect/brief-frontend.md", "bug-historian/brief.md"], "produces": ["ux-designer/spec.md", "ux-designer/string-slots.json"], "blocked_by": ["design-authority"] },
-    { "stage": 2, "agent": "backend-engineer", "task": "Supabase: schema, RLS policies, functions, Edge Functions", "consumes": ["tech-architect/brief-backend.md", "bug-historian/brief.md"], "produces": ["<source paths>"], "blocked_by": ["design-authority"] },
-    { "stage": 3, "agent": "ux-auditor", "task": "Independent audit of the design spec", "consumes": ["ux-designer/spec.md", "bug-historian/brief.md"], "produces": ["ux-auditor/findings.md"], "blocked_by": [] },
-    { "stage": 4, "agent": "ux-writer", "task": "English and Arabic strings for every new surface", "consumes": ["ux-designer/spec.md", "ux-designer/string-slots.json", "ux-auditor/findings.md", "bug-historian/brief.md"], "produces": ["ux-writer/strings.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json"], "blocked_by": ["design"] },
-    { "stage": 5, "agent": "frontend-engineer", "task": "React and Next.js implementation", "consumes": ["tech-architect/brief-frontend.md", "ux-designer/spec.md", "ux-writer/strings-en.json", "ux-writer/strings-ar.json", "bug-historian/brief.md"], "produces": ["<source paths>"], "blocked_by": ["design", "copy"] },
-    { "stage": 6, "agent": "peer-reviewer", "task": "Senior review: judgement, boundaries, failure modes", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["peer-reviewer/verdict.json", "peer-reviewer/comments.md"], "blocked_by": [] },
-    { "stage": 6, "agent": "code-analyst", "task": "Line-by-line defects, security, structural rot", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["code-analyst/findings.md"], "blocked_by": [] },
-    { "stage": 6, "agent": "code-steward", "task": "Clean code: naming, shape, module headers, comments, maintainability", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["code-steward/findings.md"], "blocked_by": [] },
-    { "stage": 6, "agent": "security-analyst", "task": "Security sweep: secrets, exposure, authorisation, injection, dependencies, robustness", "consumes": ["<source paths>", "bug-historian/brief.md"], "produces": ["security-analyst/findings.md", "evidence/security/"], "blocked_by": [] },
-    { "stage": 7, "agent": "bug-historian", "task": "Regression guard: was a known defect repeated", "consumes": ["bug-historian/brief.md", "<source paths>"], "produces": ["bug-historian/guard.md", "evidence/regression/"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security"] },
-    { "stage": 8, "agent": "engineering-lead", "task": "Integration: does it work end to end", "consumes": ["peer-reviewer/verdict.json", "peer-reviewer/comments.md", "code-analyst/findings.md", "code-steward/findings.md", "security-analyst/findings.md", "bug-historian/guard.md"], "produces": ["engineering-lead/verdict.md", "evidence/build.log"], "blocked_by": ["review-1of3", "review-2of3", "review-3of3", "security", "regression-guard"] },
-    { "stage": 9, "agent": "qc-engineer", "task": "Test API, privacy, flows, accessibility, locales, regression", "consumes": ["engineering-lead/verdict.md", "bug-historian/brief.md"], "produces": ["qc-engineer/test-log.md", "qc-engineer/defects.md", "evidence/<test artefacts>"], "blocked_by": ["engineering"] },
-    { "stage": 10, "agent": "qc-lead", "task": "Evidence audit and independent final pass", "consumes": ["qc-engineer/test-log.md", "qc-engineer/defects.md", "evidence/<test artefacts>"], "produces": ["qc-lead/readiness.md"], "blocked_by": [] },
-    { "stage": 11, "agent": "release-engineer", "task": "Release: pre-flight, migrations through the Supabase MCP, build, tag, push, verify", "consumes": ["qc-lead/readiness.md"], "produces": ["release-engineer/preflight.md", "release-engineer/deploy-log.md", "release-engineer/release-note.md", "release-engineer/rollback.md", "evidence/release/"], "blocked_by": ["quality"] },
-    { "stage": 12, "agent": "bug-historian", "task": "Record: every defect and agent mistake raised in this run, into BUGS.md", "consumes": ["qc-engineer/defects.md", "qc-lead/readiness.md", "bug-historian/guard.md"], "produces": ["bug-historian/record.md"], "blocked_by": ["release"] }
-  ],
-  "gates": [
-    { "name": "design-authority", "owner": "tech-architect", "blocks": ["ux-designer", "backend-engineer"], "result": "pending" },
-    { "name": "design", "owner": "ux-auditor", "blocks": ["ux-writer", "frontend-engineer"], "result": "pending" },
-    { "name": "copy", "owner": "ux-writer", "blocks": ["frontend-engineer"], "result": "pending" },
-    { "name": "review-1of3", "owner": "peer-reviewer", "blocks": ["engineering-lead"], "result": "pending" },
-    { "name": "review-2of3", "owner": "code-analyst", "blocks": ["engineering-lead"], "result": "pending" },
-    { "name": "review-3of3", "owner": "code-steward", "blocks": ["engineering-lead"], "result": "pending" },
-    { "name": "security", "owner": "security-analyst", "blocks": ["engineering-lead"], "result": "pending" },
-    { "name": "regression-guard", "owner": "bug-historian", "blocks": ["engineering-lead"], "result": "pending" },
-    { "name": "engineering", "owner": "engineering-lead", "blocks": ["qc-engineer"], "result": "pending" },
-    { "name": "quality", "owner": "qc-lead", "blocks": ["release-engineer"], "result": "pending" },
-    { "name": "release", "owner": "release-engineer", "blocks": [], "result": "pending" },
-    { "name": "run-closure", "owner": "orchestrator", "blocks": [], "result": "pending" }
-  ],
-  "utilisation": []
-}
-```
+1. `run.mjs open <slug> --lane <lane>`. Grep `.actio/runs/*/run.json` for the surface; read the `report.md` of any match.
+2. Fill `brief` (Shehab's words), `lane_reason`, `done_means` (each checkable against a file, log or screenshot), `out_of_scope`, every `task` and `accept`; extend `read` and `brand`; tailor the lane. Clear every placeholder `open` lists.
+3. Pre-flight: `open` logged node, npm and the Playwright line to `evidence/toolchain-preflight.log`. Make one Supabase `list_tables` call (that tool's only use), append its result to the log, `run.mjs ledger` it.
+4. Answer your `## Pre-mortem` as `Risk:` lines in `orchestrator/handoff.json`, then run the stage routine.
 
-Rules for the plan:
+| Pre-flight | Do this |
+|---|---|
+| node or npm missing | Stop and escalate: no stage can run |
+| Supabase MCP silent | Ledger and `blockers`: `supabase MCP not authorised`; escalate; no database stage until a re-check answers |
+| Playwright MCP silent | Likewise, `playwright MCP not answering`; every stage runs (gate evidence is the suite) |
 
-- One `plan` entry per agent, not per stage. Two agents sharing a stage number run
-  concurrently once both are due, which is how `peer-reviewer`, `code-analyst`,
-  `code-steward` and `security-analyst` stay independent.
-- An entry is due when every gate in its `blocked_by` reads `pass` **and** every path in its
-  `consumes` is on disk. That is why `tech-architect` shares stage 1 with `bug-historian`
-  but still waits for `bug-historian/brief.md`.
-- `consumes` and `produces` in the plan are what the utilisation check measures the actual
-  handoffs against. A plan entry with an empty `produces` cannot be verified, so fill it in
-  even where the paths are placeholders.
-- `blocked_by` names gates, never agents. A stage starts when every gate it names reads
-  `pass`.
-- The twelve gate names are canonical and come from the gate table in `docs/WORKFLOW.md`.
-  **Never rename one for a run**, because the owner writes the same name back in its
-  handoff and the check matches on it literally.
-- Skipping an agent is a plan decision, made at planning time and written in
-  `out_of_scope` with a reason. It is never a silent omission at run time.
-- Amend the plan by appending a new entry and recording the amendment in `ledger.md`.
-  Never edit a plan entry in place once the run has started.
+A database stage is one whose task needs the project: backend-engineer and release-engineer always, any other `mcp__supabase` carrier when its task needs the project rather than PGlite (say so in its `task`).
 
----
+## The stage routine (at most four tool calls per boundary)
 
-## ledger.md
+`run.mjs next` → `run.mjs dispatch` for each due stage → every due Agent call in one message → on return, `run.mjs next`. Read a handoff only to decide a rejection or an escalation, and then only `status`, `gates`, `findings`, `blockers` (a `node -e` line or `next`'s output). Advisory findings never on their own justify a dispatch.
 
-Append-only. One line per event. Correct an entry by appending a correction, never by
-editing history.
-
-```markdown
-# Ledger · 2026-09-20-privacy-preview
-
-| Time (UTC) | Event | Agent | Detail |
-|---|---|---|---|
-| 08:02:11 | run opened | orchestrator | brief from shehab |
-| 08:03:05 | toolchain pre-flight | orchestrator | node, npm, the Supabase MCP and the Playwright MCP answered · evidence/toolchain-preflight.log |
-| 08:04:40 | dispatched | tech-architect | stage: architecture |
-| 08:39:02 | handoff | tech-architect | passed · gate design-authority pass · next ux-designer |
-| 08:39:30 | dispatched | ux-designer | stage: design |
-| 09:13:55 | handoff | ux-designer | passed · next ux-auditor |
-| 09:41:55 | handoff | ux-auditor | passed · gate design pass · next ux-writer |
-| 09:42:10 | utilisation check | orchestrator | 3 agents, 0 findings |
-| 11:20:04 | handoff | code-analyst | rejected · needs backend-engineer · round 1 |
-| 12:58:33 | handoff | code-analyst | rejected · needs backend-engineer · round 2 |
-| 14:11:09 | escalated | orchestrator | rejection loop round 3, to shehab |
-| 15:02:00 | correction | orchestrator | 12:58:33 was round 2 not round 3, miscounted |
-```
-
-A run starts with a `run opened` line and ends with a `run closed` line, both written by the
-orchestrator.
-
----
-
-## Gate table
-
-Twelve gates. These literal names go into `run.json` and come back in each owner's handoff.
-
-| Gate | Owner | Passes when |
-|---|---|---|
-| `design-authority` | `tech-architect` | ADR written, task briefs unambiguous, no boundary eroded |
-| `design` | `ux-auditor` | No blocker or major findings open, states covered, accessibility measured, survives the longest locale |
-| `copy` | `ux-writer` | Every string in English and Arabic, passes the competitor check, no string concatenates a count |
-| `review-1of3` | `peer-reviewer` | The change solves the brief's problem, sits in the right layer, failure modes handled |
-| `review-2of3` | `code-analyst` | No defect above the severity threshold, no security finding, no complexity breach |
-| `review-3of3` | `code-steward` | The clean code checklist is worked in full with evidence, and no blocker or major readability finding is open |
-| `security` | `security-analyst` | Every applicable pass in `actio-security` ran with evidence, no critical or high open, audits clean or accepted in writing, no secret in tree or history, every client-reachable table has RLS with a policy, no `service_role` outside Edge Function secrets |
-| `regression-guard` | `bug-historian` | No known defect on these surfaces repeated, each checked by running its detection command, and every binding standing rule checked with its result recorded |
-| `engineering` | `engineering-lead` | All three reviews, the security gate and the regression guard ran and passed, it builds, it migrates, suite green, `get_advisors` clean for security and performance or every finding accepted in writing, works end to end with evidence |
-| `quality` | `qc-lead` | Evidence exists and shows what the log claims, untested surface named, product claims still hold |
-| `release` | `release-engineer` | Pre-flight clean, go from qc-lead, rollback plan written before the first migration is applied, migrations applied through the Supabase MCP and verified with `list_migrations`, `get_advisors` clean, `npm run build` green, tagged and pushed to origin main, post-release smoke passed. Front-end hosting recorded as `deferred: no target chosen`, which is not a failure |
-| `run-closure` | `orchestrator` | Every agent in the plan ran, was used, and resolved its gates |
-
-The three review gates and the security gate are separate names rather than one gate with
-four owners, so the check can tell which reviewer is outstanding instead of reporting a
-single ambiguous failure. `regression-guard` is the only gate whose owner also runs at the start of the run:
-`bug-historian` publishes the brief in stage 1, and the guard checks it was honoured.
-
-A stage does not start until every gate it depends on reads pass. Enforce this before
-dispatching, not after.
-
----
+- Send `dispatch`'s output plus run-specific notes only; pass paths, never another agent's text.
+- bug-historian first: nobody plans without the brief, and each agent cites its slice.
+- The four reviewers never see another's verdict before all four are filed; none covers for another.
+- Strings, numerals, states, colour, spacing, motion or RTL route through ux-writer and ux-auditor, whoever wrote the change.
+- A rejection or `GATE_STALE`: the author fixes, then the gate owners re-review the delta (`dispatch` prints the range).
+- Resume: an agent cut off mid-task (usage limit, `maxTurns`) is resumed with its context (`SendMessage`) when the harness allows; otherwise re-dispatched with an instruction to continue from its `working` handoff and its files on disk.
 
 ## The utilisation check
 
-Run after every stage, and again at closure. This is the orchestrator's reason for
-existing.
+`run.mjs next` runs `sync-gates.mjs` then `utilisation-check.mjs --compact`. The script implements this table; change both together (R-03). PENDING (gates or inputs not ready, a consumer not yet dispatched) is not a finding.
 
-### The algorithm
+| Code | Class | Means | Do this |
+|---|---|---|---|
+| `NEVER_RAN` | blocking | No handoff for an entry the run has moved past | Dispatch it, or amend the plan |
+| `MALFORMED_HANDOFF` | blocking | Unparseable, a bad status, `n/a` without a reason | Send back; never infer |
+| `PHANTOM_OUTPUT` | blocking | A `produced` path missing or empty | A falsified record: re-dispatch, say why |
+| `GATE_UNRESOLVED` | blocking | No result, or its evidence missing | Do not proceed |
+| `GATE_SELF_CERTIFIED` | blocking | Certified by a non-owner | Void it; dispatch the owner |
+| `GATE_SKIPPED` | blocking | Ran while a `blocked_by` gate was unresolved | Re-run that stage after the gate |
+| `UNKNOWN_GATE` | blocking | A name not in `run.json` | Send back; names are canonical |
+| `GATE_STALE` | blocking | engineering-lead, qc-lead or release-engineer due, and a code gate judged an older snapshot than the latest maker's | Delta re-review by that owner |
+| `UNUSED_OUTPUT` | advisory | Planned output its consumer did not cite | Report: skipped input or unneeded work |
+| `FALSE_CONSUMPTION` | advisory | `consumed` names a missing path | Send back next pass |
+| `LOOP_SKIPPED` | advisory | No `Risk:` line in `plan[]`, or `passed` without `checks[]` | Send back |
+| `NO_TIMING` | advisory | `started` or `finished` missing or reversed | Send back |
 
-For each agent in the run plan, in stage order:
+Judged by the orchestrator from the ledger and the tree:
 
-```
-1. HANDOFF EXISTS
-   Is there a handoff paired to this plan entry's stage (handoff.json for the first pass,
-   handoff-stage<N>.json for a later one)? Pair by stage, never by counting files.
-   NO, and the run is closing, or a later plan entry planned to consume its
-       output has handed off       -> finding: NEVER_RAN
-   NO, and its gates pass and its inputs are on disk
-                                   -> PENDING: due now, dispatch it
-   NO, otherwise                   -> PENDING: waiting on the named gates and inputs
-
-2. HANDOFF PARSES
-   Is it valid JSON with a status in {passed, blocked, rejected, escalated}?
-   NO  -> finding: MALFORMED_HANDOFF
-
-3. OUTPUT EXISTS
-   For each path in produced[]: does it exist on disk and is it non-empty?
-   NO  -> finding: PHANTOM_OUTPUT
-
-4. OUTPUT WAS CONSUMED
-   Does any later agent's handoff list one of this agent's produced[] paths
-   in its consumed[]?
-   NO  -> finding: UNUSED_OUTPUT
-   (Exception: the last agent in the run, and evidence files, which are
-    consumed by qc-lead and by Shehab rather than by a successor.)
-
-5. INPUTS WERE REAL
-   For each path in consumed[]: does it exist?
-   NO  -> finding: FALSE_CONSUMPTION
-
-6. GATES RESOLVED
-   For each gate this agent owns in the plan: is there a gates[] entry with a
-   result, and does its evidence path exist?
-   NO  -> finding: GATE_UNRESOLVED
-
-7. GATE OWNERSHIP
-   For each gates[] entry: is the gate in run.json gates[] at all?
-   NO  -> finding: UNKNOWN_GATE
-   Does the plan name this agent as its owner?
-   NO  -> finding: GATE_SELF_CERTIFIED
-
-8. NO SKIPPED DEPENDENCY
-   Did this agent start before every gate in blocked_by read pass?
-   YES -> finding: GATE_SKIPPED
-
-9. THE LOOP WAS WORKED
-   Is there a non-empty plan.md with an Audit section, and a non-empty review.md?
-   NO  -> finding: LOOP_SKIPPED
-
-10. TIMING IS COHERENT
-   Is started at or before finished?
-   NO  -> finding: NO_TIMING
-```
-
-### Running it
-
-The check is implemented at `.actio/bin/utilisation-check.mjs` and that file is the only
-thing you run. The check reads gate results from `run.json`, so sync them from the owners'
-handoffs first, every time:
-
-```bash
-node .actio/bin/sync-gates.mjs .actio/runs/<run-id>
-node .actio/bin/utilisation-check.mjs .actio/runs/<run-id>
-```
-
-Skipping the sync leaves every gate `pending`, so no blocked stage ever becomes due and the
-run stalls. The sync copies an owner's latest record and never decides a gate.
-
-It exits 0 when clean and 1 when anything is found, so `run-closure` can depend on it. Add
-`--json` for the machine-readable form.
-
-The algorithm above is the specification; the script is the implementation. One source, one
-reference, never two copies (R-03). If you change one, change the other in the same commit.
-
-It separates **PENDING** from a finding: an agent whose gates have not passed, or whose
-inputs are not yet on disk, has not failed to run, and an artefact nobody has consumed yet
-because its planned consumer has not been dispatched is not an unused output. Without that
-separation the check raises a finding against every agent in the plan when run at run open,
-which is what made it unusable anywhere but closure.
-
-### Supporting commands, for reference
-
-This section used to carry a shell version of each step, written in `jq`. The swarm does not
-use `jq`, so a line copied from it failed, and a second copy of the check broke R-03 in any
-case. It is gone. To read one field by hand, parse the JSON with node:
-
-```bash
-node -e "const r = require('./.actio/runs/<run-id>/run.json'); for (const g of r.gates) console.log(g.name, g.owner, g.result)"
-```
-
-Anything more than one field is the script's job.
-
-### The failure taxonomy
-
-| Finding | Means | Do this |
+| Code | Signal | Do this |
 |---|---|---|
-| `NEVER_RAN` | A plan entry has no handoff paired to its stage, and the run has moved past it: a later plan entry planned to consume its output has handed off, or run-closure is recorded. A due entry still waiting for its dispatch is PENDING, not this. | Dispatch it. If it was deliberately skipped, that belongs in `out_of_scope` with a reason, so amend the plan and say so. |
-| `MALFORMED_HANDOFF` | Status missing or not one of the four | Send it back to the agent. Do not infer the status. |
-| `PHANTOM_OUTPUT` | An agent claimed a file it did not write | Block. This is a falsified record, not a typo. Re-dispatch and say why. |
-| `UNUSED_OUTPUT` | Somebody did work nobody read | Find out which. Either the downstream agent skipped its input, or the work was not needed and the plan was wrong. Both are findings. |
-| `FALSE_CONSUMPTION` | An agent listed an input that does not exist | Block. It did not read what it says it read. |
-| `GATE_UNRESOLVED` | A gate has no result, or its evidence path is missing | The gate has not passed. Do not proceed on an unresolved gate. |
-| `GATE_SELF_CERTIFIED` | An agent passed a gate it does not own | Void the gate. Dispatch the real owner. |
-| `GATE_SKIPPED` | A stage started before its dependency passed | Stop the run. Re-run the stage after the gate resolves, because its inputs were not valid. |
-| `UNKNOWN_GATE` | A handoff or a `blocked_by` names a gate that is not in `run.json` | Send it back. The gate names are canonical and are never renamed for a run. |
-| `LOOP_SKIPPED` | No `plan.md` with an Audit section, or no `review.md` | Send it back. The deliverable without the loop is not accepted. |
-| `NO_TIMING` | `started` is after `finished`, or either is missing where required | Send it back. Timestamps come from the shell. |
-| `STALLED` | A dispatched agent with no handoff and no blocker | Ask it for a status. If it has no plan file either, it never started, so re-dispatch. |
-| `ORPHAN_EVIDENCE` | A file in `evidence/` that no handoff cites | A test ran and nobody read the result. Route it to the agent whose gate it belongs to. |
-| `REJECTION_LOOP` | The same reject between the same two agents three times | Escalate to Shehab. Do not dispatch a fourth round. |
-| `IDLE_AGENT` | Work is queued for an agent with no handoff and no blocker | Dispatch it, or record why it is not needed. |
+| `STALLED` | `dispatched` with no `returned`, or returned with only a `working` handoff | Resume it |
+| `REJECTION_LOOP` | Same reject, same two agents, three times | Escalate; no fourth round |
+| `IDLE_AGENT` | Due work with no dispatch | Dispatch, or record why not |
+| `ORPHAN_EVIDENCE` | A file in `evidence/` no handoff cites | Route it to its gate owner |
 
-### Reporting findings
+Also watch for ping-pong (two agents rejecting each other: the contract is wrong; route to tech-architect) and silent scope narrowing (`produced` covers less than the task, no blocker says why). Clear a finding by fixing its cause, never by editing it or calling it minor.
 
-Always as a table, always blocking, never buried in prose.
+## Ledger
+
+`ledger.md` under `# Ledger · <run-id>`, append-only, `| Time (UTC) | Event | Agent | Detail |`, full ISO timestamps. The hook writes `dispatched` and `returned`; `run.mjs` writes `run opened`, `toolchain pre-flight`, `utilisation check`; the orchestrator writes `gate`, `reject`, `finding`, `escalate`, `decision`, `correction`, `run closed` through `run.mjs ledger`. Correct by appending a `correction`; never edit or reorder.
 
 ```markdown
-## Utilisation check · after stage `review` · 2026-09-20T13:02:44Z
-
-| Finding | Agent | Detail | Action |
-|---|---|---|---|
-| UNUSED_OUTPUT | ux-writer | `ux-writer/strings-ar.json` appears in no consumed list | frontend-engineer built the screen without the Arabic catalogue. Re-dispatch frontend-engineer. |
-| GATE_UNRESOLVED | code-analyst | gate `review-2of3` has no entry | code-analyst ran but did not certify. Send back. |
-
-**Run status: blocked.** 2 findings. Stage `integration` will not be dispatched.
+| 2026-10-07T08:39:02Z | returned | tech-architect | auto · handoff .../tech-architect/handoff.json · status passed |
+| 2026-10-07T11:20:04Z | reject | orchestrator | code-analyst to frontend-engineer · CA-2 major · round 1 |
 ```
-
-The orchestrator never marks a gate pass on another agent's behalf, and never proceeds
-past a finding because the finding looks minor.
-
----
-
-## Detecting stalls and loops
-
-| Signal | Check |
-|---|---|
-| Rejection loop | Count `blockers[].needs` pointing at the same agent across handoffs from the same source. Three is the limit. |
-| Stall (`STALLED`) | A dispatched agent with no handoff and no blocker. Ask it for a status; if it has no plan file either, it never started. |
-| Ping-pong | Two agents each rejecting to the other. Neither is wrong; the contract between them is. Route to `tech-architect`, or escalate if it is a scope question. |
-| Silent scope narrowing | An agent's `produced` covers less than its task brief asked for, and no blocker explains the gap. This is the one the ledger catches and nothing else does. |
-
----
 
 ## The run report
 
-Written at closure, for Shehab. Plain, specific, no summary language.
+`report.md` at closure, for Shehab: plain, specific, no summary language. Sections: **Brief** and **Status** (one line each, counting his decisions and the untested items) · What changed (surface, change) · Who did what (agent, produced, gate and result) · Utilisation (agents run of planned; blocking and advisory at closure; unconsumed outputs named) · What needs you (decision, options, recommendation) · Knowingly untested (what, why, risk) · Gates certified by their own producer (BUG-0028). Then `orchestrator/handoff.json` with `run-closure`, and `run.mjs close <run> --confirm`.
 
-```markdown
-# Run report · 2026-09-20-privacy-preview
+## References
 
-**Brief.** Add the privacy preview screen ahead of the first response in a cycle.
-**Status.** Released. 1 decision was yours, 1 item is knowingly untested.
-
-## What changed
-
-| Surface | Change |
+| File | Read when |
 |---|---|
-| `GET /api/cycles/<id>/privacy-preview/` | New. Returns live group size, threshold, filterable fields, free-text treatment. |
-| Privacy preview screen | New. Shown ahead of the first response, and from the persistent link in every later message. |
-
-## Who did what
-
-| Agent | Produced | Gate |
-|---|---|---|
-| tech-architect | ADR-004, 2 task briefs | design-authority: pass |
-| ux-designer | spec, 7 states | – |
-| ux-auditor | 11 findings, 11 closed | design: pass |
-| ux-writer | 24 strings, EN and AR | copy: pass |
-| frontend-engineer | 6 files | – |
-| backend-engineer | 9 files, privacy invariant suite | – |
-| peer-reviewer | 4 comments, 4 resolved | review-1of3: pass |
-| code-analyst | 7 findings, 6 fixed, 1 accepted | review-2of3: pass |
-| code-steward | 5 findings, 5 fixed | review-3of3: pass |
-| security-analyst | 2 findings, 2 fixed, audits clean | security: pass |
-| bug-historian | brief, guard, 1 new entry | regression-guard: pass |
-| engineering-lead | integration evidence | engineering: pass |
-| qc-engineer | 38 cases, 3 defects filed and fixed | – |
-| qc-lead | readiness report | quality: go |
-| release-engineer | migrations applied through the MCP, tagged v0.4.0, pushed, hosting deferred: no target chosen | release: pass |
-
-## Utilisation
-
-15 of 15 agents ran. 0 findings at closure. Every produced artefact was consumed.
-
-## What needs you
-
-| Decision | Options | Recommendation | Your call |
-|---|---|---|---|
-| Cohort size can change between the preview and submission | Recompute at submit and warn, or freeze at preview | Freeze at preview. The preview is a promise, and a number that moves after you read it is worse than one that is slightly stale. | **Freeze** |
-
-## Knowingly untested
-
-| What | Why | Risk |
-|---|---|---|
-| Tagalog on a physical handset | No device available this cycle | Low. String lengths verified in the emulator, but the brand rule asks for a physical device, so this is open. |
-```
+| `references/run-report-example.md` | Writing `report.md` |
+| `references/v1-orchestration.md` | A run's `run.json` has no `"version": 2` |
+| `.actio/TEMPLATE/lanes/<lane>.json` | Tailoring a lane, or a plan path is in doubt |

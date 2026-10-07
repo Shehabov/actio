@@ -1,45 +1,66 @@
 {
   "run": "<yyyy-mm-dd>-<short-slug>",
   "agent": "<agent-name>",
-  "stage": "<the stage number of the plan entry this answers. A later pass writes handoff-stage<N>.json>",
-  "status": "passed",
-  "started": "<ISO 8601 UTC, from `date -u +%Y-%m-%dT%H:%M:%SZ`>",
-  "finished": "<ISO 8601 UTC>",
+  "stage": "<a number: the stage of the plan entry this answers. The first pass writes handoff.json, a later pass handoff-stage<N>.json>",
+  "status": "<working (the checkpoint, never final) | passed | blocked | rejected | escalated>",
+  "started": "<ISO 8601 UTC from date -u +%Y-%m-%dT%H:%M:%SZ, written at the checkpoint>",
+  "finished": "<ISO 8601 UTC from the shell. Absent while status is working>",
+  "reviewed": "<the snapshot sha you judged, from node .actio/bin/run.mjs snapshot <run>. Required for the owners of design, review-1of3, review-2of3, review-3of3, security, regression-guard, engineering and quality; optional for makers>",
   "consumed": [
-    "<every path you actually read. Listing one you did not read falsifies the record.>"
+    "<one plain path per entry, run-relative or repo-relative, that you actually read. Include your brief slice bug-historian/brief/<agent>.md>"
   ],
   "produced": [
-    "<every path you wrote. Each must exist on disk and be non-empty.>"
+    "<one plain path per entry that you wrote. Each exists and is non-empty. The handoff itself is implicit>"
   ],
   "gates": [
     {
-      "name": "<only a gate you own. Certifying another agent's gate is a defect.>",
-      "result": "pass",
-      "evidence": "<path>"
+      "name": "<only a gate you own, by its canonical name in docs/WORKFLOW.md>",
+      "result": "<pass | fail | n/a>",
+      "evidence": "<path>",
+      "reason": "<required when result is n/a (R-18)>"
+    }
+  ],
+  "plan": [
+    "<1 to 6 short lines: approach, acceptance criteria the dispatch did not state, assumptions you could not check>",
+    "Risk: <a failure mode from your ## Pre-mortem, and what you do about it (A1: at least one line starts Risk:)>"
+  ],
+  "checks": [
+    {
+      "criterion": "<an acceptance criterion or a role check. At least one when passed>",
+      "result": "<pass | fail | n/a>",
+      "evidence": "<evidence path, or the command that proves it>"
+    }
+  ],
+  "findings": [
+    {
+      "id": "<PREFIX-n>",
+      "severity": "<blocker | major | minor | nit. Only blocker and major reject>",
+      "where": "<path:line>",
+      "rule": "<the rule id or BRAND.md section it breaks>",
+      "what": "<at most 240 characters>",
+      "fix": "<optional. ux-auditor never proposes one>",
+      "status": "<open | fixed | accepted>"
     }
   ],
   "blockers": [
     {
-      "what": "<what is wrong or missing. A missing tool is a blocker, never faked: if the Supabase MCP does not answer, the reason is 'supabase MCP not authorised'>",
-      "why": "<specifically why it blocks you>",
-      "needs": "<agent-name or 'shehab'>"
+      "what": "<what is wrong or missing. A missing tool is a blocker, never faked: 'supabase MCP not authorised', 'playwright MCP not answering'>",
+      "why": "<why it blocks you>",
+      "needs": "<agent-name or shehab>"
     }
   ],
   "missing_inputs": [
     "<a promised input that never arrived and that you worked around>"
   ],
   "machinery_findings": [
-    "<an agent file, skill or protocol that was ambiguous or wrong, with the file named>"
+    "<an agent file, skill, template or script that was ambiguous or wrong, with the file named>"
   ],
   "decisions_for_shehab": [
     {
       "question": "<the decision, stated as a choice>",
-      "options": [
-        "<option, and its consequence>",
-        "<option, and its consequence>"
-      ],
-      "recommendation": "<your recommendation, with the reason. Never a bare question.>"
+      "options": ["<option and its consequence>", "<option and its consequence>"],
+      "recommendation": "<your recommendation and the reason. Never a bare question>"
     }
   ],
-  "next": "<agent-name, 'shehab', or null at run closure>"
+  "next": "<agent-name, shehab, or null at run closure. Absent while status is working>"
 }

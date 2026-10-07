@@ -39,6 +39,14 @@ Actio is built by a swarm of sixteen autonomous agents under one human Product L
 <img src="./docs/diagrams/actio-team.svg" alt="The Actio delivery swarm: Shehab Beram as Product Lead above the orchestrator, which routes fifteen further agent roles arranged across plan, design, build, review, guard and ship, with the twelve gate owners marked in the accent colour." width="900">
 </div>
 
+<div align="center">
+<img src="./docs/diagrams/actio-run-v2.svg" alt="How an Actio run moves under swarm v2: ten stages left to right with the five stage-5 checks running in parallel, the orchestrator's four-call routine between stages, the loop inside every agent, the four lanes, and the measured baseline of seven runs (804M tokens, 52.5 of 75.5 hours locked out by spend limits). The baseline is measured; the v2 caps are targets, not results." width="900">
+</div>
+
+One run in one picture: the stages left to right, the five checks of stage 5 in parallel, the
+loop inside every agent, and the four lanes. The two-minute walkthrough is
+[How a run moves](./docs/WORKFLOW.md#how-a-run-moves).
+
 **Shehab Beram is the Product Lead.** He sets the brief and he is the only role that can
 change scope, accept a release, or overrule a gate. Agents never assume his approval, and
 an escalation reaches him as a decision with options and a recommendation, never as a bare
@@ -67,28 +75,30 @@ question.
 
 ```mermaid
 flowchart LR
-  IN(["handoff in"]) --> P
-  P["<b>1 · plan</b><br/>inputs · assumptions<br/>acceptance criteria"]:::step
-  A["<b>2 · audit the plan</b><br/>what is missing<br/>which rule could break<br/>what would downstream reject"]:::audit
-  E["<b>3 · execute</b>"]:::step
-  R["<b>4 · review</b><br/>own criteria<br/>BRAND.md<br/>definition of done"]:::audit
-  H["<b>5 · hand off</b><br/>handoff.json<br/>+ evidence"]:::step
-  P --> A
-  A -- "revise" --> P
-  A -- "sound" --> E
-  E --> R
-  R -- "fix" --> E
-  R -- "cannot fix" --> ESC["escalate, or<br/>reject upstream"]:::esc
-  R -- "clean" --> H
-  H --> OUT(["handoff out"])
+  IN(["dispatch<br/>inputs · required reads<br/>brief slice"]) --> CP
+  CP["<b>checkpoint</b><br/>handoff.json · status working<br/>plan[] with a Risk: line"]:::audit
+  EX["<b>execute</b><br/>deliverables to disk<br/>as you go"]:::step
+  SC["<b>self-check</b><br/>each criterion into checks[]<br/>with evidence"]:::audit
+  HO["<b>validated handoff</b><br/>run.mjs handoff<br/>until exit 0"]:::step
+  RET(["8-line return"])
+  ESC["escalate, or<br/>reject upstream"]:::esc
+  CP --> EX
+  EX --> SC
+  SC -- "fails: fix" --> EX
+  SC -- "cannot fix" --> ESC
+  SC -- "all met" --> HO
+  HO -- "exit 0" --> RET
   classDef step fill:#F6F6F4,stroke:#D8D8D4,color:#0C0C0C
   classDef audit fill:#E6FAFB,stroke:#02646B,stroke-width:2px,color:#0C0C0C
   classDef esc fill:#00BFC4,stroke:#0C0C0C,color:#0C0C0C
 ```
 
-Step 2 is the one that pays for itself. An agent that audits its own plan before executing
-catches the missing state, the unchecked assumption and the brand rule it was about to
-break, at the point where fixing it costs nothing.
+The checkpoint is the step that pays for itself. An agent that writes down its plan, and a
+`Risk:` line for each question in its own pre-mortem, catches the missing state, the
+unchecked assumption and the brand rule it was about to break, at the point where fixing it
+costs nothing. It is also what survives a cut-off: a resumed agent continues from its own
+`working` handoff. One `handoff.json` carries the plan, the checks and the findings, so
+there is no `plan.md` and no `review.md`.
 
 ### Seven roles exist only to disagree
 
@@ -99,7 +109,7 @@ break, at the point where fixing it costs nothing.
 | `code-analyst` | The diff, for facts | Line by line, so a plausible design does not carry a real bug past the others. |
 | `code-steward` | The diff, for the next reader | Naming, shape, module headers, comments that say why. Correct code nobody can safely change is a cost that arrives later. |
 | `security-analyst` | The diff, for what can be broken into | Exposure, authorisation and supply chain. A leak here costs the product its claim, not a password reset. |
-| `bug-historian` | The diff, against history | Has a defect already recorded on this surface been committed again. The other three read the change on its own terms and cannot see a repeat. |
+| `bug-historian` | The diff, against history | Has a defect already recorded on this surface been committed again. The other four read the change on its own terms and cannot see a repeat. A script, run beside the reviews, so it costs no wait. |
 | `qc-lead` | `qc-engineer` | Audits whether the evidence exists and what was **not** tested. Untested surface is the finding this role exists to catch. |
 
 And the orchestrator checks the checkers: after every stage it verifies that each agent
@@ -109,12 +119,13 @@ reported rather than hidden.
 
 ### Skills
 
-Each agent is coupled with the skills it needs. Fifteen house skills carry Actio's own
-rules, and twenty-four vendored skills carry craft.
+Fifteen house skills carry Actio's own rules, and the vendored skills carry craft. An agent
+preloads `actio-agent-protocol` and its role's core house skills; every vendored skill is
+read on demand, by path, when its trigger fires, and is never preloaded.
 
 | Pack | Source | Used by |
 |---|---|---|
-| **House** (15) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-security`, `actio-supabase`, `actio-test-protocol`, `actio-release` | All |
+| **House** (15) | `actio-agent-protocol`, `actio-orchestration`, `actio-brand-guard`, `actio-design-system`, `actio-ux-audit`, `actio-bilingual-copy`, `actio-architecture`, `actio-code-review`, `actio-code-analysis`, `actio-clean-code`, `actio-bug-register`, `actio-security`, `actio-supabase`, `actio-test-protocol`, `actio-release` | All load the protocol; each role its core skills |
 | **Taste** (13) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | `ux-designer`, `ux-auditor` |
 | **Supabase** (2) | [supabase/agent-skills](https://github.com/supabase/agent-skills) | `backend-engineer`, `security-analyst` |
 | **Vercel** (9) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | `ux-designer`, `ux-auditor`, `ux-writer`, `frontend-engineer`. `deploy-to-vercel`, `vercel-cli-with-tokens` and `vercel-optimize` are coupled to no agent: reference only, for when a deploy target is chosen. |
@@ -148,26 +159,25 @@ that Actio bans outright, so they are used for compositional rigour and never fo
 decorative vocabulary. The per-skill verdicts are in
 [`actio-brand-guard`](./.claude/skills/actio-brand-guard/SKILL.md).
 
-**Full detail:** [`docs/TEAM.md`](./docs/TEAM.md) for the org, the RACI and the escalation
-ladder. [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) for the delivery flow, the twelve gates and
-the handoff schema. [`CLAUDE.md`](./CLAUDE.md) is the operating manual the agents load.
+**Full detail:** [`docs/TEAM.md`](./docs/TEAM.md) for the org, the models, the RACI and the
+escalation ladder. [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) for the two-minute walkthrough,
+the delivery flow, the lanes, the twelve gates and the run artefacts. The handoff schema is
+in [`actio-agent-protocol`](./.claude/skills/actio-agent-protocol/SKILL.md).
+[`CLAUDE.md`](./CLAUDE.md) is the operating manual the agents load.
 
 **Running the swarm:** start the orchestrator as the main thread with
-`claude --agent orchestrator` and give it the brief. It is the only role that dispatches,
-so every stage lands in the ledger and the utilisation check can see it.
+`claude --agent orchestrator` and give it the brief. It opens the run with
+`node .actio/bin/run.mjs open`, picks the lane, and is the only role that dispatches, so
+every stage lands in the ledger (a hook writes the `dispatched` and `returned` rows) and
+the utilisation check can see it.
 
 ### Toolchain
 
 Present on the machine: git, node 24, npm, npx, the Supabase MCP server (`supabase` in
 `.mcp.json`, scoped to one project) and the Playwright MCP server (`playwright` in
-`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed.
-
-The swarm does not depend on Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm, psql, jq
-or python. None of them is a required step, a gate criterion, an evidence source or an
-allowed permission. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
-Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step, a
-gate criterion, an evidence source or an allowed dependency of any stage. A tool that is
-missing is reported as blocked, never faked.
+`.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be assumed. The full
+statement, including what the swarm does not depend on and what a missing tool means, is in
+[`CLAUDE.md`](./CLAUDE.md#toolchain).
 
 Database work goes through the Supabase MCP, from migration files in the repo, and is
 iterated offline with `npm run db:test`, which runs the migrations, the seed and the pgTAP
@@ -180,11 +190,13 @@ in `web/` and in `extension/`, for every regression check and every piece of gat
 MCP for exploratory testing, reproduction and live capture. The doctrine is in
 [`actio-test-protocol`](./.claude/skills/actio-test-protocol/SKILL.md).
 
-At run open the orchestrator checks that node, npm, the Supabase MCP and the Playwright MCP
-answer. If the Supabase MCP does not, it escalates to Shehab before any database stage runs,
-and he authorises it with `/mcp`; the stages that do not need it still run. If the Playwright
-MCP does not, it tells Shehab and every stage still runs, because gate evidence comes from the
-suite.
+`run.mjs open` runs the scriptable pre-flight at the start of every run: node and npm answer,
+and the Playwright line of `claude mcp list` is logged. The orchestrator adds one Supabase
+`list_tables` call. If the Supabase MCP does not answer, it escalates to Shehab before any
+database stage runs, and he authorises it with `/mcp`; the stages that do not need it still
+run. If the Playwright MCP does not, it tells Shehab and every stage still runs, because gate
+evidence comes from the suite. `verify.mjs` runs the build, lint, typecheck, test and
+`db:test` steps once per tree, and the QA and release roles reuse the bundle.
 
 ---
 
@@ -244,7 +256,7 @@ Built for high-attrition frontline operations in Southeast Asia. Works over What
 | [`.claude/agents/`](./.claude/agents/) | The sixteen agent definitions |
 | [`.claude/skills/`](./.claude/skills/) | Fifteen house skills and twenty-two vendored ones |
 | [`docs/`](./docs/) | The org, the delivery flow, the diagrams |
-| [`.actio/`](./.actio/) | The run ledger. Plans, reviews, handoffs and evidence, per run, and the node scripts that check them. |
+| [`.actio/`](./.actio/) | The run ledger and the node scripts: handoffs and evidence per run, `run.mjs`, the ledger hook, `verify.mjs`, `bugs.mjs` and the utilisation check. |
 | `web/` | The Next.js App Router app, TypeScript, npm. Lands as runs land. |
 | `extension/` | The Chrome extension: Manifest V3, React and TypeScript, built with Vite, for the desktop roles only. Owned by frontend-engineer (ADR-0003). |
 | `supabase/` | The database source of record: migrations, pgTAP tests, seed and Edge Functions. Lands as runs land. |
@@ -269,8 +281,9 @@ actio/
 │       ├── actio-*/                       15 house skills
 │       └── <vendored>/                    22 from taste-skill and vercel-labs
 ├── .actio/
-│   ├── bin/                               sync-gates · utilisation-check · db-test
-│   ├── TEMPLATE/                          plan.md · review.md · handoff.json
+│   ├── bin/                               run · ledger-hook · verify · bugs · utilisation-check · sync-gates · db-test
+│   ├── bugs/                              surfaces.json · history/
+│   ├── TEMPLATE/                          handoff.json · lanes/
 │   └── runs/                              one directory per run
 ├── web/                                   Next.js App Router app, TypeScript, npm
 ├── extension/                             Manifest V3 Chrome extension, React, TypeScript, Vite
@@ -283,8 +296,8 @@ actio/
 ├── design/surfaces/                       canonical design specs, one per surface
 ├── docs/
 │   ├── TEAM.md                            org chart, RACI, escalation
-│   ├── WORKFLOW.md                        delivery flow, gates, handoff schema
-│   └── diagrams/actio-team.svg
+│   ├── WORKFLOW.md                        how a run moves, flow, lanes, gates, run artefacts
+│   └── diagrams/                          actio-team.svg · actio-run-v2.svg
 └── logo/
     ├── README.md
     ├── svg/

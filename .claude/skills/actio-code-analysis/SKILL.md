@@ -5,16 +5,9 @@ description: Analyse Actio code line by line for defects, security issues, data-
 
 # Code analysis
 
-Read the diff line by line for facts. `peer-reviewer` reads the same diff for judgement,
-`code-steward` for readability and `security-analyst` for security, each independently.
-All four gates must pass, and they are separate because a well-designed change
-can carry a real bug and a correct line can implement the wrong thing.
+Read the diff line by line for facts: a defect is true or false regardless of taste. `peer-reviewer` reads the same diff for judgement, `code-steward` for readability and `security-analyst` for whether it can be broken into, each independently, and all four must pass.
 
-**Not your job:** whether this is the right solution, whether the abstraction is sound,
-whether the rollout plan is safe. Those are the peer reviewer's. Also not your job:
-anything a formatter or linter already enforces.
-
-Every finding carries file, line, what is wrong, why, the concrete fix, and a severity.
+**Not your job:** whether this is the right solution, layering, the failure-mode walk, test adequacy, rollout and reversibility (`peer-reviewer`); names, headers, comments, dead code, function and file length, parameters, flag arguments, duplication (`code-steward`); injection, missing authorisation, secrets, RLS privilege, advisors (`security-analyst`, whose rows are in `actio-security/references/code-level-security.md`); anything a formatter or linter enforces.
 
 ---
 
@@ -37,18 +30,7 @@ Every finding carries file, line, what is wrong, why, the concrete fix, and a se
 
 ## 2. Security
 
-| Hunt for | Signature |
-|---|---|
-| Injection | String-built SQL inside a function body, a `format()` without `%I` or `%L`, `eval`, an unsanitised value reaching a shell |
-| Missing authorisation | A table reachable with no policy covering the command, or an Edge Function trusting a client-supplied identity instead of the verified JWT. **Every table, every command.** |
-| Mass assignment | An `update` policy with no `with check`, or an RPC taking a whole row as jsonb and writing it unfiltered |
-| Secrets in code or logs | A key, token or password literal. A log line containing a phone number, a name, or a free-text response. |
-| Personal data in a URL | An identifier or a phone number in a query string. It lands in access logs and in referrers. |
-| Unsafe deserialisation | Untrusted jsonb written straight into a typed column, or a webhook body parsed without schema validation |
-| SSRF | A user-supplied URL fetched server side |
-| Open redirect | A `next` parameter that is not validated against an allowlist |
-| Timing leak | An equality check on a secret that is not constant time |
-| Missing rate limit | An endpoint that sends a message, or that can be used to enumerate |
+Not filed here. `security-analyst` owns it. The two exceptions, double-owned on purpose, are in section 7.
 
 ## 3. Data layer
 
@@ -59,76 +41,47 @@ Every finding carries file, line, what is wrong, why, the concrete fix, and a se
 | Unbounded read | A PostgREST call with no `limit` and no keyset range |
 | Offset pagination | `offset` on a queue. Rows move while a reader pages, so they see duplicates and gaps. Keyset on `(due, id)`. |
 | Missing transaction | Two writes that must both happen, not wrapped in a function |
-| Non-reversible migration | No written reverse in the run's rollback notes, and no stated reason at the head of the migration file |
 | Locking migration | `alter table` rewriting a large live table, an index built without `concurrently` |
 | Migration outside the source of record | Migrations are hand-authored in `supabase/migrations/<yyyymmddhhmmss>_<slug>.sql`, forward-only, one concern per file. The finding is SQL applied to the project that has no file (`list_migrations` shows a name with no file), a file edited after it was applied, a file carrying more than one concern, or a change made only in a `supabase/schemas/` file. There is no declarative schema workflow: it needs `supabase db diff`, and the Supabase CLI and Docker are not used, so a schema file is not a source of record. |
 | `count(*)` in a loop | One aggregate, not one per row |
 
-## 3a. Row Level Security
+Reversibility, the written reverse and the backfill split are `peer-reviewer`'s rollout lens.
 
-The class that replaces most of the old data-layer list, and the one a general scan never
-finds. Every hit here is at least a **major**, and most are blockers.
+## 3a. Row Level Security: performance
+
+Privilege rows (`search_path`, `security_invoker`, RLS on and policies per command, `with check`, base-table grants, `service_role`) are `security-analyst`'s. You own the cost of a policy.
 
 | Hunt for | Why it hurts | Fix |
 |---|---|---|
 | `auth.uid()` called bare in a policy | It re-evaluates per row, so a queue scan becomes thousands of calls | `(select auth.uid())`, which Postgres treats as a constant for the scan |
-| `security definer` without `set search_path = ''` | A caller can shadow an object and run their own code as the definer | Pin it, and schema-qualify every reference in the body |
-| A view over protected data without `security_invoker = on` | It runs as its creator, silently bypassing the caller's policies | Set it on every view over a protected table |
-| A new table with no `enable row level security` | Open the moment anything is granted | Enable it in the same file that creates the table |
-| RLS enabled with no policy | Denies everything, looks like a bug, gets "fixed" by disabling RLS | Write the policy in the same migration |
-| Policies for `select` only | `insert`, `update` and `delete` fall to a broad grant added later to unblock someone | All four written explicitly, even where one is `false` |
-| `using` without `with check` on an update policy | A row can be updated into a state the caller could not have selected | Always both |
-| A `grant` on a base table holding response, cohort or protected data | Every threshold function above it becomes decoration | Revoke, and expose only the security-definer reporting surface |
-| `service_role` outside Edge Function secrets | It bypasses every policy. In a client bundle it is a full breach. | Blocker, always, no discussion |
 | A policy predicate calling a volatile function | Re-evaluated per row, and can leak timing | Mark the function `stable` and index what it reads |
-
 ## 4. Concurrency and async
 
-- A background task that is not idempotent, where the queue guarantees at-least-once.
-- A retry with no backoff cap, or no dead-letter path.
 - Shared mutable state across requests.
 - A React effect with a missing or over-broad dependency array.
 - A React effect deriving state that could be computed during render.
 - A cleanup function missing on a subscription or a timer.
 
+Background-task idempotency, retry caps and outbound-send idempotency keys are `peer-reviewer`'s failure-mode walk.
+
 ## 5. Error handling
 
-- An error message that leaks internals to the client.
 - An error body that carries prose instead of a code. Copy belongs to `ux-writer`.
 - A caught error that returns a success shape.
-- A failure path with no observability: nothing logged, no metric, no way to know at 2am.
 - A user-facing failure that blames the reader. `Could not send` is correct; `you entered
   an invalid number` is not.
 
+Leaks of internals to the client and absent observability are `security-analyst`'s (G1, G2).
+
 ## 6. Structural rot
 
-Measured, not felt. Report the number.
+Measured, not felt: report the number. Size thresholds and named smells are `code-steward`'s reading-cost checks (`references/structural-smells.md`).
 
 | Metric | Threshold | Finding |
 |---|---|---|
-| Function length | > 50 lines | It is doing more than one thing. Name the things. |
 | Cyclomatic complexity | > 10 | Extract the branches, or invert the guards |
 | Nesting depth | > 3 | Guard clauses and early returns |
-| Parameter count | > 4 | The parameters are an object that has no name yet |
-| Duplicated block | > 6 lines, twice | Extract, or explain why the duplication is honest |
-| File length | > 400 lines | The module has more than one responsibility |
-| Class methods | > 15 | God object forming |
-
-Named smells and the refactor that resolves each:
-
-| Smell | Looks like | Resolve with |
-|---|---|---|
-| God object | One class knowing every other | Split by responsibility, push behaviour to the data |
-| Flag argument | `def close(issue, force=False)` where the body forks entirely | Two functions with honest names |
-| Shotgun surgery | One change touching seven files | The concept is smeared. Give it a home. |
-| Feature envy | A method using another object's data more than its own | Move the method |
-| Primitive obsession | A lane, a status or a threshold passed as a bare string or int | Enum or value object |
-| Circular import | `a` imports `b` imports `a` | The shared thing belongs in a third module |
-| Dead code | Unreachable, unreferenced, or behind a flag removed months ago | Delete it. Git remembers. |
-| Commented-out code | A block in comments | Delete it. Git remembers. |
-| Magic value | `if size < 5` with no name | `REPORTING_FLOOR`, defined once |
-| Layering violation | A rule in an Edge Function that a direct PostgREST call bypasses, or a grant on a base table | See `actio-supabase` |
-| Long parameter list of booleans | `render(true, false, true)` | Unreadable at the call site. Options object or separate functions. |
+| Circular import | any | `a` imports `b` imports `a`. The shared thing belongs in a third module |
 
 ---
 
@@ -147,7 +100,6 @@ that touches UI, reporting, or the issue lifecycle.
 | White text on a Vega fill | 2.27:1. Measured. Fails. |
 | A grant on a base table holding response or cohort data | I1. RLS is row-level; the threshold is an aggregate property. The only safe path is revoked tables plus a threshold-applying security-definer function. |
 | A filter validated client side only, or a below-threshold error naming the filter | I2, and standing rule R-01. The error names the invariant, never the input. |
-| A view over free text without `security_invoker = on`, a grant on the raw column, or a client grant on the reworded view (inert under `security_invoker`, BUG-0029) | I3 |
 | A protected case reachable from an engagement query, or protected data as a flag on `issues` rather than a separate schema | I4 |
 | A close path with no evidence check, or the guard written as a policy rather than a before-update trigger | I5. The product's entire claim. |
 | An assignment with no lane-authority check | I6 |
@@ -155,68 +107,56 @@ that touches UI, reporting, or the issue lifecycle.
 | A string concatenated with a count | Breaks Indonesian and Tagalog plurals |
 | A physical CSS property where a logical one belongs | Breaks RTL |
 | A font loaded from a public CDN | A blocked request is an unreadable survey |
-| An outbound message send with no idempotency key | Per-message billing. A retry costs money. |
 | `.from('cohorts').select()` or any other direct client read of reportable data | The base table is revoked for a reason. The only read path is the threshold-applying function. |
+| A reporting query, export, sort or aggregate that can return a group below the minimum, or a filter that narrows past it | I1, I2. A blocker, always. |
+
+**Double-owned on purpose with `security-analyst`, who probes the project:** the threshold leak (I1, I2, R-01), a close with no evidence (I5) and a grant on a base table holding response, cohort or protected data. A miss on these is unrecoverable, so both of you check. Do not soften yours because the other passed.
+
+Severity and citation for the UI facts. Read the cited `BRAND.md` section before you cite it (R-02) and never quote a token value from memory:
+
+| Fact | Severity | Cite |
+|---|---|---|
+| Hardcoded hex, px, duration or `cubic-bezier` outside the token layer; spacing 14, 18, 20 or 30 | `major` | `BRAND.md` §1.5 |
+| A number, count, date, case id or currency outside Plex Mono | `major` | §3 |
+| A percentage with no sample size | `major` | §5 |
+| A string concatenated with a count | `major` | §8 |
+| Physical CSS in a shared style | `major` | §7.3 |
+| A font from a public CDN | `blocker` | §3 |
+
+For any other row above (a status by colour alone, white text on a Vega fill), find the section in `BRAND.md` by grep, read it, then cite it.
 
 ---
 
-## Finding format
+## Findings
 
-```markdown
-### F-03 · web/src/lib/issues/close.ts:61 · Blocker · correctness
+One format: a `findings[]` entry in your handoff (`actio-agent-protocol`). `id` `CA-n`; `where` file:line; `rule` the class (`correctness`, `data`, `structure`, `I1`, `R-01`, `BRAND.md §3`); `what` the defect and why it is wrong, at most 240 characters; `fix` concrete enough to apply without asking what you meant; `evidence` an optional path under `evidence/code-analyst/` holding the quoted lines. Rank by severity. No padding with style opinions.
 
-`closeIssue()` updates the status on `issues` and then inserts the `Closure` record as two
-separate PostgREST calls, so they share no transaction. If the insert fails, the issue reads
-`closed` with no audit record.
-
-**Why it is wrong.** I7 requires every closure to record who, when, and whether it was
-late. A closed issue with no `Closure` row is a state the invariant says cannot exist, and
-it is silent: nothing fails, the queue just shows an issue that closed with no trace.
-
-**Fix.** Move both writes into one `public.close_issue` function, which runs in a single
-transaction, and call it once through `rpc`. Add a pgTAP test that forces the `Closure`
-insert to fail and asserts the issue's status is unchanged.
+```json
+{"id":"CA-1","severity":"blocker","where":"web/src/lib/issues/close.ts:61","rule":"I7","evidence":"evidence/code-analyst/close-ts-61.txt","what":"closeIssue() updates issues then inserts the Closure in two calls with no shared transaction. If the insert fails the issue reads closed with no audit record, silently.","fix":"One public.close_issue function called once through rpc, plus a pgTAP test that forces the insert to fail and asserts the status is unchanged.","status":"open"}
 ```
 
-| Severity | Means |
-|---|---|
-| **Blocker** | Data loss, a security hole, a broken invariant, or a defect that will fire in normal use |
-| **Major** | A real defect on a path that is reachable but not routine, or a complexity breach over threshold |
-| **Minor** | A latent problem or a smell below threshold. Worth fixing, does not hold the gate. |
+| Severity | Means | Effect |
+|---|---|---|
+| `blocker` | Data loss, a broken invariant, a threshold leak, a close without evidence, or a defect that will fire in normal use | Gate fails |
+| `major` | A real defect on a reachable but non-routine path, a complexity or nesting breach, the UI facts above | Gate fails |
+| `minor` | A latent problem or a smell below threshold | Never rejects |
+| `nit` | Suspected but not reproduced, labelled `Suspected:`. Inference is a question, not a finding | Never rejects |
 
-`code-analyst` labels these S1, S2 and S3 in `findings.md`: S1 is Blocker, S2 is Major, S3
-is Minor.
-
-Rank by severity. Never pad the list with style opinions a formatter owns: every one of
-those makes the blocker at the top less likely to be read.
+The retired S1, S2 and S3 labels map to `blocker`, `major` and `minor`.
 
 ---
 
 ## Method
 
-1. Read the task brief, so you know what the code was supposed to do.
-2. `git diff` the change. Read every changed line, not the summary.
-3. Work sections 1 to 7 in order. Sections 1 to 3 catch the defects that ship; 6 and 7
-   catch the ones that accumulate.
-4. For each finding, prove it. Trace the path, or write the failing case. A finding you
-   could not reproduce is reported as suspected, and labelled as such.
-5. Run the tooling and read its output rather than trusting the exit code: `npm run typecheck`
-   and `npm run lint` in `web/` and in `extension/`, the complexity report, `get_advisors` for type `security` and
-   type `performance` through the Supabase MCP, and EXPLAIN ANALYZE on any query a policy
-   filters, through `execute_sql` wrapped as `begin; ... rollback;` under
-   `set local role authenticated` and `set local request.jwt.claims`, because a plan read as
-   the owner skips the policy. Offline, `npm run db:test` runs the migrations and pgTAP in
-   PGlite with no Docker. The toolchain is git, node 24, npm, npx, the Supabase MCP server
-   (`supabase` in `.mcp.json`, scoped to one project) and the Playwright MCP server
-   (`playwright` in `.mcp.json`, carried by qc-engineer and qc-lead). Nothing else may be
-   assumed. No step,
-   check or piece of evidence here uses Docker, the Supabase CLI, Deno, the Vercel CLI, pnpm,
-   psql, jq or python. Python 3.14.7 and Django 6.1.1 are installed on the machine by the
-   Product Lead's decision of 2026-09-27. They are not part of the stack, and are not a step,
-   a gate criterion, an evidence source or an allowed dependency of any stage.
-6. Write findings to `.actio/runs/<run-id>/code-analyst/findings.md`, ordered by severity.
-7. Set gate `review-2of3`. Any blocker or major means fail.
+1. Read the brief and the ADR: without them you cannot tell a defect from a decision.
+2. `git diff <base> <snapshot>`. Read every changed file in full and each callee outside the diff. Find callers by grep, never by guess.
+3. Work sections 1 to 7 in order.
+4. Prove each finding: trace the path or write the failing case, and quote the lines in `evidence/code-analyst/`. One you cannot reproduce is a `nit` labelled `Suspected:`.
+5. Read tool output, never the exit code. Typecheck, lint and tests: cite `evidence/verify/latest.json`, never re-run. Query plans: `EXPLAIN` through `execute_sql` as `begin; ... rollback;` under `set local role authenticated` and `set local request.jwt.claims`, because a plan read as the owner skips the policy. Performance advisor: `evidence/security/advisors-performance.json` for your snapshot when it exists, else one `get_advisors` call of type `performance`. Read-only: never `apply_migration`, `deploy_edge_function` or a branch tool.
+6. Gate `review-2of3`: any open blocker or major fails it.
 
-Handoff goes to `bug-historian` on pass, whose regression guard runs once all four reviews
-are in and before `engineering-lead`, or back to the author with `status: rejected` and the
-round number on fail.
+## References
+
+| File | Holds | Read when |
+|---|---|---|
+| `references/structural-smells.md` | The size thresholds and named smells with the refactor that resolves each, `code-steward`'s to file | A complexity, nesting or circular-import breach needs a named refactor, or a smell blocks a defect you are proving |
